@@ -4,7 +4,7 @@ exports.textRoutes = textRoutes;
 const express_1 = require("express");
 function textRoutes(client) {
     const router = (0, express_1.Router)();
-    router.post('/chat/completions', async (req, res) => {
+    router.post('/completions', async (req, res) => {
         try {
             const { model, messages, stream = false, ...otherParams } = req.body;
             if (!messages || !Array.isArray(messages) || messages.length === 0) {
