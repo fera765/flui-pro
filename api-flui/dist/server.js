@@ -74,6 +74,17 @@ app.get('/health', (_req, res) => {
     });
 });
 const pluginLoader = new pluginLoader_1.PluginLoader();
+(async () => {
+    try {
+        console.log('🔌 Initializing plugin system...');
+        await pluginLoader.loadAllPlugins();
+        await pluginLoader.watchForNewPlugins();
+        console.log('✅ Plugin system initialized successfully');
+    }
+    catch (error) {
+        console.error('❌ Failed to initialize plugin system:', error);
+    }
+})();
 app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
 app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
 app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));

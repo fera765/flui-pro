@@ -100,6 +100,18 @@ app.get('/health', (_req, res) => {
 // Initialize plugin loader
 const pluginLoader = new PluginLoader();
 
+// Initialize plugins
+(async () => {
+  try {
+    console.log('🔌 Initializing plugin system...');
+    await pluginLoader.loadAllPlugins();
+    await pluginLoader.watchForNewPlugins();
+    console.log('✅ Plugin system initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize plugin system:', error);
+  }
+})();
+
 // API routes
 app.use('/v1/tasks', taskRoutes(orchestrator));
 app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
