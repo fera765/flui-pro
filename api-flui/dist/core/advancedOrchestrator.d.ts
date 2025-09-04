@@ -1,0 +1,41 @@
+import { Task, TaskResult, OrchestratorConfig } from '../types';
+import { FluiContext } from '../types/advanced';
+import { Classifier } from './classifier';
+import { Planner } from './planner';
+import { Worker } from './worker';
+import { Supervisor } from './supervisor';
+export declare class AdvancedOrchestrator {
+    private config;
+    private classifier;
+    private planner;
+    private worker;
+    private supervisor;
+    private tasks;
+    private events;
+    private agents;
+    private tools;
+    private contextManager;
+    private todoPlanner;
+    private autoCorrection;
+    private fileGenerator;
+    constructor(config: OrchestratorConfig, classifier: Classifier, planner: Planner, worker: Worker, supervisor: Supervisor);
+    private initializeAgents;
+    createTask(prompt: string): Promise<Task>;
+    private createSimpleTask;
+    private createComplexTask;
+    executeTask(taskId: string): Promise<TaskResult>;
+    private executeComplexTask;
+    private executeTodo;
+    private executeAgentTodo;
+    private executeToolTodo;
+    private generateFinalDeliverables;
+    private handleSimpleTaskResult;
+    private handleComplexTaskResult;
+    private updateTaskStatus;
+    private emitEvent;
+    getTask(taskId: string): Task | undefined;
+    getAllTasks(): Task[];
+    getTaskEvents(taskId: string): any[];
+    getContext(taskId: string): FluiContext | undefined;
+}
+//# sourceMappingURL=advancedOrchestrator.d.ts.map

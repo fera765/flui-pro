@@ -4,8 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { taskRoutes } from './routes/tasks';
+import { advancedTaskRoutes } from './routes/advancedTasks';
 import { streamRoutes } from './routes/stream';
 import { Orchestrator } from './core/orchestrator';
+import { AdvancedOrchestrator } from './core/advancedOrchestrator';
 import { Classifier } from './core/classifier';
 import { Planner } from './core/planner';
 import { Worker } from './core/worker';
@@ -33,6 +35,14 @@ const orchestratorConfig = {
 };
 
 const orchestrator = new Orchestrator(
+  orchestratorConfig,
+  classifier,
+  planner,
+  worker,
+  supervisor
+);
+
+const advancedOrchestrator = new AdvancedOrchestrator(
   orchestratorConfig,
   classifier,
   planner,
@@ -87,6 +97,7 @@ app.get('/health', (_req, res) => {
 
 // API routes
 app.use('/v1/tasks', taskRoutes(orchestrator));
+app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
 
 // Root endpoint

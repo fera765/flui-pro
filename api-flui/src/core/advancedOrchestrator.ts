@@ -1,0 +1,390 @@
+import { v4 as uuidv4 } from 'uuid';
+import { Task, TaskResult, OrchestratorConfig, ClassificationResult } from '../types';
+import { FluiContext, TodoItem, Agent, AgentTask } from '../types/advanced';
+import { Classifier } from './classifier';
+import { Planner } from './planner';
+import { Worker } from './worker';
+import { Supervisor } from './supervisor';
+import { TodoPlanner } from './todoPlanner';
+import { FluiContextManager } from './fluiContext';
+import { AutonomousAgent } from '../agents/autonomousAgent';
+import { SpecializedAgents } from '../agents/specializedAgents';
+import { AdvancedTools } from '../tools/advancedTools';
+import { AutoCorrectionSystem } from './autoCorrection';
+import { FileGenerator } from './fileGenerator';
+import * as path from 'path';
+
+export class AdvancedOrchestrator {
+  private tasks: Map<string, Task> = new Map();
+  private events: Map<string, any[]> = new Map();
+  private agents: Map<string, Agent> = new Map();
+  private tools: AdvancedTools;
+  private contextManager: FluiContextManager;
+  private todoPlanner: TodoPlanner;
+  private autoCorrection: AutoCorrectionSystem;
+  private fileGenerator: FileGenerator;
+
+  constructor(
+    private config: OrchestratorConfig,
+    private classifier: Classifier,
+    private planner: Planner,
+    private worker: Worker,
+    private supervisor: Supervisor
+  ) {
+    // Initialize working directory
+    const workingDir = path.join(process.cwd(), 'flui-projects', uuidv4());
+    
+    // Initialize components
+    this.tools = new AdvancedTools(workingDir);
+    this.contextManager = new FluiContextManager('', workingDir);
+    this.todoPlanner = new TodoPlanner();
+    this.autoCorrection = new AutoCorrectionSystem(workingDir);
+    this.fileGenerator = new FileGenerator();
+    
+    // Initialize specialized agents
+    this.initializeAgents();
+  }
+
+  private initializeAgents(): void {
+    const agents = SpecializedAgents.getAllAgents();
+    agents.forEach(agent => {
+      this.agents.set(agent.id, agent);
+    });
+  }
+
+  async createTask(prompt: string): Promise<Task> {
+    // Determine if it's a conversation or complex task
+    const classification = this.classifier.classifyTask(prompt);
+    
+    if (classification.type === 'conversation') {
+      // Handle simple conversation
+      return this.createSimpleTask(prompt, classification);
+    } else {
+      // Handle complex task with todo planning
+      return this.createComplexTask(prompt, classification);
+    }
+  }
+
+  private async createSimpleTask(prompt: string, classification: ClassificationResult): Promise<Task> {
+    const task: Task = {
+      id: uuidv4(),
+      type: classification.type,
+      prompt,
+      status: 'pending',
+      depth: 0,
+      retries: 0,
+      maxRetries: this.config.maxRetries,
+      maxDepth: this.config.maxDepth,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      childTasks: [],
+      metadata: {
+        classification,
+        isSimple: true
+      }
+    };
+
+    this.tasks.set(task.id, task);
+    return task;
+  }
+
+  private async createComplexTask(prompt: string, classification: ClassificationResult): Promise<Task> {
+    // Initialize context
+    this.contextManager = new FluiContextManager(prompt, this.contextManager.getWorkingDirectory());
+    await this.contextManager.ensureWorkingDirectory();
+    
+    // Create project structure
+    const projectPath = await this.fileGenerator.createProjectStructure(this.contextManager.getContext());
+    
+    // Generate todo list
+    const todos = await this.todoPlanner.analyzeTaskComplexity(prompt);
+    this.contextManager.addTodos(todos);
+    
+    const task: Task = {
+      id: this.contextManager.getContext().mainTaskId,
+      type: classification.type,
+      prompt,
+      status: 'pending',
+      depth: 0,
+      retries: 0,
+      maxRetries: this.config.maxRetries,
+      maxDepth: this.config.maxDepth,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      childTasks: [],
+      metadata: {
+        classification,
+        isSimple: false,
+        projectPath,
+        todoCount: todos.length
+      }
+    };
+
+    this.tasks.set(task.id, task);
+    return task;
+  }
+
+  async executeTask(taskId: string): Promise<TaskResult> {
+    const task = this.getTask(taskId);
+    if (!task) {
+      throw new Error(`Task ${taskId} not found`);
+    }
+
+    if (task.status === 'completed') {
+      return {
+        success: true,
+        data: task.result,
+        metadata: task.metadata
+      };
+    }
+
+    if (task.status === 'failed' && task.retries >= task.maxRetries) {
+      return {
+        success: false,
+        error: task.error || 'Max retries exceeded',
+        metadata: task.metadata
+      };
+    }
+
+    try {
+      this.updateTaskStatus(taskId, 'running');
+      this.emitEvent(taskId, 'task_started', { task });
+
+      if (task.metadata.isSimple) {
+        // Execute simple task
+        const result = await this.worker.executeTask(task);
+        return this.handleSimpleTaskResult(taskId, result);
+      } else {
+        // Execute complex task with todo management
+        const result = await this.executeComplexTask(task);
+        return this.handleComplexTaskResult(taskId, result);
+      }
+
+    } catch (error: any) {
+      this.updateTaskStatus(taskId, 'failed', undefined, error.message);
+      this.emitEvent(taskId, 'task_failed', { task, error: error.message });
+      
+      return {
+        success: false,
+        error: error.message,
+        metadata: task.metadata
+      };
+    }
+  }
+
+  private async executeComplexTask(task: Task): Promise<TaskResult> {
+    const context = this.contextManager.getContext();
+    let completedTodos = 0;
+    const totalTodos = context.todos.length;
+
+    // Execute todos in dependency order
+    while (!this.contextManager.isTaskComplete()) {
+      const executableTodos = this.contextManager.getNextExecutableTodos();
+      
+      if (executableTodos.length === 0) {
+        // Check for failed todos that can be retried
+        const failedTodos = context.todos.filter(todo => 
+          todo.status === 'failed' && 
+          todo.dependencies.every(depId => 
+            context.todos.find(t => t.id === depId)?.status === 'completed'
+          )
+        );
+        
+        if (failedTodos.length === 0) {
+          break; // No more todos to execute
+        }
+        
+        // Retry failed todos
+        for (const todo of failedTodos) {
+          const retrySuccess = await this.autoCorrection.retryFailedTodo(todo, context);
+          if (retrySuccess) {
+            executableTodos.push(todo);
+          }
+        }
+      }
+
+      // Execute todos in parallel
+      const executionPromises = executableTodos.map(todo => this.executeTodo(todo, context));
+      await Promise.all(executionPromises);
+      
+      completedTodos = context.completedTasks.length;
+      this.emitEvent(task.id, 'progress_update', { 
+        completed: completedTodos, 
+        total: totalTodos,
+        progress: (completedTodos / totalTodos) * 100
+      });
+    }
+
+    // Generate final deliverables
+    await this.generateFinalDeliverables(context);
+
+    return {
+      success: true,
+      data: {
+        message: 'Complex task completed successfully',
+        projectPath: context.workingDirectory,
+        generatedFiles: context.generatedFiles,
+        summary: this.contextManager.generateSummary()
+      },
+      metadata: {
+        type: 'complex_task',
+        completedTodos: context.completedTasks.length,
+        totalTodos: context.todos.length,
+        generatedFiles: context.generatedFiles.length
+      }
+    };
+  }
+
+  private async executeTodo(todo: TodoItem, context: FluiContext): Promise<void> {
+    try {
+      this.contextManager.updateTodoStatus(todo.id, 'running');
+      this.emitEvent(context.mainTaskId, 'todo_started', { todo });
+
+      let result: any;
+
+      if (todo.type === 'agent') {
+        result = await this.executeAgentTodo(todo, context);
+      } else if (todo.type === 'tool') {
+        result = await this.executeToolTodo(todo, context);
+      }
+
+      this.contextManager.updateTodoStatus(todo.id, 'completed', result);
+      this.emitEvent(context.mainTaskId, 'todo_completed', { todo, result });
+
+    } catch (error: any) {
+      this.contextManager.updateTodoStatus(todo.id, 'failed', undefined, error.message);
+      this.emitEvent(context.mainTaskId, 'todo_failed', { todo, error: error.message });
+      
+      // Try auto-correction
+      const analysis = await this.autoCorrection.analyzeError(error.message, context);
+      if (analysis.shouldRetry) {
+        await this.autoCorrection.executeCorrection(analysis.solution, context);
+      }
+    }
+  }
+
+  private async executeAgentTodo(todo: TodoItem, context: FluiContext): Promise<any> {
+    const agent = this.agents.get(todo.agentId!);
+    if (!agent) {
+      throw new Error(`Agent ${todo.agentId} not found`);
+    }
+
+    const availableTools = this.tools.getAllTools();
+    const autonomousAgent = new AutonomousAgent(agent, availableTools);
+    
+    const agentTask: AgentTask = this.contextManager.createAgentTask(
+      agent.id,
+      todo.description,
+      agent.tools
+    );
+
+    const response = await autonomousAgent.executeTask(agentTask);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Agent execution failed');
+    }
+
+    // Update context with agent response
+    this.contextManager.updateGlobalContext(`Agent ${agent.name}: ${response.data}`);
+    
+    return response.data;
+  }
+
+  private async executeToolTodo(todo: TodoItem, context: FluiContext): Promise<any> {
+    const tool = this.tools.getAllTools().find(t => t.name === todo.toolName);
+    if (!tool) {
+      throw new Error(`Tool ${todo.toolName} not found`);
+    }
+
+    const result = await tool.execute(todo.parameters || {});
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Tool execution failed');
+    }
+
+    // Update context with tool result
+    this.contextManager.updateGlobalContext(`Tool ${tool.name}: ${result.context}`);
+    
+    return result.data;
+  }
+
+  private async generateFinalDeliverables(context: FluiContext): Promise<void> {
+    // Create project summary
+    await this.fileGenerator.createProjectSummary(context);
+    
+    // Save context
+    await this.contextManager.saveContextToFile();
+  }
+
+  private async handleSimpleTaskResult(taskId: string, result: TaskResult): Promise<TaskResult> {
+    if (result.success) {
+      this.updateTaskStatus(taskId, 'completed', result.data);
+      this.emitEvent(taskId, 'task_completed', { result });
+    } else {
+      this.updateTaskStatus(taskId, 'failed', undefined, result.error);
+      this.emitEvent(taskId, 'task_failed', { error: result.error });
+    }
+
+    return result;
+  }
+
+  private async handleComplexTaskResult(taskId: string, result: TaskResult): Promise<TaskResult> {
+    if (result.success) {
+      this.updateTaskStatus(taskId, 'completed', result.data);
+      this.emitEvent(taskId, 'task_completed', { result });
+    } else {
+      this.updateTaskStatus(taskId, 'failed', undefined, result.error);
+      this.emitEvent(taskId, 'task_failed', { error: result.error });
+    }
+
+    return result;
+  }
+
+
+
+  private updateTaskStatus(taskId: string, status: Task['status'], result?: any, error?: string): void {
+    const task = this.tasks.get(taskId);
+    if (task) {
+      task.status = status;
+      task.updatedAt = new Date();
+      if (result) task.result = result;
+      if (error) task.error = error;
+    }
+  }
+
+  private emitEvent(taskId: string, eventType: string, data: any): void {
+    if (!this.events.has(taskId)) {
+      this.events.set(taskId, []);
+    }
+    
+    const event = {
+      id: uuidv4(),
+      type: eventType,
+      timestamp: new Date(),
+      data
+    };
+    
+    this.events.get(taskId)!.push(event);
+  }
+
+  // Public methods for task management
+  getTask(taskId: string): Task | undefined {
+    return this.tasks.get(taskId);
+  }
+
+  getAllTasks(): Task[] {
+    return Array.from(this.tasks.values());
+  }
+
+  getTaskEvents(taskId: string): any[] {
+    return this.events.get(taskId) || [];
+  }
+
+  getContext(taskId: string): FluiContext | undefined {
+    const task = this.tasks.get(taskId);
+    if (task && !task.metadata.isSimple) {
+      return this.contextManager.getContext();
+    }
+    return undefined;
+  }
+}

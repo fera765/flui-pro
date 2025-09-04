@@ -9,8 +9,10 @@ const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const tasks_1 = require("./routes/tasks");
+const advancedTasks_1 = require("./routes/advancedTasks");
 const stream_1 = require("./routes/stream");
 const orchestrator_1 = require("./core/orchestrator");
+const advancedOrchestrator_1 = require("./core/advancedOrchestrator");
 const classifier_1 = require("./core/classifier");
 const planner_1 = require("./core/planner");
 const worker_1 = require("./core/worker");
@@ -31,6 +33,7 @@ const orchestratorConfig = {
     enableStreaming: true
 };
 const orchestrator = new orchestrator_1.Orchestrator(orchestratorConfig, classifier, planner, worker, supervisor);
+const advancedOrchestrator = new advancedOrchestrator_1.AdvancedOrchestrator(orchestratorConfig, classifier, planner, worker, supervisor);
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
     origin: process.env['NODE_ENV'] === 'production' ? false : true,
@@ -69,6 +72,7 @@ app.get('/health', (_req, res) => {
     });
 });
 app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
+app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
 app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));
 app.get('/', (_req, res) => {
     return res.json({
