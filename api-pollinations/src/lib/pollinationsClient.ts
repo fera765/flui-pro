@@ -217,6 +217,11 @@ export class PollinationsClient {
   async openaiCompatibleChat(request: OpenAIChatRequest): Promise<any> {
     const url = `${this.textBaseUrl}/openai`;
 
+    console.log('=== POLLINATIONS CLIENT - openaiCompatibleChat ===');
+    console.log('URL:', url);
+    console.log('Request:', JSON.stringify(request, null, 2));
+    console.log('API Key:', this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'NOT SET');
+
     const config: AxiosRequestConfig = {
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
@@ -225,7 +230,23 @@ export class PollinationsClient {
       timeout: parseInt((process.env as any)['TEXT_GENERATION_TIMEOUT_MS'] || '30000')
     };
 
-    return this.makeRequestWithRetry(() => axios.post(url, request, config));
+    console.log('Config:', JSON.stringify(config, null, 2));
+    console.log('================================================');
+
+    try {
+      const result = await this.makeRequestWithRetry(() => axios.post(url, request, config));
+      console.log('=== POLLINATIONS CLIENT - SUCCESS ===');
+      console.log('Result:', JSON.stringify(result, null, 2));
+      console.log('=====================================');
+      return result;
+    } catch (error: any) {
+      console.log('=== POLLINATIONS CLIENT - ERROR ===');
+      console.log('Error:', error.message);
+      console.log('Error response:', error.response?.data);
+      console.log('Error status:', error.response?.status);
+      console.log('===================================');
+      throw error;
+    }
   }
 
   async healthCheck(): Promise<HealthCheckResult> {

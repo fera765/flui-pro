@@ -29,11 +29,13 @@ export function textRoutes(client: PollinationsClient): Router {
       const pollinationsModel = mapOpenAIModelToPollinations(model);
 
       // Prepare request for Pollinations
+      // Remove temperature parameter as Pollinations API only supports default value (1)
+      const { temperature, ...paramsWithoutTemperature } = otherParams;
       const pollinationsRequest = {
         model: pollinationsModel,
         messages,
         stream,
-        ...otherParams
+        ...paramsWithoutTemperature
       };
 
       if (stream) {

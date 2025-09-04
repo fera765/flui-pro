@@ -20,11 +20,12 @@ function textRoutes(client) {
                 return res.status(400).json({ error: 'Model is required' });
             }
             const pollinationsModel = mapOpenAIModelToPollinations(model);
+            const { temperature, ...paramsWithoutTemperature } = otherParams;
             const pollinationsRequest = {
                 model: pollinationsModel,
                 messages,
                 stream,
-                ...otherParams
+                ...paramsWithoutTemperature
             };
             if (stream) {
                 res.setHeader('Content-Type', 'text/event-stream');
