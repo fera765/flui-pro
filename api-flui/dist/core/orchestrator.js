@@ -13,7 +13,7 @@ class Orchestrator {
         this.events = new Map();
     }
     async createTask(prompt) {
-        const classification = this.classifier.classifyTask(prompt);
+        const classification = await this.classifier.classifyTask(prompt);
         const task = {
             id: (0, uuid_1.v4)(),
             type: classification.type,

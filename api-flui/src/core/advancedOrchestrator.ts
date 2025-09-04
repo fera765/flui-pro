@@ -185,7 +185,7 @@ export class AdvancedOrchestrator {
 
   private async createNewTask(prompt: string): Promise<Task> {
     // Determine if it's a conversation or complex task
-    const classification = this.classifier.classifyTask(prompt);
+    const classification = await this.classifier.classifyTask(prompt);
     
     if (classification.type === 'conversation') {
       // Handle simple conversation

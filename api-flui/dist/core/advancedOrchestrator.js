@@ -158,7 +158,7 @@ class AdvancedOrchestrator {
         return this.createNewTask(prompt);
     }
     async createNewTask(prompt) {
-        const classification = this.classifier.classifyTask(prompt);
+        const classification = await this.classifier.classifyTask(prompt);
         if (classification.type === 'conversation') {
             return this.createSimpleTask(prompt, classification);
         }

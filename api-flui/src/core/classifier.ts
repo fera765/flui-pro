@@ -1,3 +1,5 @@
+import { PollinationsTool } from '../tools/pollinationsTool';
+
 export interface ClassificationResult {
   type: 'conversation' | 'task';
   subtype?: string;
@@ -6,198 +8,112 @@ export interface ClassificationResult {
 }
 
 export class Classifier {
-  private readonly imageKeywords = [
-    'generate', 'create', 'make', 'draw', 'design', 'render', 'produce',
-    'image', 'picture', 'photo', 'artwork', 'illustration', 'visual'
-  ];
+  private pollinationsTool: PollinationsTool;
 
-  private readonly textKeywords = [
-    'write', 'compose', 'create', 'generate', 'draft', 'produce',
-    'story', 'essay', 'article', 'text', 'content', 'narrative'
-  ];
+  constructor() {
+    this.pollinationsTool = new PollinationsTool();
+  }
 
-  private readonly audioKeywords = [
-    'convert', 'transform', 'speech', 'audio', 'voice', 'narration',
-    'tts', 'text-to-speech', 'audio narration'
-  ];
+  async classifyTask(prompt: string): Promise<ClassificationResult> {
+    try {
+      const classificationPrompt = `
+Analise a seguinte solicitação e classifique-a de forma precisa. Responda APENAS com um JSON válido no formato especificado.
 
-  private readonly conversationKeywords = [
-    'hello', 'hi', 'how are you', 'what\'s up', 'tell me', 'explain',
-    'weather', 'joke', 'time', 'date', 'help', 'assist'
-  ];
+Solicitação: "${prompt}"
 
-  private readonly sizePattern = /(\d{3,4})x(\d{3,4})/i;
-  private readonly modelPattern = /(flux|dalle|openai|gpt-4)/i;
-  private readonly voicePattern = /(alloy|echo|fable|onyx|nova|shimmer)/i;
-  private readonly temperaturePattern = /temperature\s*(\d*\.?\d+)/i;
-  private readonly wordCountPattern = /(\d+)-?word/i;
+Classifique esta solicitação em uma das seguintes categorias:
 
-  classifyTask(prompt: string): ClassificationResult {
+1. **conversation**: Perguntas simples, cumprimentos, pedidos de ajuda geral, conversas casuais
+2. **text_generation**: Criação de texto, redação, artigos, resumos, histórias, conteúdo escrito
+3. **image_generation**: Criação de imagens, arte, ilustrações, designs visuais
+4. **audio**: Geração de áudio, conversão de texto para fala, processamento de áudio
+5. **composite**: Tarefas que envolvem múltiplas etapas ou tipos de conteúdo
+
+Responda com JSON no formato:
+{
+  "type": "conversation" | "task",
+  "subtype": "text_generation" | "image_generation" | "audio" | "composite" | null,
+  "confidence": 0.0-1.0,
+  "parameters": {
+    "subject": "assunto principal da tarefa",
+    "language": "idioma detectado",
+    "complexity": "simple" | "medium" | "complex"
+  }
+}
+
+IMPORTANTE: 
+- Se for uma conversa simples, use type: "conversation" e subtype: null
+- Se for uma tarefa, use type: "task" e o subtype apropriado
+- Seja preciso na classificação baseado no conteúdo real da solicitação
+- Para tarefas de texto (artigos, resumos, redação), use "text_generation"
+- Para tarefas de imagem (criar, gerar, desenhar imagens), use "image_generation"
+`;
+
+      const response = await this.pollinationsTool.generateText(classificationPrompt, {
+        temperature: 0.1,
+        maxTokens: 300
+      });
+
+      // Parse the JSON response
+      const cleanResponse = response.trim();
+      const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        const classification = JSON.parse(jsonMatch[0]);
+        
+        // Validate the response structure
+        if (this.isValidClassification(classification)) {
+          return classification;
+        }
+      }
+
+      // Fallback classification if LLM response is invalid
+      return this.getFallbackClassification(prompt);
+      
+    } catch (error) {
+      console.error('Error in LLM classification:', error);
+      return this.getFallbackClassification(prompt);
+    }
+  }
+
+  private isValidClassification(classification: any): boolean {
+    return (
+      classification &&
+      typeof classification === 'object' &&
+      (classification.type === 'conversation' || classification.type === 'task') &&
+      typeof classification.confidence === 'number' &&
+      classification.confidence >= 0 && classification.confidence <= 1 &&
+      typeof classification.parameters === 'object'
+    );
+  }
+
+  private getFallbackClassification(prompt: string): ClassificationResult {
     const lowerPrompt = prompt.toLowerCase();
     
-    // Check for conversation patterns
-    if (this.isConversation(lowerPrompt)) {
+    // Simple fallback logic
+    if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('help')) {
       return {
         type: 'conversation',
-        confidence: 0.95,
-        parameters: {}
+        confidence: 0.6,
+        parameters: { subject: 'general', language: 'unknown', complexity: 'simple' }
       };
     }
-
-    // Check for composite tasks
-    if (this.isCompositeTask(lowerPrompt)) {
-      return {
-        type: 'task',
-        subtype: 'composite',
-        confidence: 0.85,
-        parameters: this.extractCompositeParameters(lowerPrompt)
-      };
-    }
-
-    // Check for image generation
-    if (this.isImageGeneration(lowerPrompt)) {
+    
+    if (lowerPrompt.includes('image') || lowerPrompt.includes('picture') || lowerPrompt.includes('draw')) {
       return {
         type: 'task',
         subtype: 'image_generation',
-        confidence: 0.9,
-        parameters: this.extractImageParameters(lowerPrompt)
+        confidence: 0.7,
+        parameters: { subject: lowerPrompt, language: 'unknown', complexity: 'medium' }
       };
     }
-
-    // Check for text generation
-    if (this.isTextGeneration(lowerPrompt)) {
-      return {
-        type: 'task',
-        subtype: 'text_generation',
-        confidence: 0.9,
-        parameters: this.extractTextParameters(lowerPrompt)
-      };
-    }
-
-    // Check for audio tasks
-    if (this.isAudioTask(lowerPrompt)) {
-      return {
-        type: 'task',
-        subtype: 'audio',
-        confidence: 0.9,
-        parameters: this.extractAudioParameters(lowerPrompt)
-      };
-    }
-
-    // Default to task with low confidence
+    
     return {
       type: 'task',
+      subtype: 'text_generation',
       confidence: 0.5,
-      parameters: {}
+      parameters: { subject: lowerPrompt, language: 'unknown', complexity: 'medium' }
     };
   }
 
-  private isConversation(prompt: string): boolean {
-    return this.conversationKeywords.some(keyword => prompt.includes(keyword));
-  }
-
-  private isCompositeTask(prompt: string): boolean {
-    const compositeIndicators = ['first', 'then', 'finally', 'and then', 'after that'];
-    return compositeIndicators.some(indicator => prompt.includes(indicator));
-  }
-
-  private isImageGeneration(prompt: string): boolean {
-    return this.imageKeywords.some(keyword => prompt.includes(keyword));
-  }
-
-  private isTextGeneration(prompt: string): boolean {
-    return this.textKeywords.some(keyword => prompt.includes(keyword));
-  }
-
-  private isAudioTask(prompt: string): boolean {
-    return this.audioKeywords.some(keyword => prompt.includes(keyword));
-  }
-
-  private extractImageParameters(prompt: string): Record<string, any> {
-    const params: Record<string, any> = {};
-    
-    // Extract size
-    const sizeMatch = prompt.match(this.sizePattern);
-    if (sizeMatch) {
-      params.size = sizeMatch[0];
-    }
-
-    // Extract model
-    const modelMatch = prompt.match(this.modelPattern);
-    if (modelMatch) {
-      params.model = modelMatch[1];
-    }
-
-    // Extract subject (everything after "of" or "a" before size/model)
-    const subjectMatch = prompt.match(/(?:of|a|an)\s+([^,]+?)(?:\s+\d{3,4}x\d{3,4}|\s+(?:using|with)|$)/i);
-    if (subjectMatch && subjectMatch[1]) {
-      params.subject = subjectMatch[1].trim();
-    }
-
-    // Check for transparent background
-    if (prompt.includes('transparent')) {
-      params.transparent = true;
-    }
-
-    return params;
-  }
-
-  private extractTextParameters(prompt: string): Record<string, any> {
-    const params: Record<string, any> = {};
-    
-    // Extract word count
-    const wordMatch = prompt.match(this.wordCountPattern);
-    if (wordMatch && wordMatch[1]) {
-      params.maxWords = parseInt(wordMatch[1]);
-    }
-
-    // Extract temperature
-    const tempMatch = prompt.match(this.temperaturePattern);
-    if (tempMatch && tempMatch[1]) {
-      params.temperature = parseFloat(tempMatch[1]);
-    }
-
-    // Extract subject
-    const subjectMatch = prompt.match(/(?:about|on|regarding)\s+([^,]+?)(?:\s+\d+|\s+with|$)/i);
-    if (subjectMatch && subjectMatch[1]) {
-      params.subject = subjectMatch[1].trim();
-    }
-
-    return params;
-  }
-
-  private extractAudioParameters(prompt: string): Record<string, any> {
-    const params: Record<string, any> = {};
-    
-    // Extract voice
-    const voiceMatch = prompt.match(this.voicePattern);
-    if (voiceMatch) {
-      params.voice = voiceMatch[1];
-    }
-
-    // Determine action
-    if (prompt.includes('text to speech') || prompt.includes('tts')) {
-      params.action = 'text_to_speech';
-    } else if (prompt.includes('speech to text') || prompt.includes('stt')) {
-      params.action = 'speech_to_text';
-    }
-
-    return params;
-  }
-
-  private extractCompositeParameters(prompt: string): Record<string, any> {
-    const params: Record<string, any> = {};
-    
-    // Count subtasks
-    const subtaskIndicators = ['first', 'then', 'finally', 'and then', 'after that'];
-    params.subtaskCount = subtaskIndicators.filter(indicator => prompt.includes(indicator)).length + 1;
-
-    // Extract main subjects
-    const subjects = prompt.match(/(?:generate|create|write|make)\s+(?:an?\s+)?([^,]+?)(?:\s+then|\s+finally|$)/gi);
-    if (subjects) {
-      params.subjects = subjects.map(s => s.replace(/(?:generate|create|write|make)\s+(?:an?\s+)?/i, '').trim());
-    }
-
-    return params;
-  }
 }

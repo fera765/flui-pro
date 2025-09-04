@@ -32,7 +32,7 @@ export class Orchestrator {
   ) {}
 
   async createTask(prompt: string): Promise<Task> {
-    const classification = this.classifier.classifyTask(prompt);
+    const classification = await this.classifier.classifyTask(prompt);
     
     const task: Task = {
       id: uuidv4(),
