@@ -6,6 +6,12 @@ function textRoutes(client) {
     const router = (0, express_1.Router)();
     router.post('/completions', async (req, res) => {
         try {
+            console.log('=== TEXT ROUTE REQUEST ===');
+            console.log('Headers:', JSON.stringify(req.headers, null, 2));
+            console.log('Body:', JSON.stringify(req.body, null, 2));
+            console.log('URL:', req.url);
+            console.log('Method:', req.method);
+            console.log('========================');
             const { model, messages, stream = false, ...otherParams } = req.body;
             if (!messages || !Array.isArray(messages) || messages.length === 0) {
                 return res.status(400).json({ error: 'Messages are required' });
@@ -38,12 +44,21 @@ function textRoutes(client) {
                 }
             }
             else {
+                console.log('=== CALLING POLLINATIONS CLIENT ===');
+                console.log('Request to client:', JSON.stringify(pollinationsRequest, null, 2));
                 const response = await client.openaiCompatibleChat(pollinationsRequest);
+                console.log('=== POLLINATIONS CLIENT RESPONSE ===');
+                console.log('Response:', JSON.stringify(response, null, 2));
+                console.log('====================================');
                 return res.json(response);
             }
         }
         catch (error) {
+            console.log('=== TEXT ROUTE ERROR ===');
             console.error('Chat completion error:', error);
+            console.log('Error message:', error.message);
+            console.log('Error stack:', error.stack);
+            console.log('=======================');
             return res.status(500).json({ error: 'Internal server error' });
         }
     });

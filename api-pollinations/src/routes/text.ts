@@ -7,6 +7,14 @@ export function textRoutes(client: PollinationsClient): Router {
   // POST /completions - OpenAI-compatible chat endpoint
   router.post('/completions', async (req: Request, res: Response) => {
     try {
+      // LOG: Request received
+      console.log('=== TEXT ROUTE REQUEST ===');
+      console.log('Headers:', JSON.stringify(req.headers, null, 2));
+      console.log('Body:', JSON.stringify(req.body, null, 2));
+      console.log('URL:', req.url);
+      console.log('Method:', req.method);
+      console.log('========================');
+      
       const { model, messages, stream = false, ...otherParams } = req.body;
 
       if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -52,12 +60,24 @@ export function textRoutes(client: PollinationsClient): Router {
         }
       } else {
         // Handle non-streaming response
+        console.log('=== CALLING POLLINATIONS CLIENT ===');
+        console.log('Request to client:', JSON.stringify(pollinationsRequest, null, 2));
+        
         const response = await client.openaiCompatibleChat(pollinationsRequest);
+        
+        console.log('=== POLLINATIONS CLIENT RESPONSE ===');
+        console.log('Response:', JSON.stringify(response, null, 2));
+        console.log('====================================');
+        
         return res.json(response);
       }
 
     } catch (error: any) {
+      console.log('=== TEXT ROUTE ERROR ===');
       console.error('Chat completion error:', error);
+      console.log('Error message:', error.message);
+      console.log('Error stack:', error.stack);
+      console.log('=======================');
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
