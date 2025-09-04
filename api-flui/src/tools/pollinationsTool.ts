@@ -69,6 +69,37 @@ export class PollinationsTool {
 
       throw new Error('No text response received');
     } catch (error: any) {
+      // Try alternative route if the first one fails
+      try {
+        const altResponse = await fetch(`${this.openai.baseURL}/v1/chat/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.openai.apiKey}`
+          },
+          body: JSON.stringify({
+            model: options.model || 'openai',
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: options.temperature || 0.7,
+            max_tokens: options.maxTokens || 500
+          })
+        });
+
+        if (altResponse.ok) {
+          const data = await altResponse.json() as any;
+          if (data.choices && data.choices[0]?.message?.content) {
+            return data.choices[0].message.content;
+          }
+        }
+      } catch (altError) {
+        // Ignore alternative route errors
+      }
+
       throw new Error(`Text generation failed: ${error.message}`);
     }
   }
