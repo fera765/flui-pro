@@ -8,6 +8,7 @@ import { advancedTaskRoutes } from './routes/advancedTasks';
 import { streamRoutes } from './routes/stream';
 import { createPluginRoutes } from './routes/plugins';
 import { knowledgeRoutes } from './routes/knowledge';
+import { mcpRoutes } from './routes/mcp';
 import { Orchestrator } from './core/orchestrator';
 import { AdvancedOrchestrator } from './core/advancedOrchestrator';
 import { Classifier } from './core/classifier';
@@ -17,6 +18,8 @@ import { Supervisor } from './core/supervisor';
 import { PollinationsTool } from './tools/pollinationsTool';
 import { PluginLoader } from './core/pluginLoader';
 import { KnowledgeManager } from './core/knowledgeManager';
+import { MCPRegistry } from './core/mcpRegistry';
+import { MCPToolProxy } from './core/mcpToolProxy';
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +30,8 @@ const PORT = (process.env as any)['PORT'] || 5000;
 // Initialize core components
 const pollinationsTool = new PollinationsTool();
 const knowledgeManager = new KnowledgeManager();
+const mcpRegistry = new MCPRegistry();
+const mcpToolProxy = new MCPToolProxy(mcpRegistry);
 const classifier = new Classifier(knowledgeManager);
 const planner = new Planner();
 const worker = new Worker(pollinationsTool, knowledgeManager);
@@ -120,6 +125,7 @@ app.use('/v1/tasks', taskRoutes(orchestrator));
 app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
 app.use('/v1/knowledge', knowledgeRoutes(knowledgeManager));
+app.use('/mcp', mcpRoutes(mcpRegistry, mcpToolProxy));
 app.use('/v1', createPluginRoutes(pluginLoader));
 
 // Root endpoint
@@ -133,6 +139,7 @@ app.get('/', (_req, res) => {
       advancedTasks: '/v1/advanced-tasks',
       stream: '/v1/stream',
       knowledge: '/v1/knowledge',
+      mcp: '/mcp',
       plugins: '/v1/plugins'
     },
     documentation: '/docs',
@@ -165,7 +172,18 @@ app.use('*', (_req, res) => {
       'PUT /v1/knowledge/:id',
       'DELETE /v1/knowledge/:id',
       'GET /v1/knowledge/search/:query',
-      'POST /v1/knowledge/contextual'
+      'POST /v1/knowledge/contextual',
+      'POST /mcp/add',
+      'GET /mcp/list',
+      'GET /mcp/:name',
+      'DELETE /mcp/remove/:name',
+      'POST /mcp/:name/connect',
+      'POST /mcp/:name/disconnect',
+      'GET /mcp/tools/list',
+      'POST /mcp/tools/call',
+      'GET /mcp/tools/:toolName',
+      'POST /mcp/:name/enable',
+      'POST /mcp/:name/disable'
     ]
   });
 });

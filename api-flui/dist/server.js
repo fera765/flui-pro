@@ -13,6 +13,7 @@ const advancedTasks_1 = require("./routes/advancedTasks");
 const stream_1 = require("./routes/stream");
 const plugins_1 = require("./routes/plugins");
 const knowledge_1 = require("./routes/knowledge");
+const mcp_1 = require("./routes/mcp");
 const orchestrator_1 = require("./core/orchestrator");
 const advancedOrchestrator_1 = require("./core/advancedOrchestrator");
 const classifier_1 = require("./core/classifier");
@@ -22,11 +23,15 @@ const supervisor_1 = require("./core/supervisor");
 const pollinationsTool_1 = require("./tools/pollinationsTool");
 const pluginLoader_1 = require("./core/pluginLoader");
 const knowledgeManager_1 = require("./core/knowledgeManager");
+const mcpRegistry_1 = require("./core/mcpRegistry");
+const mcpToolProxy_1 = require("./core/mcpToolProxy");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env['PORT'] || 5000;
 const pollinationsTool = new pollinationsTool_1.PollinationsTool();
 const knowledgeManager = new knowledgeManager_1.KnowledgeManager();
+const mcpRegistry = new mcpRegistry_1.MCPRegistry();
+const mcpToolProxy = new mcpToolProxy_1.MCPToolProxy(mcpRegistry);
 const classifier = new classifier_1.Classifier(knowledgeManager);
 const planner = new planner_1.Planner();
 const worker = new worker_1.Worker(pollinationsTool, knowledgeManager);
@@ -92,6 +97,7 @@ app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
 app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
 app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));
 app.use('/v1/knowledge', (0, knowledge_1.knowledgeRoutes)(knowledgeManager));
+app.use('/mcp', (0, mcp_1.mcpRoutes)(mcpRegistry, mcpToolProxy));
 app.use('/v1', (0, plugins_1.createPluginRoutes)(pluginLoader));
 app.get('/', (_req, res) => {
     return res.json({
@@ -103,6 +109,7 @@ app.get('/', (_req, res) => {
             advancedTasks: '/v1/advanced-tasks',
             stream: '/v1/stream',
             knowledge: '/v1/knowledge',
+            mcp: '/mcp',
             plugins: '/v1/plugins'
         },
         documentation: '/docs',
@@ -133,7 +140,18 @@ app.use('*', (_req, res) => {
             'PUT /v1/knowledge/:id',
             'DELETE /v1/knowledge/:id',
             'GET /v1/knowledge/search/:query',
-            'POST /v1/knowledge/contextual'
+            'POST /v1/knowledge/contextual',
+            'POST /mcp/add',
+            'GET /mcp/list',
+            'GET /mcp/:name',
+            'DELETE /mcp/remove/:name',
+            'POST /mcp/:name/connect',
+            'POST /mcp/:name/disconnect',
+            'GET /mcp/tools/list',
+            'POST /mcp/tools/call',
+            'GET /mcp/tools/:toolName',
+            'POST /mcp/:name/enable',
+            'POST /mcp/:name/disable'
         ]
     });
 });
