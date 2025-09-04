@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { taskRoutes } from './routes/tasks';
 import { advancedTaskRoutes } from './routes/advancedTasks';
 import { streamRoutes } from './routes/stream';
+import { createPluginRoutes } from './routes/plugins';
 import { Orchestrator } from './core/orchestrator';
 import { AdvancedOrchestrator } from './core/advancedOrchestrator';
 import { Classifier } from './core/classifier';
@@ -13,6 +14,7 @@ import { Planner } from './core/planner';
 import { Worker } from './core/worker';
 import { Supervisor } from './core/supervisor';
 import { PollinationsTool } from './tools/pollinationsTool';
+import { PluginLoader } from './core/pluginLoader';
 
 // Load environment variables
 dotenv.config();
@@ -95,10 +97,14 @@ app.get('/health', (_req, res) => {
   });
 });
 
+// Initialize plugin loader
+const pluginLoader = new PluginLoader();
+
 // API routes
 app.use('/v1/tasks', taskRoutes(orchestrator));
 app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
+app.use('/v1', createPluginRoutes(pluginLoader));
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -108,7 +114,9 @@ app.get('/', (_req, res) => {
     endpoints: {
       health: '/health',
       tasks: '/v1/tasks',
-      stream: '/v1/stream'
+      advancedTasks: '/v1/advanced-tasks',
+      stream: '/v1/stream',
+      plugins: '/v1/plugins'
     },
     documentation: '/docs',
     status: 'running'

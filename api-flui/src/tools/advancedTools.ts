@@ -3,14 +3,20 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { PluginTools } from './pluginTools';
+import { PluginLoader } from '../core/pluginLoader';
 
 const execAsync = promisify(exec);
 
 export class AdvancedTools {
   private workingDirectory: string;
+  private pluginTools: PluginTools;
+  private pluginLoader: PluginLoader;
 
-  constructor(workingDirectory: string) {
+  constructor(workingDirectory: string, pluginLoader?: PluginLoader) {
     this.workingDirectory = workingDirectory;
+    this.pluginLoader = pluginLoader || new PluginLoader();
+    this.pluginTools = new PluginTools(this.pluginLoader);
   }
 
   // Web Search Tool (Mocked)
@@ -329,7 +335,7 @@ This content would normally be fetched from the actual URL in a real implementat
 
   // Get all available tools
   getAllTools(): Tool[] {
-    return [
+    const baseTools = [
       this.createWebSearchTool(),
       this.createFetchTool(),
       this.createFileReadTool(),
@@ -338,5 +344,173 @@ This content would normally be fetched from the actual URL in a real implementat
       this.createTextSplitTool(),
       this.createTextSummarizeTool()
     ];
+
+    // Add plugin tools
+    const pluginTools = this.pluginTools.getAvailableTools().map(pluginTool => ({
+      name: pluginTool.name,
+      description: pluginTool.description,
+      parameters: pluginTool.parameters,
+      execute: async (params: any): Promise<ToolResponse> => {
+        try {
+          const result = await this.pluginTools.executeTool(pluginTool.name, params);
+          return {
+            success: true,
+            data: result
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: (error as Error).message
+          };
+        }
+      }
+    }));
+
+    return [...baseTools, ...pluginTools];
+  }
+
+  // Get all tool schemas for OpenAI SDK
+  getAllToolSchemas(): any[] {
+    const baseSchemas = [
+      this.getWebSearchSchema(),
+      this.getFetchSchema(),
+      this.getFileReadSchema(),
+      this.getFileWriteSchema(),
+      this.getShellSchema(),
+      this.getTextSplitSchema(),
+      this.getTextSummarizeSchema()
+    ];
+
+    // Add plugin tool schemas
+    const pluginSchemas = this.pluginTools.getAllToolSchemas();
+
+    return [...baseSchemas, ...pluginSchemas];
+  }
+
+  // Refresh plugin tools
+  refreshPluginTools(): void {
+    this.pluginTools.refreshTools();
+  }
+
+  // Schema methods for OpenAI SDK
+  private getWebSearchSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'web_search',
+        description: 'Search the web for information using keywords',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search query' }
+          },
+          required: ['query']
+        }
+      }
+    };
+  }
+
+  private getFetchSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'fetch',
+        description: 'Fetch content from a URL',
+        parameters: {
+          type: 'object',
+          properties: {
+            url: { type: 'string', description: 'URL to fetch' }
+          },
+          required: ['url']
+        }
+      }
+    };
+  }
+
+  private getFileReadSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'file_read',
+        description: 'Read content from a file',
+        parameters: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'File path to read' }
+          },
+          required: ['path']
+        }
+      }
+    };
+  }
+
+  private getFileWriteSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'file_write',
+        description: 'Write content to a file',
+        parameters: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'File path to write' },
+            content: { type: 'string', description: 'Content to write' }
+          },
+          required: ['path', 'content']
+        }
+      }
+    };
+  }
+
+  private getShellSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'shell',
+        description: 'Execute shell command in working directory',
+        parameters: {
+          type: 'object',
+          properties: {
+            command: { type: 'string', description: 'Shell command to execute' }
+          },
+          required: ['command']
+        }
+      }
+    };
+  }
+
+  private getTextSplitSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'text_split',
+        description: 'Split text into chunks',
+        parameters: {
+          type: 'object',
+          properties: {
+            text: { type: 'string', description: 'Text to split' },
+            chunkSize: { type: 'number', description: 'Size of each chunk' }
+          },
+          required: ['text', 'chunkSize']
+        }
+      }
+    };
+  }
+
+  private getTextSummarizeSchema(): any {
+    return {
+      type: 'function',
+      function: {
+        name: 'text_summarize',
+        description: 'Summarize text content',
+        parameters: {
+          type: 'object',
+          properties: {
+            text: { type: 'string', description: 'Text to summarize' }
+          },
+          required: ['text']
+        }
+      }
+    };
   }
 }

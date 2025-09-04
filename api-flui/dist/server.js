@@ -11,6 +11,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const tasks_1 = require("./routes/tasks");
 const advancedTasks_1 = require("./routes/advancedTasks");
 const stream_1 = require("./routes/stream");
+const plugins_1 = require("./routes/plugins");
 const orchestrator_1 = require("./core/orchestrator");
 const advancedOrchestrator_1 = require("./core/advancedOrchestrator");
 const classifier_1 = require("./core/classifier");
@@ -18,6 +19,7 @@ const planner_1 = require("./core/planner");
 const worker_1 = require("./core/worker");
 const supervisor_1 = require("./core/supervisor");
 const pollinationsTool_1 = require("./tools/pollinationsTool");
+const pluginLoader_1 = require("./core/pluginLoader");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env['PORT'] || 5000;
@@ -71,9 +73,11 @@ app.get('/health', (_req, res) => {
         }
     });
 });
+const pluginLoader = new pluginLoader_1.PluginLoader();
 app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
 app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
 app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));
+app.use('/v1', (0, plugins_1.createPluginRoutes)(pluginLoader));
 app.get('/', (_req, res) => {
     return res.json({
         message: 'API Flui - Autonomous AI Orchestrator',
@@ -81,7 +85,9 @@ app.get('/', (_req, res) => {
         endpoints: {
             health: '/health',
             tasks: '/v1/tasks',
-            stream: '/v1/stream'
+            advancedTasks: '/v1/advanced-tasks',
+            stream: '/v1/stream',
+            plugins: '/v1/plugins'
         },
         documentation: '/docs',
         status: 'running'

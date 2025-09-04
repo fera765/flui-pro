@@ -12,6 +12,7 @@ import { SpecializedAgents } from '../agents/specializedAgents';
 import { AdvancedTools } from '../tools/advancedTools';
 import { AutoCorrectionSystem } from './autoCorrection';
 import { FileGenerator } from './fileGenerator';
+import { PluginLoader } from './pluginLoader';
 import * as path from 'path';
 
 export class AdvancedOrchestrator {
@@ -23,6 +24,7 @@ export class AdvancedOrchestrator {
   private todoPlanner: TodoPlanner;
   private autoCorrection: AutoCorrectionSystem;
   private fileGenerator: FileGenerator;
+  private pluginLoader: PluginLoader;
 
   constructor(
     private config: OrchestratorConfig,
@@ -34,8 +36,11 @@ export class AdvancedOrchestrator {
     // Initialize working directory
     const workingDir = path.join(process.cwd(), 'flui-projects', uuidv4());
     
+    // Initialize plugin loader
+    this.pluginLoader = new PluginLoader();
+    
     // Initialize components
-    this.tools = new AdvancedTools(workingDir);
+    this.tools = new AdvancedTools(workingDir, this.pluginLoader);
     this.contextManager = new FluiContextManager('', workingDir);
     this.todoPlanner = new TodoPlanner();
     this.autoCorrection = new AutoCorrectionSystem(workingDir);
@@ -43,6 +48,9 @@ export class AdvancedOrchestrator {
     
     // Initialize specialized agents
     this.initializeAgents();
+    
+    // Load plugins and start watching
+    this.initializePlugins();
   }
 
   private initializeAgents(): void {
@@ -50,6 +58,38 @@ export class AdvancedOrchestrator {
     agents.forEach(agent => {
       this.agents.set(agent.id, agent);
     });
+  }
+
+  private async initializePlugins(): Promise<void> {
+    try {
+      console.log('🔌 Initializing plugin system...');
+      
+      // Set up plugin event listeners
+      this.pluginLoader.on('pluginStatus', (status) => {
+        console.log(`🔌 Plugin ${status.plugin}: ${status.status} - ${status.message}`);
+        
+        // Emit plugin status to task events if there's an active task
+        this.tasks.forEach((task, taskId) => {
+          if (task.status === 'running') {
+            this.emitEvent(taskId, 'plugin_status', {
+              type: 'plugin_status',
+              data: status,
+              timestamp: new Date().toISOString()
+            });
+          }
+        });
+      });
+
+      // Load existing plugins
+      await this.pluginLoader.loadAllPlugins();
+      
+      // Start watching for new plugins
+      await this.pluginLoader.watchForNewPlugins();
+      
+      console.log('✅ Plugin system initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize plugin system:', error);
+    }
   }
 
   async createTask(prompt: string): Promise<Task> {

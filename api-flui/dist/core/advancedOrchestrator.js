@@ -42,6 +42,7 @@ const specializedAgents_1 = require("../agents/specializedAgents");
 const advancedTools_1 = require("../tools/advancedTools");
 const autoCorrection_1 = require("./autoCorrection");
 const fileGenerator_1 = require("./fileGenerator");
+const pluginLoader_1 = require("./pluginLoader");
 const path = __importStar(require("path"));
 class AdvancedOrchestrator {
     constructor(config, classifier, planner, worker, supervisor) {
@@ -54,18 +55,43 @@ class AdvancedOrchestrator {
         this.events = new Map();
         this.agents = new Map();
         const workingDir = path.join(process.cwd(), 'flui-projects', (0, uuid_1.v4)());
-        this.tools = new advancedTools_1.AdvancedTools(workingDir);
+        this.pluginLoader = new pluginLoader_1.PluginLoader();
+        this.tools = new advancedTools_1.AdvancedTools(workingDir, this.pluginLoader);
         this.contextManager = new fluiContext_1.FluiContextManager('', workingDir);
         this.todoPlanner = new todoPlanner_1.TodoPlanner();
         this.autoCorrection = new autoCorrection_1.AutoCorrectionSystem(workingDir);
         this.fileGenerator = new fileGenerator_1.FileGenerator();
         this.initializeAgents();
+        this.initializePlugins();
     }
     initializeAgents() {
         const agents = specializedAgents_1.SpecializedAgents.getAllAgents();
         agents.forEach(agent => {
             this.agents.set(agent.id, agent);
         });
+    }
+    async initializePlugins() {
+        try {
+            console.log('🔌 Initializing plugin system...');
+            this.pluginLoader.on('pluginStatus', (status) => {
+                console.log(`🔌 Plugin ${status.plugin}: ${status.status} - ${status.message}`);
+                this.tasks.forEach((task, taskId) => {
+                    if (task.status === 'running') {
+                        this.emitEvent(taskId, 'plugin_status', {
+                            type: 'plugin_status',
+                            data: status,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                });
+            });
+            await this.pluginLoader.loadAllPlugins();
+            await this.pluginLoader.watchForNewPlugins();
+            console.log('✅ Plugin system initialized successfully');
+        }
+        catch (error) {
+            console.error('❌ Failed to initialize plugin system:', error);
+        }
     }
     async createTask(prompt) {
         const classification = this.classifier.classifyTask(prompt);

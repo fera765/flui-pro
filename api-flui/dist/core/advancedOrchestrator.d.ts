@@ -18,8 +18,10 @@ export declare class AdvancedOrchestrator {
     private todoPlanner;
     private autoCorrection;
     private fileGenerator;
+    private pluginLoader;
     constructor(config: OrchestratorConfig, classifier: Classifier, planner: Planner, worker: Worker, supervisor: Supervisor);
     private initializeAgents;
+    private initializePlugins;
     createTask(prompt: string): Promise<Task>;
     private createSimpleTask;
     private createComplexTask;

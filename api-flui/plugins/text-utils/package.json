@@ -1,0 +1,16 @@
+{
+  "name": "@flui/plugin-text-utils",
+  "version": "1.0.0",
+  "description": "Text utilities plugin for Flui - provides text manipulation functions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
