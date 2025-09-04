@@ -28,6 +28,29 @@ class PollinationsTool {
             throw new Error('No image data received');
         }
         catch (error) {
+            try {
+                const altResponse = await fetch(`${this.openai.baseURL}/v1/images/generations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.openai.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        prompt,
+                        size: options.size || '1024x1024',
+                        model: options.model || 'flux',
+                        n: 1
+                    })
+                });
+                if (altResponse.ok) {
+                    const data = await altResponse.json();
+                    if (data.data && data.data[0]?.url) {
+                        return data.data[0].url;
+                    }
+                }
+            }
+            catch (altError) {
+            }
             throw new Error(`Image generation failed: ${error.message}`);
         }
     }

@@ -61,26 +61,13 @@ app.use('/v1/audio', audioRoutes(pollinationsClient));
 app.use('/v1/models', modelsRoutes(pollinationsClient));
 app.use('/v1/feed', feedRoutes(pollinationsClient));
 
-// Legacy endpoints for backward compatibility
-app.post('/v1/images/generations', (_req, res) => {
-  res.redirect(307, '/v1/images/generations');
-});
+// OpenAI SDK compatibility routes (without /v1 prefix)
+app.use('/images', imageRoutes(pollinationsClient));
+app.use('/chat', textRoutes(pollinationsClient));
+app.use('/audio', audioRoutes(pollinationsClient));
+app.use('/models', modelsRoutes(pollinationsClient));
 
-app.post('/v1/chat/completions', (_req, res) => {
-  res.redirect(307, '/v1/chat/completions');
-});
-
-app.post('/v1/audio/speech', (_req, res) => {
-  res.redirect(307, '/v1/audio/speech');
-});
-
-app.post('/v1/audio/transcriptions', (_req, res) => {
-  res.redirect(307, '/v1/audio/transcriptions');
-});
-
-app.get('/v1/models', (_req, res) => {
-  res.redirect(307, '/v1/models');
-});
+// Legacy endpoints for backward compatibility - removed to avoid conflicts
 
 // Error handling middleware
 app.use((error: any, _req: any, res: express.Response, _next: express.NextFunction) => {

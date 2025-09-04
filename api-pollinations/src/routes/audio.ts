@@ -7,9 +7,9 @@ export function audioRoutes(client: PollinationsClient): Router {
   // POST /v1/audio/speech - OpenAI-compatible TTS endpoint
   router.post('/speech', async (req: Request, res: Response) => {
     try {
-      const { model, input, voice = 'alloy' } = req.body;
+      const { model, text, voice = 'alloy' } = req.body;
 
-      if (!input) {
+      if (!text) {
         return res.status(400).json({ error: 'Input text is required' });
       }
 
@@ -26,7 +26,7 @@ export function audioRoutes(client: PollinationsClient): Router {
       }
 
       // Generate audio
-      const audioBuffer = await client.generateAudio(input, {
+      const audioBuffer = await client.generateAudio(text, {
         voice,
         model: 'openai-audio'
       });

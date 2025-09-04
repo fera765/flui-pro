@@ -6,8 +6,8 @@ function audioRoutes(client) {
     const router = (0, express_1.Router)();
     router.post('/speech', async (req, res) => {
         try {
-            const { model, input, voice = 'alloy' } = req.body;
-            if (!input) {
+            const { model, text, voice = 'alloy' } = req.body;
+            if (!text) {
                 return res.status(400).json({ error: 'Input text is required' });
             }
             if (!model) {
@@ -19,7 +19,7 @@ function audioRoutes(client) {
                     error: `Invalid voice. Allowed voices: ${validVoices.join(', ')}`
                 });
             }
-            const audioBuffer = await client.generateAudio(input, {
+            const audioBuffer = await client.generateAudio(text, {
                 voice,
                 model: 'openai-audio'
             });
