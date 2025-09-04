@@ -61,11 +61,8 @@ app.use('/v1/audio', audioRoutes(pollinationsClient));
 app.use('/v1/models', modelsRoutes(pollinationsClient));
 app.use('/v1/feed', feedRoutes(pollinationsClient));
 
-// OpenAI SDK compatibility routes (without /v1 prefix)
+// OpenAI SDK compatibility routes (only images without /v1 prefix)
 app.use('/images', imageRoutes(pollinationsClient));
-app.use('/chat', textRoutes(pollinationsClient));
-app.use('/audio', audioRoutes(pollinationsClient));
-app.use('/models', modelsRoutes(pollinationsClient));
 
 // Legacy endpoints for backward compatibility - removed to avoid conflicts
 

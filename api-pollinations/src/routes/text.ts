@@ -4,8 +4,8 @@ import { PollinationsClient } from '../lib/pollinationsClient';
 export function textRoutes(client: PollinationsClient): Router {
   const router = Router();
 
-  // POST /completions - OpenAI-compatible chat endpoint
-  router.post('/completions', async (req: Request, res: Response) => {
+  // POST /v1/chat/completions - OpenAI-compatible chat endpoint
+  router.post('/chat/completions', async (req: Request, res: Response) => {
     try {
       const { model, messages, stream = false, ...otherParams } = req.body;
 

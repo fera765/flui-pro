@@ -47,9 +47,6 @@ app.use('/v1/audio', (0, audio_1.audioRoutes)(pollinationsClient));
 app.use('/v1/models', (0, models_1.modelsRoutes)(pollinationsClient));
 app.use('/v1/feed', (0, feed_1.feedRoutes)(pollinationsClient));
 app.use('/images', (0, image_1.imageRoutes)(pollinationsClient));
-app.use('/chat', (0, text_1.textRoutes)(pollinationsClient));
-app.use('/audio', (0, audio_1.audioRoutes)(pollinationsClient));
-app.use('/models', (0, models_1.modelsRoutes)(pollinationsClient));
 app.use((error, _req, res, _next) => {
     console.error('Unhandled error:', error);
     res.status(500).json({
