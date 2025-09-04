@@ -75,7 +75,7 @@ class PollinationsTool {
         }
         catch (error) {
             try {
-                const altResponse = await fetch(`${this.openai.baseURL}/v1/chat/chat/completions`, {
+                const altResponse = await fetch(`${this.openai.baseURL}/chat/completions`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
