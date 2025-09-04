@@ -12,6 +12,7 @@ const tasks_1 = require("./routes/tasks");
 const advancedTasks_1 = require("./routes/advancedTasks");
 const stream_1 = require("./routes/stream");
 const plugins_1 = require("./routes/plugins");
+const knowledge_1 = require("./routes/knowledge");
 const orchestrator_1 = require("./core/orchestrator");
 const advancedOrchestrator_1 = require("./core/advancedOrchestrator");
 const classifier_1 = require("./core/classifier");
@@ -20,13 +21,15 @@ const worker_1 = require("./core/worker");
 const supervisor_1 = require("./core/supervisor");
 const pollinationsTool_1 = require("./tools/pollinationsTool");
 const pluginLoader_1 = require("./core/pluginLoader");
+const knowledgeManager_1 = require("./core/knowledgeManager");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env['PORT'] || 5000;
 const pollinationsTool = new pollinationsTool_1.PollinationsTool();
-const classifier = new classifier_1.Classifier();
+const knowledgeManager = new knowledgeManager_1.KnowledgeManager();
+const classifier = new classifier_1.Classifier(knowledgeManager);
 const planner = new planner_1.Planner();
-const worker = new worker_1.Worker(pollinationsTool);
+const worker = new worker_1.Worker(pollinationsTool, knowledgeManager);
 const supervisor = new supervisor_1.Supervisor();
 const orchestratorConfig = {
     maxDepth: parseInt(process.env['MAX_TASK_DEPTH'] || '5'),
@@ -88,6 +91,7 @@ const pluginLoader = new pluginLoader_1.PluginLoader();
 app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
 app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
 app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));
+app.use('/v1/knowledge', (0, knowledge_1.knowledgeRoutes)(knowledgeManager));
 app.use('/v1', (0, plugins_1.createPluginRoutes)(pluginLoader));
 app.get('/', (_req, res) => {
     return res.json({
@@ -98,6 +102,7 @@ app.get('/', (_req, res) => {
             tasks: '/v1/tasks',
             advancedTasks: '/v1/advanced-tasks',
             stream: '/v1/stream',
+            knowledge: '/v1/knowledge',
             plugins: '/v1/plugins'
         },
         documentation: '/docs',
@@ -119,7 +124,16 @@ app.use('*', (_req, res) => {
             'POST /v1/tasks/:id/retry',
             'GET /v1/tasks/:id/status',
             'GET /v1/tasks/:id/events',
-            'GET /v1/stream/:id'
+            'GET /v1/stream/:id',
+            'POST /v1/knowledge',
+            'GET /v1/knowledge',
+            'GET /v1/knowledge/active',
+            'GET /v1/knowledge/context',
+            'GET /v1/knowledge/:id',
+            'PUT /v1/knowledge/:id',
+            'DELETE /v1/knowledge/:id',
+            'GET /v1/knowledge/search/:query',
+            'POST /v1/knowledge/contextual'
         ]
     });
 });

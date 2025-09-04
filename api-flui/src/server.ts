@@ -7,6 +7,7 @@ import { taskRoutes } from './routes/tasks';
 import { advancedTaskRoutes } from './routes/advancedTasks';
 import { streamRoutes } from './routes/stream';
 import { createPluginRoutes } from './routes/plugins';
+import { knowledgeRoutes } from './routes/knowledge';
 import { Orchestrator } from './core/orchestrator';
 import { AdvancedOrchestrator } from './core/advancedOrchestrator';
 import { Classifier } from './core/classifier';
@@ -15,6 +16,7 @@ import { Worker } from './core/worker';
 import { Supervisor } from './core/supervisor';
 import { PollinationsTool } from './tools/pollinationsTool';
 import { PluginLoader } from './core/pluginLoader';
+import { KnowledgeManager } from './core/knowledgeManager';
 
 // Load environment variables
 dotenv.config();
@@ -24,9 +26,10 @@ const PORT = (process.env as any)['PORT'] || 5000;
 
 // Initialize core components
 const pollinationsTool = new PollinationsTool();
-const classifier = new Classifier();
+const knowledgeManager = new KnowledgeManager();
+const classifier = new Classifier(knowledgeManager);
 const planner = new Planner();
-const worker = new Worker(pollinationsTool);
+const worker = new Worker(pollinationsTool, knowledgeManager);
 const supervisor = new Supervisor();
 
 const orchestratorConfig = {
@@ -116,6 +119,7 @@ const pluginLoader = new PluginLoader();
 app.use('/v1/tasks', taskRoutes(orchestrator));
 app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
+app.use('/v1/knowledge', knowledgeRoutes(knowledgeManager));
 app.use('/v1', createPluginRoutes(pluginLoader));
 
 // Root endpoint
@@ -128,6 +132,7 @@ app.get('/', (_req, res) => {
       tasks: '/v1/tasks',
       advancedTasks: '/v1/advanced-tasks',
       stream: '/v1/stream',
+      knowledge: '/v1/knowledge',
       plugins: '/v1/plugins'
     },
     documentation: '/docs',
@@ -151,7 +156,16 @@ app.use('*', (_req, res) => {
       'POST /v1/tasks/:id/retry',
       'GET /v1/tasks/:id/status',
       'GET /v1/tasks/:id/events',
-      'GET /v1/stream/:id'
+      'GET /v1/stream/:id',
+      'POST /v1/knowledge',
+      'GET /v1/knowledge',
+      'GET /v1/knowledge/active',
+      'GET /v1/knowledge/context',
+      'GET /v1/knowledge/:id',
+      'PUT /v1/knowledge/:id',
+      'DELETE /v1/knowledge/:id',
+      'GET /v1/knowledge/search/:query',
+      'POST /v1/knowledge/contextual'
     ]
   });
 });

@@ -1,3 +1,4 @@
+import { KnowledgeManager } from './knowledgeManager';
 export interface ClassificationResult {
     type: 'conversation' | 'task';
     subtype?: string;
@@ -6,7 +7,8 @@ export interface ClassificationResult {
 }
 export declare class Classifier {
     private pollinationsTool;
-    constructor();
+    private knowledgeManager;
+    constructor(knowledgeManager: KnowledgeManager);
     classifyTask(prompt: string): Promise<ClassificationResult>;
     private isValidClassification;
     private getFallbackClassification;

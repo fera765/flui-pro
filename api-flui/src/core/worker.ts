@@ -1,11 +1,15 @@
 import { Task, TaskResult } from '../types';
 import { PollinationsTool } from '../tools/pollinationsTool';
+import { KnowledgeManager } from './knowledgeManager';
 
 export class Worker {
   private isWorking = false;
   private currentTaskId: string | null = null;
 
-  constructor(private pollinationsTool: PollinationsTool) {}
+  constructor(
+    private pollinationsTool: PollinationsTool,
+    private knowledgeManager: KnowledgeManager
+  ) {}
 
   async executeTask(task: Task): Promise<TaskResult> {
     if (this.isWorking) {
@@ -46,9 +50,17 @@ export class Worker {
 
   private async handleConversation(task: Task): Promise<TaskResult> {
     try {
+      // Get relevant knowledge for this conversation
+      const contextualKnowledge = this.knowledgeManager.getContextualKnowledge(task.prompt, 2);
+      
+      // Enhance prompt with knowledge if available
+      const enhancedPrompt = contextualKnowledge 
+        ? `${task.prompt}\n\n${contextualKnowledge}`
+        : task.prompt;
+
       // For conversation tasks, use text generation with conversation context
       const response = await this.pollinationsTool.generateText(
-        task.prompt,
+        enhancedPrompt,
         {
           model: 'openai',
           temperature: 0.7,
@@ -62,7 +74,8 @@ export class Worker {
         metadata: {
           type: 'conversation',
           model: 'openai',
-          temperature: 0.7
+          temperature: 0.7,
+          knowledgeUsed: !!contextualKnowledge
         }
       };
     } catch (error: any) {
@@ -149,8 +162,16 @@ export class Worker {
     const params = metadata.classification.parameters;
 
     try {
+      // Get relevant knowledge for this text generation task
+      const contextualKnowledge = this.knowledgeManager.getContextualKnowledge(task.prompt, 3);
+      
+      // Enhance prompt with knowledge if available
+      const enhancedPrompt = contextualKnowledge 
+        ? `${task.prompt}\n\n${contextualKnowledge}`
+        : task.prompt;
+
       const text = await this.pollinationsTool.generateText(
-        task.prompt,
+        enhancedPrompt,
         {
           model: params.model || 'openai',
           temperature: params.temperature || 0.7,
@@ -165,6 +186,7 @@ export class Worker {
           type: 'text_generation',
           model: params.model || 'openai',
           temperature: params.temperature || 0.7,
+          knowledgeUsed: !!contextualKnowledge,
           maxTokens: params.maxWords ? params.maxWords * 10 : 500
         }
       };

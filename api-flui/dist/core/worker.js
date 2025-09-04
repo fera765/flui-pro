@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Worker = void 0;
 class Worker {
-    constructor(pollinationsTool) {
+    constructor(pollinationsTool, knowledgeManager) {
         this.pollinationsTool = pollinationsTool;
+        this.knowledgeManager = knowledgeManager;
         this.isWorking = false;
         this.currentTaskId = null;
     }
@@ -40,7 +41,11 @@ class Worker {
     }
     async handleConversation(task) {
         try {
-            const response = await this.pollinationsTool.generateText(task.prompt, {
+            const contextualKnowledge = this.knowledgeManager.getContextualKnowledge(task.prompt, 2);
+            const enhancedPrompt = contextualKnowledge
+                ? `${task.prompt}\n\n${contextualKnowledge}`
+                : task.prompt;
+            const response = await this.pollinationsTool.generateText(enhancedPrompt, {
                 model: 'openai',
                 temperature: 0.7,
                 maxTokens: 500
@@ -51,7 +56,8 @@ class Worker {
                 metadata: {
                     type: 'conversation',
                     model: 'openai',
-                    temperature: 0.7
+                    temperature: 0.7,
+                    knowledgeUsed: !!contextualKnowledge
                 }
             };
         }
@@ -128,7 +134,11 @@ class Worker {
         const metadata = task.metadata;
         const params = metadata.classification.parameters;
         try {
-            const text = await this.pollinationsTool.generateText(task.prompt, {
+            const contextualKnowledge = this.knowledgeManager.getContextualKnowledge(task.prompt, 3);
+            const enhancedPrompt = contextualKnowledge
+                ? `${task.prompt}\n\n${contextualKnowledge}`
+                : task.prompt;
+            const text = await this.pollinationsTool.generateText(enhancedPrompt, {
                 model: params.model || 'openai',
                 temperature: params.temperature || 0.7,
                 maxTokens: params.maxWords ? params.maxWords * 10 : 500
@@ -140,6 +150,7 @@ class Worker {
                     type: 'text_generation',
                     model: params.model || 'openai',
                     temperature: params.temperature || 0.7,
+                    knowledgeUsed: !!contextualKnowledge,
                     maxTokens: params.maxWords ? params.maxWords * 10 : 500
                 }
             };

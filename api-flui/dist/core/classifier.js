@@ -3,15 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Classifier = void 0;
 const pollinationsTool_1 = require("../tools/pollinationsTool");
 class Classifier {
-    constructor() {
+    constructor(knowledgeManager) {
         this.pollinationsTool = new pollinationsTool_1.PollinationsTool();
+        this.knowledgeManager = knowledgeManager;
     }
     async classifyTask(prompt) {
         try {
+            const contextualKnowledge = this.knowledgeManager.getContextualKnowledge(prompt, 3);
             const classificationPrompt = `
 Analise a seguinte solicitação e classifique-a de forma precisa. Responda APENAS com um JSON válido no formato especificado.
 
 Solicitação: "${prompt}"
+
+${contextualKnowledge ? `CONHECIMENTO RELEVANTE DISPONÍVEL:
+${contextualKnowledge}
+
+Use este conhecimento para melhorar a classificação e compreensão da tarefa.` : ''}
 
 Classifique esta solicitação em uma das seguintes categorias:
 
@@ -29,7 +36,8 @@ Responda com JSON no formato:
   "parameters": {
     "subject": "assunto principal da tarefa",
     "language": "idioma detectado",
-    "complexity": "simple" | "medium" | "complex"
+    "complexity": "simple" | "medium" | "complex",
+    "knowledgeUsed": ${contextualKnowledge ? "true" : "false"}
   }
 }
 
@@ -39,6 +47,7 @@ IMPORTANTE:
 - Seja preciso na classificação baseado no conteúdo real da solicitação
 - Para tarefas de texto (artigos, resumos, redação), use "text_generation"
 - Para tarefas de imagem (criar, gerar, desenhar imagens), use "image_generation"
+- Use o conhecimento disponível para melhorar a precisão da classificação
 `;
             const response = await this.pollinationsTool.generateText(classificationPrompt, {
                 temperature: 0.1,
