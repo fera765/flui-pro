@@ -70,9 +70,8 @@ export class FluiContextManager {
   }
 
   isTaskComplete(): boolean {
-    return this.context.todos.every(todo => 
-      todo.status === 'completed' || todo.status === 'failed'
-    );
+    // Task is complete when all todos are completed (not failed)
+    return this.context.todos.every(todo => todo.status === 'completed');
   }
 
   addGeneratedFile(filePath: string): void {

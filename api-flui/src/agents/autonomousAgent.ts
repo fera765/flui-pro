@@ -4,6 +4,8 @@ import { Agent, AgentTask, AgentResponse, Tool } from '../types/advanced';
 export class AutonomousAgent {
   private openai: OpenAI;
   private tools: Map<string, Tool> = new Map();
+  private executionCount: number = 0;
+  private maxExecutions: number = 3; // Limit executions to prevent loops
 
   constructor(
     private agent: Agent,
@@ -23,8 +25,34 @@ export class AutonomousAgent {
 
   async executeTask(task: AgentTask): Promise<AgentResponse> {
     try {
+      // DEBUG: Log execution start
+      this.executionCount++;
+      console.log(`\n=== AUTONOMOUS AGENT EXECUTION #${this.executionCount} ===`);
+      console.log(`Agent: ${this.agent.name} (${this.agent.id})`);
+      console.log(`Task: ${task.prompt}`);
+      console.log(`Context: ${task.context.substring(0, 200)}...`);
+      console.log(`Execution Count: ${this.executionCount}/${this.maxExecutions}`);
+      console.log(`================================================`);
+
+      // Check execution limit
+      if (this.executionCount > this.maxExecutions) {
+        console.log(`🚨 LOOP DETECTED: Agent ${this.agent.name} exceeded max executions (${this.maxExecutions})`);
+        return {
+          success: false,
+          error: `Agent exceeded maximum executions (${this.maxExecutions}). Possible loop detected.`,
+          nextAction: {
+            type: 'complete'
+          }
+        };
+      }
+
       // Create system prompt with engineering
       const systemPrompt = this.createSystemPrompt(task);
+      
+      // DEBUG: Log system prompt
+      console.log(`\n=== SYSTEM PROMPT ===`);
+      console.log(systemPrompt.substring(0, 500) + '...');
+      console.log(`====================`);
       
       // Prepare messages
       const messages = [
@@ -41,38 +69,88 @@ export class AutonomousAgent {
       // Prepare tools for OpenAI
       const openaiTools = this.prepareToolsForOpenAI();
 
-      // Call OpenAI with tools
-      const response = await this.openai.chat.completions.create({
-        model: 'openai',
-        messages,
-        tools: openaiTools,
-        tool_choice: 'auto',
-        temperature: 0.7,
-        max_tokens: 2000
-      });
+      // DEBUG: Log OpenAI request
+      console.log(`\n=== OPENAI REQUEST ===`);
+      console.log(`Model: openai`);
+      console.log(`Messages count: ${messages.length}`);
+      console.log(`Tools count: ${openaiTools.length}`);
+      console.log(`Base URL: ${this.openai.baseURL}`);
+      console.log(`======================`);
+
+      // Call OpenAI - Pollinations API doesn't support tools, so we'll use a simple approach
+      let response;
+      if (this.openai.baseURL?.includes('localhost:4000')) {
+        // Pollinations API - no tools support
+        console.log(`🔧 POLLINATIONS API: Skipping tools parameter`);
+        response = await this.openai.chat.completions.create({
+          model: 'openai',
+          messages,
+          temperature: 0.7,
+          max_tokens: 2000
+        });
+      } else {
+        // Standard OpenAI API - with tools
+        console.log(`🔧 STANDARD OPENAI API: Using tools`);
+        response = await this.openai.chat.completions.create({
+          model: 'openai',
+          messages,
+          tools: openaiTools,
+          tool_choice: 'auto',
+          temperature: 0.7,
+          max_tokens: 2000
+        });
+      }
+
+      // DEBUG: Log OpenAI response
+      console.log(`\n=== OPENAI RESPONSE ===`);
+      console.log(`Response ID: ${response.id}`);
+      console.log(`Choices count: ${response.choices.length}`);
+      console.log(`Usage: ${JSON.stringify(response.usage)}`);
+      console.log(`=======================`);
 
       const message = response.choices[0]?.message;
       
       if (!message) {
+        console.log(`❌ ERROR: No message in response`);
         return {
           success: false,
           error: 'No response from agent'
         };
       }
 
+      // DEBUG: Log message details
+      console.log(`\n=== MESSAGE DETAILS ===`);
+      console.log(`Content: ${message.content ? message.content.substring(0, 200) + '...' : 'null'}`);
+      console.log(`Tool calls: ${message.tool_calls ? message.tool_calls.length : 0}`);
+      if (message.tool_calls) {
+        message.tool_calls.forEach((call, index) => {
+          console.log(`  Tool call ${index + 1}: ${call.function.name}`);
+        });
+      }
+      console.log(`=======================`);
+
       // Handle tool calls
       if (message.tool_calls && message.tool_calls.length > 0) {
-        return await this.handleToolCalls(message.tool_calls, task);
+        console.log(`🔧 EXECUTING TOOL CALLS: ${message.tool_calls.length} tools`);
+        const result = await this.handleToolCalls(message.tool_calls, task);
+        console.log(`✅ TOOL CALLS RESULT: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+        if (!result.success) {
+          console.log(`❌ TOOL ERROR: ${result.error}`);
+        }
+        return result;
       }
 
       // Direct response
-      return {
+      console.log(`💬 DIRECT RESPONSE: ${message.content ? 'HAS CONTENT' : 'NO CONTENT'}`);
+      const response_result = {
         success: true,
         data: message.content,
         nextAction: {
-          type: 'complete'
+          type: 'complete' as const
         }
       };
+      console.log(`✅ AGENT EXECUTION COMPLETED SUCCESSFULLY`);
+      return response_result;
 
     } catch (error: any) {
       return {

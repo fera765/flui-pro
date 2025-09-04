@@ -1,0 +1,114 @@
+🚀 Starting API Flui - Autonomous AI Orchestrator...
+📚 For more information, visit the documentation
+🔧 Configuration loaded from environment variables
+🎯 Ready to orchestrate AI tasks!
+🚀 API Flui server running on port 5000
+📊 Health check: http://localhost:5000/health
+🔧 Environment: development
+🎯 OpenAI Base URL: http://localhost:4000
+{"requestId":"20ktsr","method":"GET","path":"/health","timestamp":"2025-09-04T10:03:26.175Z","userAgent":"curl/8.12.1","ip":"::1"}
+::1 - - [04/Sep/2025:10:03:26 +0000] "GET /health HTTP/1.1" 200 261 "-" "curl/8.12.1"
+{"requestId":"y04rt","method":"POST","path":"/v1/advanced-tasks","timestamp":"2025-09-04T10:03:29.958Z","userAgent":"curl/8.12.1","ip":"::1"}
+=== FLUI TASK CREATION ===
+Prompt: Crie um video viral para tiktok sobre tecnologia
+========================
+::1 - - [04/Sep/2025:10:03:30 +0000] "POST /v1/advanced-tasks HTTP/1.1" 201 533 "-" "curl/8.12.1"
+{"requestId":"wcso1","method":"POST","path":"/v1/advanced-tasks/b52910ef-5c12-4198-bf2b-57557e6a6f3d/execute","timestamp":"2025-09-04T10:03:32.385Z","userAgent":"curl/8.12.1","ip":"::1"}
+=== FLUI TASK EXECUTION ===
+Task ID: b52910ef-5c12-4198-bf2b-57557e6a6f3d
+===========================
+
+🔄 STARTING COMPLEX TASK EXECUTION
+Total Todos: 5
+Task Complete: false
+
+🔄 LOOP ITERATION #1/10
+📋 Executable Todos: 2
+  - 095a5ef3-50e5-4bba-bcf9-237b471ff204: Analisando estrutura de roteiro de videos para tiktok (pending)
+  - e1b112d3-09db-42b9-b946-cc9989c523b1: Pesquisando tendências atuais do TikTok (pending)
+🚀 EXECUTING 2 TODOS IN PARALLEL
+
+🎯 EXECUTING AGENT TODO: 095a5ef3-50e5-4bba-bcf9-237b471ff204
+Description: Analisando estrutura de roteiro de videos para tiktok
+Agent ID: script_analyst
+Status: running
+Dependencies: 
+✅ AGENT FOUND: Script Analyst (script_analyst)
+Agent Role: Video Script Specialist
+Agent Max Depth: 3
+🔧 AVAILABLE TOOLS: 7 tools
+📋 AGENT TASK CREATED:
+  Prompt: Analisando estrutura de roteiro de videos para tiktok
+  Context: ...
+🚀 CALLING AUTONOMOUS AGENT...
+
+=== AUTONOMOUS AGENT EXECUTION #1 ===
+Agent: Script Analyst (script_analyst)
+Task: Analisando estrutura de roteiro de videos para tiktok
+Context: ...
+Execution Count: 1/3
+================================================
+
+=== SYSTEM PROMPT ===
+
+# Script Analyst - Video Script Specialist
+
+## Persona
+You are an expert in video script analysis and TikTok content creation. You understand viral content patterns, audience engagement, and script structure optimization.
+
+## Objective
+Analyze video script requirements and provide detailed structure recommendations for viral TikTok content.
+
+## Current Context
+
+
+## Available Tools
+You have access to the following tools:
+- web_search: Search the web for information using keywords
+- fetch: Fetch ...
+====================
+
+=== OPENAI REQUEST ===
+Model: openai
+Messages count: 2
+Tools count: 7
+Base URL: http://localhost:4000
+======================
+🔧 POLLINATIONS API: Skipping tools parameter
+
+=== OPENAI RESPONSE ===
+Response ID: pllns_53b78df8ecd8b01e42592b150fe3eae1
+Choices count: 1
+Usage: {"completion_tokens":3180,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":1856,"rejected_prediction_tokens":0},"prompt_tokens":309,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":3489}
+=======================
+
+=== MESSAGE DETAILS ===
+Content: Ótima ideia. A estrutura de roteiro correta é o fator-chave para retenção e viralização no TikTok. Abaixo vai um guia prático, com modelos editáveis e um exemplo para você adaptar ao seu nicho.
+
+1) Es...
+Tool calls: 0
+=======================
+💬 DIRECT RESPONSE: HAS CONTENT
+✅ AGENT EXECUTION COMPLETED SUCCESSFULLY
+📥 AGENT RESPONSE RECEIVED:
+  Success: true
+  Data: Ótima ideia. A estrutura de roteiro correta é o fator-chave para retenção e viralização no TikTok. Abaixo vai um guia prático, com modelos editáveis e um exemplo para você adaptar ao seu nicho.
+
+1) Es...
+  Error: none
+  Next Action: complete
+📝 UPDATING GLOBAL CONTEXT: Agent Script Analyst: Ótima ideia. A estrutura de roteiro correta é o fator-chave para retenção e vi...
+✅ AGENT TODO COMPLETED SUCCESSFULLY
+✅ PARALLEL EXECUTION COMPLETED
+📊 PROGRESS: 2/5 (40.0%)
+
+🔄 LOOP ITERATION #2/10
+📋 Executable Todos: 0
+⚠️  NO EXECUTABLE TODOS FOUND
+📊 TODO STATUS:
+  - Pending: 3
+  - Failed: 0
+  - Completed: 2
+❌ NO RETRYABLE FAILED TODOS - STOPPING EXECUTION
+✅ COMPLEX TASK EXECUTION COMPLETED
+::1 - - [04/Sep/2025:10:03:49 +0000] "POST /v1/advanced-tasks/b52910ef-5c12-4198-bf2b-57557e6a6f3d/execute HTTP/1.1" 200 5933 "-" "curl/8.12.1"

@@ -1,0 +1,137 @@
+{
+  "mainTask": "Crie um video viral para tiktok sobre tecnologia",
+  "mainTaskId": "b52910ef-5c12-4198-bf2b-57557e6a6f3d",
+  "todos": [
+    {
+      "id": "095a5ef3-50e5-4bba-bcf9-237b471ff204",
+      "description": "Analisando estrutura de roteiro de videos para tiktok",
+      "type": "agent",
+      "agentId": "script_analyst",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2025-09-04T10:03:30.197Z",
+      "result": "Ótima ideia. A estrutura de roteiro correta é o fator-chave para retenção e viralização no TikTok. Abaixo vai um guia prático, com modelos editáveis e um exemplo para você adaptar ao seu nicho.\n\n1) Estrutura base recomendada (para 15–60 segundos)\n- Gancho (0–3s): captura imediatamente a atenção. Use uma pergunta impactante, uma afirmação surpreendente ou um preview do resultado.\n- Contexto/setup (3–6s): apresente rapidamente o cenário ou o problema.\n- Conteúdo principal (6–20s): entrega o valor em 2–4 passos ou ações claras. Use cortes rápidos, demonstrações visuais, textos na tela.\n- Payoff / revelação (20–40s): mostre o resultado, a transformação ou a solução efetiva.\n- CTA (call to action) (últimos 5–10s): peça curtidas, comentários, segui, link na bio. Dê um motivo claro para agir (ex.: “comente qual hack você quer que eu teste no próximo vídeo”).\n\n2) Dicas de edição e ritmo\n- Ritmo rápido: cortes a cada 0,5–1,5s para manter o vídeo dinâmico.\n- Legendas: use legendas curtas (1 linha por bloco), com alto contraste. Muitos assistem sem som.\n- Visuals: inclua textos na tela, setas, stickers, demonstrações visuais (antes/depois).\n- Áudio: escolha um áudio cativante nos primeiros segundos; sincronize ações com o beat.\n- Transições: use cortes secos, whip pans, jump cuts para manter o ritmo sem cansar.\n- Simples prioriza retenção: entregue valor claro sem rodeios; evite filler.\n\n3) Modelos de formatos (com exemplos de aplicabilidade)\n- Tutorial rápido (how-to em 15–30s)\n  Gancho: “Como dobrar a eficácia do seu tempo em 3 passos.”\n  Passos: 1) Passo A, 2) Passo B, 3) Passo C.\n  Payoff: resultado prático em tela.\n  CTA: “Curta e siga para mais hacks rápidos.”\n\n- Storytime / narrativa (15–45s)\n  Gancho emocional: “Isso aconteceu comigo numa segunda-feira impossível…”\n  Desenvolvimento: sequência de 3 momentos-chave.\n  Clímax: a virada ou aprendizado.\n  CTA: “Curtiu? Comente qual parte você mais se identifica.”\n\n- Transformação / Before-After (15–30s)\n  Gancho: “Veja como eu transformei isso em 1 minuto.”\n  Demonstração: antes → durante → depois.\n  Resultados: destaque do ganho.\n  CTA: “Segue para o passo a passo completo.”\n\n- Dicas rápidas / life hacks (10–20s)\n  Gancho: “Dica de 10 segundos que muda tudo.”\n  Demonstração: 3 hacks em sequência.\n  CTA: “Compartilha com alguém que precisa dessa dica.”\n\n4) Template de roteiro (preenchível)\n- Título: [Tema do vídeo]\n- Gancho (0–3s): [Frase curta e provocativa]\n- Contexto (3–6s): [Breve introdução do cenário]\n- Conteúdo principal (6–20s):\n  - Passo 1: [Ação/Narrativa] | Duração: [s]\n  - Passo 2: [Ação/Narrativa] | Duração: [s]\n  - Passo 3 (opcional): [Ação/Narrativa] | Duração: [s]\n- Payoff (20–40s): [Resultado, transformação, prova]\n- CTA (40–50s): [Chamada para follow/like/comentar/baixar]\n- Legendas-chave: [3–5 pontos-chave para destacar na tela]\n- Música/efeitos: [Descrição rápida do áudio e efeitos]\n- Observações de edição: [Notas de cortes, transições]\n\n5) Exemplo rápido (15–20s) para nicho de organização/produtividade\n- Gancho: “Quero ver você terminar o dia com a mesa limpa em 60 segundos.”\n- Contexto: “Vou fazer 3 passos rápidos.”\n- Passo 1: “Desligar tudo que não é essencial.”\n- Passo 2: “Agrupar itens por função e guardar cabos.”\n- Passo 3: “Colocar itens usados com frequência ao alcance.”\n- Payoff: mostra a mesa organizada com antes/depois em tela.\n- CTA: “Curta se você quer o vídeo completo de 5 hacks de organização e siga para mais.”\n\n6) Checklist rápido de pré-produção\n- Objetivo claro: o que a pessoa vai aprender ou conseguir no vídeo.\n- Gancho forte nos primeiros 0–3s.\n- Valor imediato: entrega algo utilizável nos primeiros 6–8s.\n- Pacing definido: cada bloco tem uma duração estimada.\n- Legendas prontas: texto legível no primeiro frame.\n- Visuals alinhados com o roteiro: demuestra o que será dito.\n- CTA específico e simples.\n- Adequação de tom ao nicho (humor, profissional, didático, etc.).\n- Nichedescrição/hashtag strings alinhadas ao tema.\n\n7) Perguntas para adaptar ao seu conteúdo\n- Qual é o seu nicho e o perfil do público (idade, interesses, tom)?\n- Qual é o objetivo principal de cada vídeo (educar, entreter, converter)?\n- Qual formato você prefere (tutorial, storytelling, transformação, dicas rápidas)?\n- Qual é a duração alvo mais natural para seu público?\n- Qual chamado à ação funciona melhor no seu nicho (comentar, seguir, link na bio, baixar um recurso)?\n\nSe quiser, eu monto um kit pronto para o seu nicho específico: um modelo de 3 variações de roteiro (Tutorial, Storytime, Transformação) com placeholders já preenchidos e exemplos de CTA adaptados ao seu público. Também posso analisar um script que você já tenha e sugerir ajustes de gancho, ritmo e CTA para melhorar retenção. Me conte o seu nicho, o tom desejado e a duração média dos seus vídeos.",
+      "completedAt": "2025-09-04T10:03:49.213Z"
+    },
+    {
+      "id": "e1b112d3-09db-42b9-b946-cc9989c523b1",
+      "description": "Pesquisando tendências atuais do TikTok",
+      "type": "tool",
+      "toolName": "web_search",
+      "parameters": {
+        "query": "TikTok viral trends 2024",
+        "maxResults": 5
+      },
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2025-09-04T10:03:30.197Z",
+      "result": [
+        {
+          "title": "How to TikTok viral trends 2024 - Complete Guide",
+          "url": "https://example.com/guide-tiktok-viral-trends-2024",
+          "snippet": "Comprehensive guide on TikTok viral trends 2024 with step-by-step instructions."
+        },
+        {
+          "title": "TikTok viral trends 2024 Best Practices",
+          "url": "https://example.com/best-practices-tiktok-viral-trends-2024",
+          "snippet": "Learn the best practices for TikTok viral trends 2024 from industry experts."
+        },
+        {
+          "title": "TikTok viral trends 2024 Tutorial for Beginners",
+          "url": "https://example.com/tutorial-tiktok-viral-trends-2024",
+          "snippet": "Beginner-friendly tutorial covering all aspects of TikTok viral trends 2024."
+        }
+      ],
+      "completedAt": "2025-09-04T10:03:32.387Z"
+    },
+    {
+      "id": "b8233654-17a5-4a95-a39f-c24ca6309cdc",
+      "description": "Criando roteiro baseado nas tendências",
+      "type": "agent",
+      "agentId": "script_writer",
+      "status": "pending",
+      "dependencies": [
+        "script_analyst",
+        "trend_research"
+      ],
+      "createdAt": "2025-09-04T10:03:30.197Z"
+    },
+    {
+      "id": "318c96c9-3e2f-49aa-8918-f6af8e428aa8",
+      "description": "Gerando ideias visuais e storyboard",
+      "type": "agent",
+      "agentId": "visual_creator",
+      "status": "pending",
+      "dependencies": [
+        "script_writer"
+      ],
+      "createdAt": "2025-09-04T10:03:30.197Z"
+    },
+    {
+      "id": "5a570475-01ab-47de-ac7e-f567c9e75591",
+      "description": "Criando arquivos de produção",
+      "type": "tool",
+      "toolName": "file_write",
+      "parameters": {
+        "filePath": "script.md",
+        "content": "Generated script content"
+      },
+      "status": "pending",
+      "dependencies": [
+        "script_writer"
+      ],
+      "createdAt": "2025-09-04T10:03:30.197Z"
+    }
+  ],
+  "completedTasks": [
+    {
+      "id": "e1b112d3-09db-42b9-b946-cc9989c523b1",
+      "description": "Pesquisando tendências atuais do TikTok",
+      "type": "tool",
+      "toolName": "web_search",
+      "parameters": {
+        "query": "TikTok viral trends 2024",
+        "maxResults": 5
+      },
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2025-09-04T10:03:30.197Z",
+      "result": [
+        {
+          "title": "How to TikTok viral trends 2024 - Complete Guide",
+          "url": "https://example.com/guide-tiktok-viral-trends-2024",
+          "snippet": "Comprehensive guide on TikTok viral trends 2024 with step-by-step instructions."
+        },
+        {
+          "title": "TikTok viral trends 2024 Best Practices",
+          "url": "https://example.com/best-practices-tiktok-viral-trends-2024",
+          "snippet": "Learn the best practices for TikTok viral trends 2024 from industry experts."
+        },
+        {
+          "title": "TikTok viral trends 2024 Tutorial for Beginners",
+          "url": "https://example.com/tutorial-tiktok-viral-trends-2024",
+          "snippet": "Beginner-friendly tutorial covering all aspects of TikTok viral trends 2024."
+        }
+      ],
+      "completedAt": "2025-09-04T10:03:32.387Z"
+    },
+    {
+      "id": "095a5ef3-50e5-4bba-bcf9-237b471ff204",
+      "description": "Analisando estrutura de roteiro de videos para tiktok",
+      "type": "agent",
+      "agentId": "script_analyst",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2025-09-04T10:03:30.197Z",
+      "result": "Ótima ideia. A estrutura de roteiro correta é o fator-chave para retenção e viralização no TikTok. Abaixo vai um guia prático, com modelos editáveis e um exemplo para você adaptar ao seu nicho.\n\n1) Estrutura base recomendada (para 15–60 segundos)\n- Gancho (0–3s): captura imediatamente a atenção. Use uma pergunta impactante, uma afirmação surpreendente ou um preview do resultado.\n- Contexto/setup (3–6s): apresente rapidamente o cenário ou o problema.\n- Conteúdo principal (6–20s): entrega o valor em 2–4 passos ou ações claras. Use cortes rápidos, demonstrações visuais, textos na tela.\n- Payoff / revelação (20–40s): mostre o resultado, a transformação ou a solução efetiva.\n- CTA (call to action) (últimos 5–10s): peça curtidas, comentários, segui, link na bio. Dê um motivo claro para agir (ex.: “comente qual hack você quer que eu teste no próximo vídeo”).\n\n2) Dicas de edição e ritmo\n- Ritmo rápido: cortes a cada 0,5–1,5s para manter o vídeo dinâmico.\n- Legendas: use legendas curtas (1 linha por bloco), com alto contraste. Muitos assistem sem som.\n- Visuals: inclua textos na tela, setas, stickers, demonstrações visuais (antes/depois).\n- Áudio: escolha um áudio cativante nos primeiros segundos; sincronize ações com o beat.\n- Transições: use cortes secos, whip pans, jump cuts para manter o ritmo sem cansar.\n- Simples prioriza retenção: entregue valor claro sem rodeios; evite filler.\n\n3) Modelos de formatos (com exemplos de aplicabilidade)\n- Tutorial rápido (how-to em 15–30s)\n  Gancho: “Como dobrar a eficácia do seu tempo em 3 passos.”\n  Passos: 1) Passo A, 2) Passo B, 3) Passo C.\n  Payoff: resultado prático em tela.\n  CTA: “Curta e siga para mais hacks rápidos.”\n\n- Storytime / narrativa (15–45s)\n  Gancho emocional: “Isso aconteceu comigo numa segunda-feira impossível…”\n  Desenvolvimento: sequência de 3 momentos-chave.\n  Clímax: a virada ou aprendizado.\n  CTA: “Curtiu? Comente qual parte você mais se identifica.”\n\n- Transformação / Before-After (15–30s)\n  Gancho: “Veja como eu transformei isso em 1 minuto.”\n  Demonstração: antes → durante → depois.\n  Resultados: destaque do ganho.\n  CTA: “Segue para o passo a passo completo.”\n\n- Dicas rápidas / life hacks (10–20s)\n  Gancho: “Dica de 10 segundos que muda tudo.”\n  Demonstração: 3 hacks em sequência.\n  CTA: “Compartilha com alguém que precisa dessa dica.”\n\n4) Template de roteiro (preenchível)\n- Título: [Tema do vídeo]\n- Gancho (0–3s): [Frase curta e provocativa]\n- Contexto (3–6s): [Breve introdução do cenário]\n- Conteúdo principal (6–20s):\n  - Passo 1: [Ação/Narrativa] | Duração: [s]\n  - Passo 2: [Ação/Narrativa] | Duração: [s]\n  - Passo 3 (opcional): [Ação/Narrativa] | Duração: [s]\n- Payoff (20–40s): [Resultado, transformação, prova]\n- CTA (40–50s): [Chamada para follow/like/comentar/baixar]\n- Legendas-chave: [3–5 pontos-chave para destacar na tela]\n- Música/efeitos: [Descrição rápida do áudio e efeitos]\n- Observações de edição: [Notas de cortes, transições]\n\n5) Exemplo rápido (15–20s) para nicho de organização/produtividade\n- Gancho: “Quero ver você terminar o dia com a mesa limpa em 60 segundos.”\n- Contexto: “Vou fazer 3 passos rápidos.”\n- Passo 1: “Desligar tudo que não é essencial.”\n- Passo 2: “Agrupar itens por função e guardar cabos.”\n- Passo 3: “Colocar itens usados com frequência ao alcance.”\n- Payoff: mostra a mesa organizada com antes/depois em tela.\n- CTA: “Curta se você quer o vídeo completo de 5 hacks de organização e siga para mais.”\n\n6) Checklist rápido de pré-produção\n- Objetivo claro: o que a pessoa vai aprender ou conseguir no vídeo.\n- Gancho forte nos primeiros 0–3s.\n- Valor imediato: entrega algo utilizável nos primeiros 6–8s.\n- Pacing definido: cada bloco tem uma duração estimada.\n- Legendas prontas: texto legível no primeiro frame.\n- Visuals alinhados com o roteiro: demuestra o que será dito.\n- CTA específico e simples.\n- Adequação de tom ao nicho (humor, profissional, didático, etc.).\n- Nichedescrição/hashtag strings alinhadas ao tema.\n\n7) Perguntas para adaptar ao seu conteúdo\n- Qual é o seu nicho e o perfil do público (idade, interesses, tom)?\n- Qual é o objetivo principal de cada vídeo (educar, entreter, converter)?\n- Qual formato você prefere (tutorial, storytelling, transformação, dicas rápidas)?\n- Qual é a duração alvo mais natural para seu público?\n- Qual chamado à ação funciona melhor no seu nicho (comentar, seguir, link na bio, baixar um recurso)?\n\nSe quiser, eu monto um kit pronto para o seu nicho específico: um modelo de 3 variações de roteiro (Tutorial, Storytime, Transformação) com placeholders já preenchidos e exemplos de CTA adaptados ao seu público. Também posso analisar um script que você já tenha e sugerir ajustes de gancho, ritmo e CTA para melhorar retenção. Me conte o seu nicho, o tom desejado e a duração média dos seus vídeos.",
+      "completedAt": "2025-09-04T10:03:49.213Z"
+    }
+  ],
+  "globalContext": "\n2025-09-04T10:03:32.387Z: Tool web_search: Found 3 results for \"TikTok viral trends 2024\"\n2025-09-04T10:03:49.213Z: Agent Script Analyst: Ótima ideia. A estrutura de roteiro correta é o fator-chave para retenção e viralização no TikTok. Abaixo vai um guia prático, com modelos editáveis e um exemplo para você adaptar ao seu nicho.\n\n1) Estrutura base recomendada (para 15–60 segundos)\n- Gancho (0–3s): captura imediatamente a atenção. Use uma pergunta impactante, uma afirmação surpreendente ou um preview do resultado.\n- Contexto/setup (3–6s): apresente rapidamente o cenário ou o problema.\n- Conteúdo principal (6–20s): entrega o valor em 2–4 passos ou ações claras. Use cortes rápidos, demonstrações visuais, textos na tela.\n- Payoff / revelação (20–40s): mostre o resultado, a transformação ou a solução efetiva.\n- CTA (call to action) (últimos 5–10s): peça curtidas, comentários, segui, link na bio. Dê um motivo claro para agir (ex.: “comente qual hack você quer que eu teste no próximo vídeo”).\n\n2) Dicas de edição e ritmo\n- Ritmo rápido: cortes a cada 0,5–1,5s para manter o vídeo dinâmico.\n- Legendas: use legendas curtas (1 linha por bloco), com alto contraste. Muitos assistem sem som.\n- Visuals: inclua textos na tela, setas, stickers, demonstrações visuais (antes/depois).\n- Áudio: escolha um áudio cativante nos primeiros segundos; sincronize ações com o beat.\n- Transições: use cortes secos, whip pans, jump cuts para manter o ritmo sem cansar.\n- Simples prioriza retenção: entregue valor claro sem rodeios; evite filler.\n\n3) Modelos de formatos (com exemplos de aplicabilidade)\n- Tutorial rápido (how-to em 15–30s)\n  Gancho: “Como dobrar a eficácia do seu tempo em 3 passos.”\n  Passos: 1) Passo A, 2) Passo B, 3) Passo C.\n  Payoff: resultado prático em tela.\n  CTA: “Curta e siga para mais hacks rápidos.”\n\n- Storytime / narrativa (15–45s)\n  Gancho emocional: “Isso aconteceu comigo numa segunda-feira impossível…”\n  Desenvolvimento: sequência de 3 momentos-chave.\n  Clímax: a virada ou aprendizado.\n  CTA: “Curtiu? Comente qual parte você mais se identifica.”\n\n- Transformação / Before-After (15–30s)\n  Gancho: “Veja como eu transformei isso em 1 minuto.”\n  Demonstração: antes → durante → depois.\n  Resultados: destaque do ganho.\n  CTA: “Segue para o passo a passo completo.”\n\n- Dicas rápidas / life hacks (10–20s)\n  Gancho: “Dica de 10 segundos que muda tudo.”\n  Demonstração: 3 hacks em sequência.\n  CTA: “Compartilha com alguém que precisa dessa dica.”\n\n4) Template de roteiro (preenchível)\n- Título: [Tema do vídeo]\n- Gancho (0–3s): [Frase curta e provocativa]\n- Contexto (3–6s): [Breve introdução do cenário]\n- Conteúdo principal (6–20s):\n  - Passo 1: [Ação/Narrativa] | Duração: [s]\n  - Passo 2: [Ação/Narrativa] | Duração: [s]\n  - Passo 3 (opcional): [Ação/Narrativa] | Duração: [s]\n- Payoff (20–40s): [Resultado, transformação, prova]\n- CTA (40–50s): [Chamada para follow/like/comentar/baixar]\n- Legendas-chave: [3–5 pontos-chave para destacar na tela]\n- Música/efeitos: [Descrição rápida do áudio e efeitos]\n- Observações de edição: [Notas de cortes, transições]\n\n5) Exemplo rápido (15–20s) para nicho de organização/produtividade\n- Gancho: “Quero ver você terminar o dia com a mesa limpa em 60 segundos.”\n- Contexto: “Vou fazer 3 passos rápidos.”\n- Passo 1: “Desligar tudo que não é essencial.”\n- Passo 2: “Agrupar itens por função e guardar cabos.”\n- Passo 3: “Colocar itens usados com frequência ao alcance.”\n- Payoff: mostra a mesa organizada com antes/depois em tela.\n- CTA: “Curta se você quer o vídeo completo de 5 hacks de organização e siga para mais.”\n\n6) Checklist rápido de pré-produção\n- Objetivo claro: o que a pessoa vai aprender ou conseguir no vídeo.\n- Gancho forte nos primeiros 0–3s.\n- Valor imediato: entrega algo utilizável nos primeiros 6–8s.\n- Pacing definido: cada bloco tem uma duração estimada.\n- Legendas prontas: texto legível no primeiro frame.\n- Visuals alinhados com o roteiro: demuestra o que será dito.\n- CTA específico e simples.\n- Adequação de tom ao nicho (humor, profissional, didático, etc.).\n- Nichedescrição/hashtag strings alinhadas ao tema.\n\n7) Perguntas para adaptar ao seu conteúdo\n- Qual é o seu nicho e o perfil do público (idade, interesses, tom)?\n- Qual é o objetivo principal de cada vídeo (educar, entreter, converter)?\n- Qual formato você prefere (tutorial, storytelling, transformação, dicas rápidas)?\n- Qual é a duração alvo mais natural para seu público?\n- Qual chamado à ação funciona melhor no seu nicho (comentar, seguir, link na bio, baixar um recurso)?\n\nSe quiser, eu monto um kit pronto para o seu nicho específico: um modelo de 3 variações de roteiro (Tutorial, Storytime, Transformação) com placeholders já preenchidos e exemplos de CTA adaptados ao seu público. Também posso analisar um script que você já tenha e sugerir ajustes de gancho, ritmo e CTA para melhorar retenção. Me conte o seu nicho, o tom desejado e a duração média dos seus vídeos.",
+  "collectedData": {},
+  "workingDirectory": "/workspace/api-flui/flui-projects/3d37aee8-dc87-49da-bf7b-9e0dc395f140/video-viral-tecnologia-tiktok",
+  "generatedFiles": [
+    "README.md",
+    "PROJECT_SUMMARY.md"
+  ]
+}

@@ -170,30 +170,70 @@ class AdvancedOrchestrator {
         const context = this.contextManager.getContext();
         let completedTodos = 0;
         const totalTodos = context.todos.length;
-        while (!this.contextManager.isTaskComplete()) {
+        let loopCount = 0;
+        const maxLoops = 10;
+        console.log(`\n🔄 STARTING COMPLEX TASK EXECUTION`);
+        console.log(`Total Todos: ${totalTodos}`);
+        console.log(`Task Complete: ${this.contextManager.isTaskComplete()}`);
+        while (!this.contextManager.isTaskComplete() && loopCount < maxLoops) {
+            loopCount++;
+            console.log(`\n🔄 LOOP ITERATION #${loopCount}/${maxLoops}`);
             const executableTodos = this.contextManager.getNextExecutableTodos();
+            console.log(`📋 Executable Todos: ${executableTodos.length}`);
+            executableTodos.forEach(todo => {
+                console.log(`  - ${todo.id}: ${todo.description} (${todo.status})`);
+            });
             if (executableTodos.length === 0) {
-                const failedTodos = context.todos.filter(todo => todo.status === 'failed' &&
-                    todo.dependencies.every(depId => context.todos.find(t => t.id === depId)?.status === 'completed'));
-                if (failedTodos.length === 0) {
+                console.log(`⚠️  NO EXECUTABLE TODOS FOUND`);
+                const pendingTodos = context.todos.filter(todo => todo.status === 'pending');
+                const failedTodos = context.todos.filter(todo => todo.status === 'failed');
+                console.log(`📊 TODO STATUS:`);
+                console.log(`  - Pending: ${pendingTodos.length}`);
+                console.log(`  - Failed: ${failedTodos.length}`);
+                console.log(`  - Completed: ${context.todos.filter(t => t.status === 'completed').length}`);
+                if (pendingTodos.length === 0) {
+                    console.log(`✅ NO MORE TODOS TO EXECUTE - BREAKING LOOP`);
                     break;
                 }
-                for (const todo of failedTodos) {
-                    const retrySuccess = await this.autoCorrection.retryFailedTodo(todo, context);
-                    if (retrySuccess) {
-                        executableTodos.push(todo);
+                const retryableFailedTodos = failedTodos.filter(todo => todo.dependencies.every(depId => context.todos.find(t => t.id === depId)?.status === 'completed'));
+                if (retryableFailedTodos.length > 0) {
+                    console.log(`🔄 RETRYING ${retryableFailedTodos.length} FAILED TODOS`);
+                    for (const todo of retryableFailedTodos) {
+                        console.log(`🔄 RETRYING FAILED TODO: ${todo.id}`);
+                        const retrySuccess = await this.autoCorrection.retryFailedTodo(todo, context);
+                        if (retrySuccess) {
+                            console.log(`✅ RETRY SUCCESS: ${todo.id}`);
+                            executableTodos.push(todo);
+                        }
+                        else {
+                            console.log(`❌ RETRY FAILED: ${todo.id}`);
+                        }
                     }
                 }
+                else {
+                    console.log(`❌ NO RETRYABLE FAILED TODOS - STOPPING EXECUTION`);
+                    break;
+                }
             }
-            const executionPromises = executableTodos.map(todo => this.executeTodo(todo, context));
-            await Promise.all(executionPromises);
+            if (executableTodos.length > 0) {
+                console.log(`🚀 EXECUTING ${executableTodos.length} TODOS IN PARALLEL`);
+                const executionPromises = executableTodos.map(todo => this.executeTodo(todo, context));
+                await Promise.all(executionPromises);
+                console.log(`✅ PARALLEL EXECUTION COMPLETED`);
+            }
             completedTodos = context.completedTasks.length;
+            console.log(`📊 PROGRESS: ${completedTodos}/${totalTodos} (${((completedTodos / totalTodos) * 100).toFixed(1)}%)`);
             this.emitEvent(task.id, 'progress_update', {
                 completed: completedTodos,
                 total: totalTodos,
                 progress: (completedTodos / totalTodos) * 100
             });
         }
+        if (loopCount >= maxLoops) {
+            console.log(`🚨 MAX LOOPS REACHED (${maxLoops}) - STOPPING EXECUTION`);
+            throw new Error(`Task execution exceeded maximum loops (${maxLoops}). Possible infinite loop detected.`);
+        }
+        console.log(`✅ COMPLEX TASK EXECUTION COMPLETED`);
         await this.generateFinalDeliverables(context);
         return {
             success: true,
@@ -235,18 +275,41 @@ class AdvancedOrchestrator {
         }
     }
     async executeAgentTodo(todo, context) {
+        console.log(`\n🎯 EXECUTING AGENT TODO: ${todo.id}`);
+        console.log(`Description: ${todo.description}`);
+        console.log(`Agent ID: ${todo.agentId}`);
+        console.log(`Status: ${todo.status}`);
+        console.log(`Dependencies: ${todo.dependencies.join(', ')}`);
         const agent = this.agents.get(todo.agentId);
         if (!agent) {
+            console.log(`❌ AGENT NOT FOUND: ${todo.agentId}`);
             throw new Error(`Agent ${todo.agentId} not found`);
         }
+        console.log(`✅ AGENT FOUND: ${agent.name} (${agent.id})`);
+        console.log(`Agent Role: ${agent.role}`);
+        console.log(`Agent Max Depth: ${agent.maxDepth}`);
         const availableTools = this.tools.getAllTools();
+        console.log(`🔧 AVAILABLE TOOLS: ${availableTools.length} tools`);
         const autonomousAgent = new autonomousAgent_1.AutonomousAgent(agent, availableTools);
         const agentTask = this.contextManager.createAgentTask(agent.id, todo.description, agent.tools);
+        console.log(`📋 AGENT TASK CREATED:`);
+        console.log(`  Prompt: ${agentTask.prompt}`);
+        console.log(`  Context: ${agentTask.context.substring(0, 200)}...`);
+        console.log(`🚀 CALLING AUTONOMOUS AGENT...`);
         const response = await autonomousAgent.executeTask(agentTask);
+        console.log(`📥 AGENT RESPONSE RECEIVED:`);
+        console.log(`  Success: ${response.success}`);
+        console.log(`  Data: ${response.data ? response.data.substring(0, 200) + '...' : 'null'}`);
+        console.log(`  Error: ${response.error || 'none'}`);
+        console.log(`  Next Action: ${response.nextAction?.type || 'none'}`);
         if (!response.success) {
+            console.log(`❌ AGENT EXECUTION FAILED: ${response.error}`);
             throw new Error(response.error || 'Agent execution failed');
         }
-        this.contextManager.updateGlobalContext(`Agent ${agent.name}: ${response.data}`);
+        const contextUpdate = `Agent ${agent.name}: ${response.data}`;
+        console.log(`📝 UPDATING GLOBAL CONTEXT: ${contextUpdate.substring(0, 100)}...`);
+        this.contextManager.updateGlobalContext(contextUpdate);
+        console.log(`✅ AGENT TODO COMPLETED SUCCESSFULLY`);
         return response.data;
     }
     async executeToolTodo(todo, context) {

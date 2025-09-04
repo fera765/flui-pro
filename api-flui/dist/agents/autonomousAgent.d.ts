@@ -4,6 +4,8 @@ export declare class AutonomousAgent {
     private availableTools;
     private openai;
     private tools;
+    private executionCount;
+    private maxExecutions;
     constructor(agent: Agent, availableTools: Tool[]);
     executeTask(task: AgentTask): Promise<AgentResponse>;
     private createSystemPrompt;

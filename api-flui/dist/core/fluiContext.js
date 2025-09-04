@@ -90,7 +90,7 @@ class FluiContextManager {
             todo.dependencies.every(depId => this.context.todos.find(t => t.id === depId)?.status === 'completed'));
     }
     isTaskComplete() {
-        return this.context.todos.every(todo => todo.status === 'completed' || todo.status === 'failed');
+        return this.context.todos.every(todo => todo.status === 'completed');
     }
     addGeneratedFile(filePath) {
         this.context.generatedFiles.push(filePath);
