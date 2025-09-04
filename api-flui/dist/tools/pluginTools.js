@@ -13,18 +13,28 @@ class PluginTools {
     getAvailableTools() {
         return Array.from(this.pluginFunctions.values());
     }
-    async executeTool(toolName, parameters) {
+    async executeTool(toolName, parameters, timeoutMs = 30000) {
         const tool = this.pluginFunctions.get(toolName);
         if (!tool) {
             throw new Error(`Tool not found: ${toolName}`);
         }
         try {
-            console.log(`🔧 Executing plugin tool: ${toolName}`);
-            const result = await tool.execute(parameters);
+            console.log(`🔧 Executing plugin tool: ${toolName} (timeout: ${timeoutMs}ms)`);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error(`Tool ${toolName} execution timeout (${timeoutMs}ms)`)), timeoutMs);
+            });
+            const result = await Promise.race([
+                tool.execute(parameters),
+                timeoutPromise
+            ]);
             console.log(`✅ Plugin tool ${toolName} executed successfully`);
             return result;
         }
         catch (error) {
+            if (error.message.includes('timeout')) {
+                console.error(`⏰ Plugin tool ${toolName} timed out after ${timeoutMs}ms`);
+                throw new Error(`Tool execution timeout: ${toolName} took longer than ${timeoutMs}ms`);
+            }
             console.error(`❌ Plugin tool ${toolName} failed:`, error);
             throw error;
         }

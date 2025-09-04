@@ -19,10 +19,15 @@ export declare class AdvancedOrchestrator {
     private autoCorrection;
     private fileGenerator;
     private pluginLoader;
+    private timeoutManager;
+    private concurrentTaskManager;
     constructor(config: OrchestratorConfig, classifier: Classifier, planner: Planner, worker: Worker, supervisor: Supervisor);
     private initializeAgents;
     private initializePlugins;
+    private setupConcurrentTaskListeners;
     createTask(prompt: string): Promise<Task>;
+    private createNewTask;
+    private getCurrentActiveTaskId;
     private createSimpleTask;
     private createComplexTask;
     executeTask(taskId: string): Promise<TaskResult>;

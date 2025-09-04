@@ -6,7 +6,7 @@ export declare class PluginTools {
     constructor(pluginLoader: PluginLoader);
     private loadPluginFunctions;
     getAvailableTools(): PluginFunction[];
-    executeTool(toolName: string, parameters: any): Promise<any>;
+    executeTool(toolName: string, parameters: any, timeoutMs?: number): Promise<any>;
     getToolSchema(toolName: string): any;
     getAllToolSchemas(): any[];
     refreshTools(): void;

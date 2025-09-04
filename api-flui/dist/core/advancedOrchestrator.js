@@ -43,6 +43,8 @@ const advancedTools_1 = require("../tools/advancedTools");
 const autoCorrection_1 = require("./autoCorrection");
 const fileGenerator_1 = require("./fileGenerator");
 const pluginLoader_1 = require("./pluginLoader");
+const timeoutManager_1 = require("./timeoutManager");
+const concurrentTaskManager_1 = require("./concurrentTaskManager");
 const path = __importStar(require("path"));
 class AdvancedOrchestrator {
     constructor(config, classifier, planner, worker, supervisor) {
@@ -55,7 +57,17 @@ class AdvancedOrchestrator {
         this.events = new Map();
         this.agents = new Map();
         const workingDir = path.join(process.cwd(), 'flui-projects', (0, uuid_1.v4)());
+        const timeoutConfig = {
+            defaultTimeout: 30000,
+            pluginTimeout: 60000,
+            toolTimeout: 30000,
+            longRunningTimeout: 300000,
+            maxRetries: 3,
+            retryDelay: 5000
+        };
+        this.timeoutManager = new timeoutManager_1.TimeoutManager(timeoutConfig);
         this.pluginLoader = new pluginLoader_1.PluginLoader();
+        this.concurrentTaskManager = new concurrentTaskManager_1.ConcurrentTaskManager(this.timeoutManager, 3);
         this.tools = new advancedTools_1.AdvancedTools(workingDir, this.pluginLoader);
         this.contextManager = new fluiContext_1.FluiContextManager('', workingDir);
         this.todoPlanner = new todoPlanner_1.TodoPlanner();
@@ -63,6 +75,7 @@ class AdvancedOrchestrator {
         this.fileGenerator = new fileGenerator_1.FileGenerator();
         this.initializeAgents();
         this.initializePlugins();
+        this.setupConcurrentTaskListeners();
     }
     initializeAgents() {
         const agents = specializedAgents_1.SpecializedAgents.getAllAgents();
@@ -93,7 +106,58 @@ class AdvancedOrchestrator {
             console.error('❌ Failed to initialize plugin system:', error);
         }
     }
+    setupConcurrentTaskListeners() {
+        this.concurrentTaskManager.on('taskStarted', (data) => {
+            console.log(`🚀 Task started: ${data.taskId}`);
+            this.emitEvent(data.taskId, 'task_started', data);
+        });
+        this.concurrentTaskManager.on('taskQueued', (data) => {
+            console.log(`📋 Task queued: ${data.taskId} (position: ${data.queuePosition})`);
+            this.emitEvent(data.taskId, 'task_queued', data);
+        });
+        this.concurrentTaskManager.on('statusResponse', (data) => {
+            console.log(`📊 Status response for ${data.taskId}: ${data.message}`);
+            this.emitEvent(data.taskId, 'status_response', data);
+        });
+        this.concurrentTaskManager.on('taskInterrupted', (data) => {
+            console.log(`🛑 Task interrupted: ${data.taskId} - ${data.reason}`);
+            this.emitEvent(data.taskId, 'task_interrupted', data);
+        });
+        this.concurrentTaskManager.on('taskRetry', (data) => {
+            console.log(`🔄 Task retry: ${data.taskId} (attempt ${data.retryCount})`);
+            this.emitEvent(data.taskId, 'task_retry', data);
+        });
+        this.concurrentTaskManager.on('taskFailed', (data) => {
+            console.log(`❌ Task failed: ${data.taskId} - ${data.message}`);
+            this.emitEvent(data.taskId, 'task_failed', data);
+        });
+        this.concurrentTaskManager.on('taskForceCompleted', (data) => {
+            console.log(`🛑 Task force completed: ${data.taskId} - ${data.reason}`);
+            this.emitEvent(data.taskId, 'task_force_completed', data);
+        });
+    }
     async createTask(prompt) {
+        const currentTaskId = this.getCurrentActiveTaskId();
+        if (currentTaskId) {
+            const request = this.timeoutManager.analyzeConcurrentRequest(prompt, currentTaskId);
+            if (request.type === 'status_check') {
+                const status = this.concurrentTaskManager.getTaskStatus(currentTaskId);
+                this.emitEvent(currentTaskId, 'status_check', {
+                    taskId: currentTaskId,
+                    status: status.task ? 'running' : 'not_found',
+                    queued: status.queued,
+                    timeoutInfo: status.timeoutInfo
+                });
+                return this.tasks.get(currentTaskId) || this.createNewTask(prompt);
+            }
+            if (request.type === 'interrupt') {
+                this.concurrentTaskManager.addTask({}, prompt);
+                return this.createNewTask(prompt);
+            }
+        }
+        return this.createNewTask(prompt);
+    }
+    async createNewTask(prompt) {
         const classification = this.classifier.classifyTask(prompt);
         if (classification.type === 'conversation') {
             return this.createSimpleTask(prompt, classification);
@@ -101,6 +165,10 @@ class AdvancedOrchestrator {
         else {
             return this.createComplexTask(prompt, classification);
         }
+    }
+    getCurrentActiveTaskId() {
+        const activeTasks = this.concurrentTaskManager.getActiveTasks();
+        return activeTasks.length > 0 ? activeTasks[0]?.id : undefined;
     }
     async createSimpleTask(prompt, classification) {
         const task = {

@@ -175,10 +175,19 @@ class PluginLoader extends events_1.EventEmitter {
             for (const func of pluginModule.functions || []) {
                 try {
                     const testParams = this.generateTestParams(func.parameters);
-                    const result = await func.execute(testParams);
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Function test timeout')), 10000);
+                    });
+                    const result = await Promise.race([
+                        func.execute(testParams),
+                        timeoutPromise
+                    ]);
                     console.log(`✅ Function ${func.name} test passed`);
                 }
                 catch (error) {
+                    if (error.message.includes('timeout')) {
+                        throw new Error(`Function ${func.name} test timed out (10s limit)`);
+                    }
                     throw new Error(`Function ${func.name} test failed: ${error.message}`);
                 }
             }

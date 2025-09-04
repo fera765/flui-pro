@@ -13,6 +13,9 @@ import { AdvancedTools } from '../tools/advancedTools';
 import { AutoCorrectionSystem } from './autoCorrection';
 import { FileGenerator } from './fileGenerator';
 import { PluginLoader } from './pluginLoader';
+import { TimeoutManager } from './timeoutManager';
+import { ConcurrentTaskManager } from './concurrentTaskManager';
+import { TimeoutConfig } from '../types/timeout';
 import * as path from 'path';
 
 export class AdvancedOrchestrator {
@@ -25,6 +28,8 @@ export class AdvancedOrchestrator {
   private autoCorrection: AutoCorrectionSystem;
   private fileGenerator: FileGenerator;
   private pluginLoader: PluginLoader;
+  private timeoutManager: TimeoutManager;
+  private concurrentTaskManager: ConcurrentTaskManager;
 
   constructor(
     private config: OrchestratorConfig,
@@ -36,8 +41,24 @@ export class AdvancedOrchestrator {
     // Initialize working directory
     const workingDir = path.join(process.cwd(), 'flui-projects', uuidv4());
     
+    // Initialize timeout configuration
+    const timeoutConfig: TimeoutConfig = {
+      defaultTimeout: 30000, // 30s
+      pluginTimeout: 60000, // 60s
+      toolTimeout: 30000, // 30s
+      longRunningTimeout: 300000, // 5min
+      maxRetries: 3,
+      retryDelay: 5000 // 5s
+    };
+
+    // Initialize timeout manager
+    this.timeoutManager = new TimeoutManager(timeoutConfig);
+    
     // Initialize plugin loader
     this.pluginLoader = new PluginLoader();
+    
+    // Initialize concurrent task manager
+    this.concurrentTaskManager = new ConcurrentTaskManager(this.timeoutManager, 3);
     
     // Initialize components
     this.tools = new AdvancedTools(workingDir, this.pluginLoader);
@@ -51,6 +72,9 @@ export class AdvancedOrchestrator {
     
     // Load plugins and start watching
     this.initializePlugins();
+    
+    // Setup concurrent task event listeners
+    this.setupConcurrentTaskListeners();
   }
 
   private initializeAgents(): void {
@@ -92,7 +116,74 @@ export class AdvancedOrchestrator {
     }
   }
 
+  private setupConcurrentTaskListeners(): void {
+    // Listen to concurrent task events
+    this.concurrentTaskManager.on('taskStarted', (data) => {
+      console.log(`🚀 Task started: ${data.taskId}`);
+      this.emitEvent(data.taskId, 'task_started', data);
+    });
+
+    this.concurrentTaskManager.on('taskQueued', (data) => {
+      console.log(`📋 Task queued: ${data.taskId} (position: ${data.queuePosition})`);
+      this.emitEvent(data.taskId, 'task_queued', data);
+    });
+
+    this.concurrentTaskManager.on('statusResponse', (data) => {
+      console.log(`📊 Status response for ${data.taskId}: ${data.message}`);
+      this.emitEvent(data.taskId, 'status_response', data);
+    });
+
+    this.concurrentTaskManager.on('taskInterrupted', (data) => {
+      console.log(`🛑 Task interrupted: ${data.taskId} - ${data.reason}`);
+      this.emitEvent(data.taskId, 'task_interrupted', data);
+    });
+
+    this.concurrentTaskManager.on('taskRetry', (data) => {
+      console.log(`🔄 Task retry: ${data.taskId} (attempt ${data.retryCount})`);
+      this.emitEvent(data.taskId, 'task_retry', data);
+    });
+
+    this.concurrentTaskManager.on('taskFailed', (data) => {
+      console.log(`❌ Task failed: ${data.taskId} - ${data.message}`);
+      this.emitEvent(data.taskId, 'task_failed', data);
+    });
+
+    this.concurrentTaskManager.on('taskForceCompleted', (data) => {
+      console.log(`🛑 Task force completed: ${data.taskId} - ${data.reason}`);
+      this.emitEvent(data.taskId, 'task_force_completed', data);
+    });
+  }
+
   async createTask(prompt: string): Promise<Task> {
+    // Check if this is a concurrent request
+    const currentTaskId = this.getCurrentActiveTaskId();
+    if (currentTaskId) {
+      const request = this.timeoutManager.analyzeConcurrentRequest(prompt, currentTaskId);
+      
+      if (request.type === 'status_check') {
+        // Handle status check
+        const status = this.concurrentTaskManager.getTaskStatus(currentTaskId);
+        this.emitEvent(currentTaskId, 'status_check', {
+          taskId: currentTaskId,
+          status: status.task ? 'running' : 'not_found',
+          queued: status.queued,
+          timeoutInfo: status.timeoutInfo
+        });
+        return this.tasks.get(currentTaskId) || this.createNewTask(prompt);
+      }
+      
+      if (request.type === 'interrupt') {
+        // Handle task interruption
+        this.concurrentTaskManager.addTask({} as Task, prompt);
+        return this.createNewTask(prompt);
+      }
+    }
+
+    // Create new task
+    return this.createNewTask(prompt);
+  }
+
+  private async createNewTask(prompt: string): Promise<Task> {
     // Determine if it's a conversation or complex task
     const classification = this.classifier.classifyTask(prompt);
     
@@ -103,6 +194,11 @@ export class AdvancedOrchestrator {
       // Handle complex task with todo planning
       return this.createComplexTask(prompt, classification);
     }
+  }
+
+  private getCurrentActiveTaskId(): string | undefined {
+    const activeTasks = this.concurrentTaskManager.getActiveTasks();
+    return activeTasks.length > 0 ? activeTasks[0]?.id : undefined;
   }
 
   private async createSimpleTask(prompt: string, classification: ClassificationResult): Promise<Task> {
