@@ -1,15 +1,17 @@
+import { EventEmitter } from 'events';
 import { TaskManager } from './taskManager';
 import { LiveTester } from './liveTester';
 import { MarkdownReporter } from './markdownReporter';
 import { ContextPersistence } from './contextPersistence';
 import { TaskOrchestratorResult, TaskCreationRequest, TaskModificationRequest, TaskQuestionRequest, TaskDownloadRequest, TaskInteractionResult, TaskStatusUpdate, TaskSummary, TaskListResult } from '../types/taskOrchestrator';
-export declare class TaskOrchestrator {
+export declare class TaskOrchestrator extends EventEmitter {
     private taskManager;
     private liveTester;
     private markdownReporter;
     private contextPersistence;
     private activeTasks;
     constructor(taskManager: TaskManager, liveTester: LiveTester, markdownReporter: MarkdownReporter, contextPersistence: ContextPersistence);
+    private setupEventHandlers;
     createPersistentTask(request: TaskCreationRequest): Promise<TaskOrchestratorResult>;
     executeTask(taskId: string): Promise<TaskOrchestratorResult>;
     interactWithTask(request: TaskQuestionRequest | TaskModificationRequest | TaskDownloadRequest): Promise<TaskInteractionResult>;

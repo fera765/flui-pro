@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { EventEmitter } from 'events';
 import { TaskManager } from './taskManager';
 import { LiveTester } from './liveTester';
 import { MarkdownReporter } from './markdownReporter';
@@ -19,7 +20,7 @@ import {
   TestResult
 } from '../types/taskOrchestrator';
 
-export class TaskOrchestrator {
+export class TaskOrchestrator extends EventEmitter {
   private taskManager: TaskManager;
   private liveTester: LiveTester;
   private markdownReporter: MarkdownReporter;
@@ -32,11 +33,90 @@ export class TaskOrchestrator {
     markdownReporter: MarkdownReporter,
     contextPersistence: ContextPersistence
   ) {
+    super();
     this.taskManager = taskManager;
     this.liveTester = liveTester;
     this.markdownReporter = markdownReporter;
     this.contextPersistence = contextPersistence;
     this.activeTasks = new Map();
+    
+    this.setupEventHandlers();
+  }
+
+  private setupEventHandlers(): void {
+    // Task lifecycle events
+    this.on('taskCreated', (data) => {
+      console.log(`📋 Task created: ${data.taskId} - ${data.name}`);
+    });
+
+    this.on('taskStarted', (data) => {
+      console.log(`🚀 Task started: ${data.taskId} - ${data.name}`);
+    });
+
+    this.on('taskProgress', (data) => {
+      console.log(`📊 Task progress: ${data.taskId} - ${data.progress}%`);
+    });
+
+    this.on('taskCompleted', (data) => {
+      console.log(`✅ Task completed: ${data.taskId} - ${data.name}`);
+    });
+
+    this.on('taskFailed', (data) => {
+      console.log(`❌ Task failed: ${data.taskId} - ${data.error}`);
+    });
+
+    // Agent events
+    this.on('agentStarted', (data) => {
+      console.log(`🤖 Agent started: ${data.agentName} for task ${data.taskId}`);
+    });
+
+    this.on('agentCompleted', (data) => {
+      console.log(`✅ Agent completed: ${data.agentName} for task ${data.taskId}`);
+    });
+
+    this.on('agentFailed', (data) => {
+      console.log(`❌ Agent failed: ${data.agentName} for task ${data.taskId} - ${data.error}`);
+    });
+
+    // Tool events
+    this.on('toolStarted', (data) => {
+      console.log(`🔧 Tool started: ${data.toolName} for task ${data.taskId}`);
+    });
+
+    this.on('toolCompleted', (data) => {
+      console.log(`✅ Tool completed: ${data.toolName} for task ${data.taskId}`);
+    });
+
+    this.on('toolFailed', (data) => {
+      console.log(`❌ Tool failed: ${data.toolName} for task ${data.taskId} - ${data.error}`);
+    });
+
+    // Test events
+    this.on('testStarted', (data) => {
+      console.log(`🧪 Test started: ${data.testType} for task ${data.taskId}`);
+    });
+
+    this.on('testCompleted', (data) => {
+      console.log(`✅ Test completed: ${data.testType} for task ${data.taskId} - ${data.result}`);
+    });
+
+    this.on('testFailed', (data) => {
+      console.log(`❌ Test failed: ${data.testType} for task ${data.taskId} - ${data.error}`);
+    });
+
+    // Report events
+    this.on('reportGenerated', (data) => {
+      console.log(`📊 Report generated: ${data.reportPath} for task ${data.taskId}`);
+    });
+
+    // Interaction events
+    this.on('interactionReceived', (data) => {
+      console.log(`💬 Interaction received: ${data.type} for task ${data.taskId}`);
+    });
+
+    this.on('interactionProcessed', (data) => {
+      console.log(`✅ Interaction processed: ${data.type} for task ${data.taskId}`);
+    });
   }
 
   async createPersistentTask(request: TaskCreationRequest): Promise<TaskOrchestratorResult> {
@@ -97,6 +177,17 @@ export class TaskOrchestrator {
       // Save context
       await this.contextPersistence.saveContext(task.id, initialContext);
 
+      // Emit task created callback
+      this.emit('taskCreated', {
+        taskId: task.id,
+        name: task.name,
+        description: task.description,
+        projectType: task.projectType,
+        userId: request.userId,
+        status: task.status,
+        timestamp: new Date().toISOString()
+      });
+
       return {
         success: true,
         taskId: task.id,
@@ -131,18 +222,73 @@ export class TaskOrchestrator {
         };
       }
 
+      // Emit task started callback
+      this.emit('taskStarted', {
+        taskId,
+        name: context.projectType,
+        userId: context.userId,
+        timestamp: new Date().toISOString()
+      });
+
       // Update context
       context.lastAccessed = new Date();
       context.testStatus = 'running';
 
+      // Emit progress callback
+      this.emit('taskProgress', {
+        taskId,
+        progress: 10,
+        message: 'Iniciando criação do projeto...',
+        timestamp: new Date().toISOString()
+      });
+
       // Simulate project creation (in real implementation, this would use CodeForgeAgent)
+      this.emit('agentStarted', {
+        taskId,
+        agentName: 'CodeForgeAgent',
+        action: 'projectCreation',
+        timestamp: new Date().toISOString()
+      });
+
       const projectStructure = await this.simulateProjectCreation(context);
+      
+      this.emit('agentCompleted', {
+        taskId,
+        agentName: 'CodeForgeAgent',
+        action: 'projectCreation',
+        result: 'success',
+        timestamp: new Date().toISOString()
+      });
+
+      // Emit progress callback
+      this.emit('taskProgress', {
+        taskId,
+        progress: 50,
+        message: 'Executando testes...',
+        timestamp: new Date().toISOString()
+      });
       
       // Run tests
       const testResults = await this.runTests(context, projectStructure);
       
+      // Emit progress callback
+      this.emit('taskProgress', {
+        taskId,
+        progress: 75,
+        message: 'Iniciando servidor...',
+        timestamp: new Date().toISOString()
+      });
+      
       // Start server if needed
       const serverUrl = await this.startServer(context, projectStructure);
+      
+      // Emit progress callback
+      this.emit('taskProgress', {
+        taskId,
+        progress: 90,
+        message: 'Gerando relatório...',
+        timestamp: new Date().toISOString()
+      });
       
       // Generate report
       const reportPath = await this.generateReport(context, projectStructure, testResults, serverUrl);
@@ -156,6 +302,20 @@ export class TaskOrchestrator {
       await this.contextPersistence.updateContext(taskId, context);
 
       const executionTime = Date.now() - startTime;
+
+      // Emit task completed callback
+      this.emit('taskCompleted', {
+        taskId,
+        name: context.projectType,
+        userId: context.userId,
+        executionTime,
+        filesCreated: projectStructure.files.length,
+        testsPassed: testResults.filter(t => t.status === 'passed').length,
+        testsFailed: testResults.filter(t => t.status === 'failed').length,
+        reportPath,
+        liveUrl: serverUrl,
+        timestamp: new Date().toISOString()
+      });
 
       return {
         success: true,
@@ -500,6 +660,13 @@ export class TaskOrchestrator {
   }
 
   private async runTests(context: TaskExecutionContext, projectStructure: any): Promise<any[]> {
+    // Emit test started callback
+    this.emit('testStarted', {
+      taskId: context.taskId,
+      testType: 'build',
+      timestamp: new Date().toISOString()
+    });
+
     // Simulate test execution - return simple test results for now
     const testResults = [];
     
@@ -521,6 +688,14 @@ export class TaskOrchestrator {
       });
     }
 
+    // Emit test completed callback
+    this.emit('testCompleted', {
+      taskId: context.taskId,
+      testType: 'build',
+      result: 'success',
+      timestamp: new Date().toISOString()
+    });
+
     return testResults;
   }
 
@@ -531,6 +706,14 @@ export class TaskOrchestrator {
   }
 
   private async generateReport(context: TaskExecutionContext, projectStructure: any, testResults: any[], serverUrl?: string): Promise<string> {
+    // Emit report generation started callback
+    this.emit('toolStarted', {
+      taskId: context.taskId,
+      toolName: 'MarkdownReporter',
+      action: 'generateReport',
+      timestamp: new Date().toISOString()
+    });
+
     // Generate report using MarkdownReporter
     const title = `Projeto ${context.projectType}`;
     
@@ -570,6 +753,22 @@ export class TaskOrchestrator {
         includeExecutionSummary: true
       }
     );
+
+    // Emit report generated callback
+    this.emit('reportGenerated', {
+      taskId: context.taskId,
+      reportPath: reportResult.reportPath || '',
+      timestamp: new Date().toISOString()
+    });
+
+    // Emit tool completed callback
+    this.emit('toolCompleted', {
+      taskId: context.taskId,
+      toolName: 'MarkdownReporter',
+      action: 'generateReport',
+      result: 'success',
+      timestamp: new Date().toISOString()
+    });
 
     return reportResult.reportPath || '';
   }
