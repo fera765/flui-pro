@@ -24,7 +24,10 @@ export class EpisodicStore {
     outcomeFlag: 'success' | 'failure' | 'partial',
     policyDelta: PolicyDelta,
     context: string,
-    taskId: string
+    taskId: string,
+    agentId?: string,
+    domain?: string,
+    complexity: 'simple' | 'medium' | 'complex' = 'medium'
   ): Promise<EpisodicMemory | null> {
     // Check if emotion intensity exceeds threshold
     const emotionIntensity = this.calculateEmotionIntensity(emotionVector);
@@ -41,9 +44,13 @@ export class EpisodicStore {
       policyDelta,
       context,
       taskId,
+      agentId: agentId || undefined,
+      domain: domain || this.extractDomain(context),
+      complexity,
       createdAt: new Date(),
       lastAccessed: new Date(),
-      accessCount: 0
+      accessCount: 0,
+      effectiveness: 0.5 // Initial effectiveness
     };
 
     this.memories.set(emotionHash, memory);
@@ -103,18 +110,31 @@ export class EpisodicStore {
   }
 
   /**
-   * Calculate emotion intensity using VAD model
+   * Calculate emotion intensity using expanded emotion model
    */
   private calculateEmotionIntensity(emotionVector: EmotionVector): number {
-    // Use Euclidean distance from neutral point (0, 0.5, 0.5)
+    // Use Euclidean distance from neutral point for VAD
     const valence = emotionVector.valence;
     const arousal = emotionVector.arousal - 0.5; // Center around 0
     const dominance = emotionVector.dominance - 0.5; // Center around 0
     
-    const intensity = Math.sqrt(valence * valence + arousal * arousal + dominance * dominance);
+    // Include additional emotions
+    const surprise = emotionVector.surprise || 0;
+    const fear = emotionVector.fear || 0;
+    const joy = emotionVector.joy || 0;
+    const anger = emotionVector.anger || 0;
+    const sadness = emotionVector.sadness || 0;
+    const disgust = emotionVector.disgust || 0;
+    
+    // Calculate intensity from all emotions
+    const basicIntensity = Math.sqrt(valence * valence + arousal * arousal + dominance * dominance);
+    const emotionIntensity = Math.sqrt(surprise * surprise + fear * fear + joy * joy + anger * anger + sadness * sadness + disgust * disgust);
+    
+    // Combine both intensities
+    const totalIntensity = Math.sqrt(basicIntensity * basicIntensity + emotionIntensity * emotionIntensity);
     
     // Normalize to 0-1 range
-    return Math.min(intensity / Math.sqrt(3), 1);
+    return Math.min(totalIntensity / Math.sqrt(6), 1);
   }
 
   /**
@@ -181,5 +201,80 @@ export class EpisodicStore {
   private applyMemoryDecay(memory: EpisodicMemory): number {
     const daysSinceAccess = (Date.now() - memory.lastAccessed.getTime()) / (1000 * 60 * 60 * 24);
     return Math.pow(this.config.memoryDecay, daysSinceAccess);
+  }
+
+  /**
+   * Extract domain from context
+   */
+  private extractDomain(context: string): string {
+    const lowerContext = context.toLowerCase();
+    
+    const domainMappings: Record<string, string> = {
+      'financial': 'finance',
+      'investment': 'finance',
+      'cryptocurrency': 'finance',
+      'bitcoin': 'finance',
+      'altcoin': 'finance',
+      'money': 'finance',
+      'design': 'design',
+      'logo': 'design',
+      'image': 'design',
+      'graphic': 'design',
+      'code': 'programming',
+      'programming': 'programming',
+      'development': 'programming',
+      'software': 'programming',
+      'analysis': 'research',
+      'research': 'research',
+      'data': 'research',
+      'report': 'research'
+    };
+    
+    for (const [keyword, domain] of Object.entries(domainMappings)) {
+      if (lowerContext.includes(keyword)) {
+        return domain;
+      }
+    }
+    
+    return 'general';
+  }
+
+  /**
+   * Update memory effectiveness based on usage
+   */
+  updateMemoryEffectiveness(emotionHash: string, wasHelpful: boolean): void {
+    const memory = this.memories.get(emotionHash);
+    if (!memory) return;
+
+    // Update effectiveness based on whether it was helpful
+    const adjustment = wasHelpful ? 0.1 : -0.05;
+    memory.effectiveness = Math.max(0, Math.min(1, memory.effectiveness + adjustment));
+    
+    // Update access count and timestamp
+    memory.accessCount++;
+    memory.lastAccessed = new Date();
+  }
+
+  /**
+   * Get memories by domain
+   */
+  async getMemoriesByDomain(domain: string): Promise<EpisodicMemory[]> {
+    return Array.from(this.memories.values()).filter(m => m.domain === domain);
+  }
+
+  /**
+   * Get memories by agent
+   */
+  async getMemoriesByAgent(agentId: string): Promise<EpisodicMemory[]> {
+    return Array.from(this.memories.values()).filter(m => m.agentId === agentId);
+  }
+
+  /**
+   * Get most effective memories
+   */
+  async getMostEffectiveMemories(limit: number = 10): Promise<EpisodicMemory[]> {
+    return Array.from(this.memories.values())
+      .sort((a, b) => b.effectiveness - a.effectiveness)
+      .slice(0, limit);
   }
 }

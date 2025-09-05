@@ -3,6 +3,12 @@ export interface EmotionVector {
   arousal: number;      // 0 to 1 (calm to excited)
   dominance: number;    // 0 to 1 (submissive to dominant)
   confidence: number;   // 0 to 1 (uncertain to certain)
+  surprise: number;     // 0 to 1 (expected to surprising)
+  fear: number;         // 0 to 1 (safe to fearful)
+  joy: number;          // 0 to 1 (neutral to joyful)
+  anger: number;        // 0 to 1 (calm to angry)
+  sadness: number;      // 0 to 1 (neutral to sad)
+  disgust: number;      // 0 to 1 (neutral to disgusted)
   timestamp: Date;
 }
 
@@ -11,6 +17,9 @@ export interface PolicyDelta {
   context: string;      // e.g., "altcoin", "financial_advice"
   impact: number;       // -1 to 1 (negative to positive impact)
   description: string;  // Human readable description
+  category: 'safety' | 'quality' | 'efficiency' | 'user_experience' | 'compliance';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  triggers: string[];   // Keywords that trigger this policy
 }
 
 export interface EpisodicMemory {
@@ -21,9 +30,13 @@ export interface EpisodicMemory {
   policyDelta: PolicyDelta;
   context: string;      // Original context that triggered this memory
   taskId: string;
+  agentId?: string | undefined;     // Agent that generated this memory
+  domain: string;       // Domain/category of the task
+  complexity: 'simple' | 'medium' | 'complex';
   createdAt: Date;
   lastAccessed: Date;
   accessCount: number;
+  effectiveness: number; // How effective this memory has been (0-1)
 }
 
 export interface MemoryRecall {

@@ -705,4 +705,65 @@ export class AdvancedOrchestrator {
     const contextMessages = [{ role: 'user' as const, content: context }];
     return await this.sriProtocol.optimizeContextForAgent(agentId, contextMessages, taskId);
   }
+
+  /**
+   * Get performance metrics
+   */
+  async getPerformanceMetrics(): Promise<any> {
+    return this.sriProtocol.getPerformanceMetrics();
+  }
+
+  /**
+   * Get real-time alerts
+   */
+  async getAlerts(): Promise<any[]> {
+    return this.sriProtocol.getAlerts();
+  }
+
+  /**
+   * Get agent-specific metrics
+   */
+  async getAgentMetrics(agentId: string): Promise<any[]> {
+    return this.sriProtocol.getAgentMetrics(agentId);
+  }
+
+  /**
+   * Get memories by domain
+   */
+  async getMemoriesByDomain(domain: string): Promise<any[]> {
+    // This would need to be implemented in the episodic store
+    return [];
+  }
+
+  /**
+   * Get memories by agent
+   */
+  async getMemoriesByAgent(agentId: string): Promise<any[]> {
+    // This would need to be implemented in the episodic store
+    return [];
+  }
+
+  /**
+   * Get most effective memories
+   */
+  async getMostEffectiveMemories(limit: number = 10): Promise<any[]> {
+    // This would need to be implemented in the episodic store
+    return [];
+  }
+
+  /**
+   * Get tuning recommendations
+   */
+  async getTuningRecommendations(): Promise<any[]> {
+    // This would need to be implemented with the adaptive tuner
+    return [];
+  }
+
+  /**
+   * Apply tuning recommendations
+   */
+  async applyTuningRecommendations(recommendations: any[]): Promise<any> {
+    // This would need to be implemented with the adaptive tuner
+    return this.config;
+  }
 }

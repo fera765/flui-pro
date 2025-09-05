@@ -10,6 +10,7 @@ import { createPluginRoutes } from './routes/plugins';
 import { knowledgeRoutes } from './routes/knowledge';
 import { mcpRoutes } from './routes/mcp';
 import { createEmotionMemoryRoutes } from './routes/emotionMemory';
+import { createAnalyticsRoutes } from './routes/analytics';
 import { Orchestrator } from './core/orchestrator';
 import { AdvancedOrchestrator } from './core/advancedOrchestrator';
 import { Classifier } from './core/classifier';
@@ -138,6 +139,7 @@ app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
 app.use('/v1/knowledge', knowledgeRoutes(knowledgeManager));
 app.use('/v1/emotion-memory', createEmotionMemoryRoutes(orchestrator, advancedOrchestrator));
+app.use('/v1/analytics', createAnalyticsRoutes(orchestrator, advancedOrchestrator));
 app.use('/mcp', mcpRoutes(mcpRegistry, mcpToolProxy));
 app.use('/v1', createPluginRoutes(pluginLoader));
 

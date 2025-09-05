@@ -2,6 +2,8 @@ export { EpisodicStore } from './episodicStore';
 export { EmotionHash } from './emotionHash';
 export { ContextInjector } from './contextInjector';
 export { SRIProtocol } from './sriProtocol';
+export { MetricsCollector } from './metricsCollector';
+export { AdaptiveTuner } from './adaptiveTuner';
 
 // Re-export types
 export type {

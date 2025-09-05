@@ -1,6 +1,7 @@
 import { EpisodicStore } from './episodicStore';
 import { EmotionHash } from './emotionHash';
 import { ContextInjector, ContextMessage } from './contextInjector';
+import { MetricsCollector } from './metricsCollector';
 import { 
   EmotionMemoryConfig, 
   EmotionVector, 
@@ -24,12 +25,16 @@ export interface MemoryStats {
 }
 
 export class SRIProtocol {
+  private metricsCollector: MetricsCollector;
+
   constructor(
     private episodicStore: EpisodicStore,
     private emotionHash: EmotionHash,
     private contextInjector: ContextInjector,
     private config: EmotionMemoryConfig
-  ) {}
+  ) {
+    this.metricsCollector = new MetricsCollector();
+  }
 
   /**
    * Main SRI Protocol: Strip-Recall-Inject
@@ -58,6 +63,9 @@ export class SRIProtocol {
       relevantMemories,
       relevanceThreshold
     );
+
+    // Record metrics
+    this.metricsCollector.recordMetrics(result, taskId, undefined, 'simple');
 
     return result;
   }
@@ -92,6 +100,9 @@ export class SRIProtocol {
       relevantMemories,
       relevanceThreshold
     );
+
+    // Record metrics
+    this.metricsCollector.recordMetrics(result, taskId, agentId, 'complex');
 
     return result;
   }
@@ -145,6 +156,12 @@ export class SRIProtocol {
         arousal: 0.3, // Low arousal (calm satisfaction)
         dominance: 0.8, // High dominance (feeling in control)
         confidence,
+        surprise: 0.2, // Low surprise for expected success
+        fear: 0.1, // Low fear
+        joy: 0.8, // High joy for success
+        anger: 0.1, // Low anger
+        sadness: 0.1, // Low sadness
+        disgust: 0.1, // Low disgust
         timestamp: new Date()
       };
     } else {
@@ -154,6 +171,12 @@ export class SRIProtocol {
         arousal: 0.9, // High arousal (frustration/excitement)
         dominance: 0.2, // Low dominance (feeling out of control)
         confidence,
+        surprise: 0.3, // Some surprise at failure
+        fear: 0.4, // Some fear of consequences
+        joy: 0.1, // Low joy
+        anger: 0.7, // High anger at failure
+        sadness: 0.6, // Some sadness
+        disgust: 0.2, // Some disgust
         timestamp: new Date()
       };
     }
@@ -170,14 +193,20 @@ export class SRIProtocol {
         action: 'reinforce_approach',
         context,
         impact: 0.7,
-        description: `Continue using successful approach for ${context}`
+        description: `Continue using successful approach for ${context}`,
+        category: 'efficiency',
+        priority: 'medium',
+        triggers: [context]
       };
     } else {
       return {
         action: 'add_safeguard',
         context,
         impact: 0.8,
-        description: `Add safeguards and disclaimers for ${context}`
+        description: `Add safeguards and disclaimers for ${context}`,
+        category: 'safety',
+        priority: 'high',
+        triggers: [context]
       };
     }
   }
@@ -272,5 +301,33 @@ export class SRIProtocol {
     // This would need to be implemented in EpisodicStore
     // For now, just log the action
     console.log(`Importing ${memories.length} memories...`);
+  }
+
+  /**
+   * Get performance metrics
+   */
+  getPerformanceMetrics(): any {
+    return this.metricsCollector.getPerformanceMetrics();
+  }
+
+  /**
+   * Get real-time alerts
+   */
+  getAlerts(): any[] {
+    return this.metricsCollector.getAlerts();
+  }
+
+  /**
+   * Get metrics for specific agent
+   */
+  getAgentMetrics(agentId: string): any[] {
+    return this.metricsCollector.getAgentMetrics(agentId);
+  }
+
+  /**
+   * Clear all metrics
+   */
+  clearMetrics(): void {
+    this.metricsCollector.clearMetrics();
   }
 }
