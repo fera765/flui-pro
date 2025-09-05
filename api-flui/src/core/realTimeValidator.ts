@@ -10,26 +10,36 @@ export class RealTimeValidator {
   async validateProject(workingDirectory: string, solution: SolutionArchitecture): Promise<ValidationResult> {
     const validations: Promise<ValidationStepResult>[] = [];
     
-    // Validate build
-    validations.push(this.validateBuild(workingDirectory, solution.buildTool, solution.scripts.build || 'npm run build'));
+    // Check if it's a simple HTML project (no package.json)
+    const hasPackageJson = fs.existsSync(path.join(workingDirectory, 'package.json'));
+    const hasHtmlFiles = fs.readdirSync(workingDirectory).some(file => file.endsWith('.html'));
     
-    // Validate tests if available
-    if (solution.scripts.test) {
-      validations.push(this.validateTests(workingDirectory, solution.buildTool, solution.scripts.test));
-    }
-    
-    // Validate server if applicable
-    if (solution.type === 'frontend' || solution.type === 'backend') {
-      const port = this.getDefaultPort(solution);
-      const url = `http://localhost:${port}`;
-      const startCommand = solution.scripts.start;
+    if (!hasPackageJson && hasHtmlFiles) {
+      // Simple HTML project validation
+      validations.push(this.validateHtmlProject(workingDirectory));
+    } else {
+      // Standard project validation
+      // Validate build
+      validations.push(this.validateBuild(workingDirectory, solution.buildTool, solution.scripts.build || 'npm run build'));
       
-      validations.push(this.validateServer(workingDirectory, port, url, startCommand));
-    }
-    
-    // Validate linting if available
-    if (solution.devDependencies.includes('eslint') || solution.devDependencies.includes('prettier')) {
-      validations.push(this.validateLinting(workingDirectory, 'eslint', 'npx eslint src/'));
+      // Validate tests if available and jest is installed
+      if (solution.scripts.test && fs.existsSync(path.join(workingDirectory, 'node_modules', 'jest'))) {
+        validations.push(this.validateTests(workingDirectory, solution.buildTool, solution.scripts.test));
+      }
+      
+      // Validate server if applicable
+      if (solution.type === 'frontend' || solution.type === 'backend') {
+        const port = this.getDefaultPort(solution);
+        const url = `http://localhost:${port}`;
+        const startCommand = solution.scripts.start;
+        
+        validations.push(this.validateServer(workingDirectory, port, url, startCommand));
+      }
+      
+      // Validate linting if available
+      if (solution.devDependencies.includes('eslint') || solution.devDependencies.includes('prettier')) {
+        validations.push(this.validateLinting(workingDirectory, 'eslint', 'npx eslint src/'));
+      }
     }
     
     // Validate logs
@@ -44,6 +54,41 @@ export class RealTimeValidator {
       warnings: results.filter(r => r.warning).map(r => r.warning || ''),
       serverUrl: this.getServerUrl(results)
     };
+  }
+
+  async validateHtmlProject(workingDirectory: string): Promise<ValidationStepResult> {
+    try {
+      const files = fs.readdirSync(workingDirectory);
+      const htmlFiles = files.filter(file => file.endsWith('.html'));
+      const cssFiles = files.filter(file => file.endsWith('.css'));
+      const jsFiles = files.filter(file => file.endsWith('.js'));
+      
+      if (htmlFiles.length === 0) {
+        return {
+          name: 'HTML Project',
+          success: false,
+          output: '',
+          error: 'No HTML files found'
+        };
+      }
+      
+      // Check if index.html exists
+      const hasIndex = htmlFiles.includes('index.html');
+      
+      return {
+        name: 'HTML Project',
+        success: true,
+        output: `HTML files: ${htmlFiles.join(', ')}, CSS files: ${cssFiles.join(', ')}, JS files: ${jsFiles.join(', ')}`,
+        error: hasIndex ? '' : 'Warning: No index.html found'
+      };
+    } catch (error: any) {
+      return {
+        name: 'HTML Project',
+        success: false,
+        output: '',
+        error: error.message
+      };
+    }
   }
 
   async validateBuild(workingDirectory: string, buildTool: string, command: string): Promise<ValidationStepResult> {

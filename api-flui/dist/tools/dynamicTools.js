@@ -704,6 +704,24 @@ class DynamicTools {
             }
         };
     }
+    async runShellCommand(command) {
+        try {
+            const { stdout, stderr } = await execAsync(command, { cwd: this.workingDirectory });
+            return {
+                stdout,
+                stderr,
+                success: true
+            };
+        }
+        catch (error) {
+            return {
+                stdout: '',
+                stderr: error.message,
+                success: false,
+                error: error.message
+            };
+        }
+    }
     createPackageManagerTool() {
         return {
             name: 'package_manager',
@@ -771,6 +789,14 @@ class DynamicTools {
                 }
             }
         };
+    }
+    async createFile(filePath, content) {
+        const fullPath = path.join(this.workingDirectory, filePath);
+        const dir = path.dirname(fullPath);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(fullPath, content, 'utf8');
     }
 }
 exports.DynamicTools = DynamicTools;

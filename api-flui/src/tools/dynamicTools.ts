@@ -741,6 +741,24 @@ export class DynamicTools {
     };
   }
 
+  private async runShellCommand(command: string): Promise<any> {
+    try {
+      const { stdout, stderr } = await execAsync(command, { cwd: this.workingDirectory });
+      return {
+        stdout,
+        stderr,
+        success: true
+      };
+    } catch (error: any) {
+      return {
+        stdout: '',
+        stderr: error.message,
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   createPackageManagerTool(): Tool {
     return {
       name: 'package_manager',
@@ -807,5 +825,18 @@ export class DynamicTools {
         }
       }
     };
+  }
+
+  private async createFile(filePath: string, content: string): Promise<void> {
+    const fullPath = path.join(this.workingDirectory, filePath);
+    const dir = path.dirname(fullPath);
+    
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Write file
+    fs.writeFileSync(fullPath, content, 'utf8');
   }
 }

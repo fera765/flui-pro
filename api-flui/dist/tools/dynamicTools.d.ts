@@ -19,7 +19,9 @@ export declare class DynamicTools {
     private analyzeProject;
     private analyzeProjectStructure;
     createShellTool(): Tool;
+    private runShellCommand;
     createPackageManagerTool(): Tool;
     createFileWriteTool(): Tool;
+    private createFile;
 }
 //# sourceMappingURL=dynamicTools.d.ts.map

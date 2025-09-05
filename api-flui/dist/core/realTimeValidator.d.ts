@@ -1,6 +1,7 @@
 import { SolutionArchitecture, ValidationResult, ValidationStepResult } from '../types/dynamic';
 export declare class RealTimeValidator {
     validateProject(workingDirectory: string, solution: SolutionArchitecture): Promise<ValidationResult>;
+    validateHtmlProject(workingDirectory: string): Promise<ValidationStepResult>;
     validateBuild(workingDirectory: string, buildTool: string, command: string): Promise<ValidationStepResult>;
     validateTests(workingDirectory: string, testTool: string, command: string): Promise<ValidationStepResult>;
     validateServer(workingDirectory: string, port: number, url: string, startCommand?: string): Promise<ValidationStepResult>;

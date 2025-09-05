@@ -456,7 +456,7 @@ class DynamicSolutionArchitect {
                     description: 'Initialize React project',
                     type: 'tool',
                     toolName: 'shell',
-                    parameters: { command: 'npx create-react-app . --template typescript' },
+                    parameters: { command: 'npx create-react-app temp-react-app --template typescript && cp -r temp-react-app/* . && cp -r temp-react-app/.* . 2>/dev/null || true && rm -rf temp-react-app' },
                     status: 'pending',
                     dependencies: [],
                     createdAt: new Date(),
@@ -489,6 +489,41 @@ class DynamicSolutionArchitect {
                     projectPhase: 'setup'
                 });
             }
+            else if (intent.technology === 'html') {
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Create HTML project structure',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>My Website</title>\n    <link rel="stylesheet" href="style.css">\n</head>\n<body>\n    <h1>Welcome to My Website</h1>\n    <p>This is a simple HTML website.</p>\n    <script src="script.js"></script>\n</body>\n</html>' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'setup'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Create CSS file',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'style.css', content: 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n    background-color: #f0f0f0;\n}\n\nh1 {\n    color: #333;\n    text-align: center;\n}\n\np {\n    color: #666;\n    line-height: 1.6;\n}' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'setup'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Create JavaScript file',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'script.js', content: '// JavaScript functionality\nconsole.log("Website loaded successfully!");\n\n// Add interactive features\ndocument.addEventListener("DOMContentLoaded", function() {\n    console.log("DOM is ready!");\n    \n    // Example: Add click event to h1\n    const h1 = document.querySelector("h1");\n    if (h1) {\n        h1.addEventListener("click", function() {\n            alert("Hello from JavaScript!");\n        });\n    }\n});' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'setup'
+                });
+            }
             else if (intent.technology === 'express') {
                 tasks.push({
                     id: (0, uuid_1.v4)(),
@@ -500,6 +535,72 @@ class DynamicSolutionArchitect {
                     dependencies: [],
                     createdAt: new Date(),
                     projectPhase: 'setup'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Update package.json with scripts',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'package.json', content: '{\n  "name": "express-api",\n  "version": "1.0.0",\n  "description": "Express API with JWT authentication",\n  "main": "src/server.js",\n  "scripts": {\n    "start": "node src/server.js",\n    "dev": "nodemon src/server.js",\n    "test": "jest",\n    "build": "echo \\"No build step required for Node.js\\""\n  },\n  "keywords": ["express", "api", "jwt", "authentication"],\n  "author": "",\n  "license": "MIT"\n}' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'setup'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Install Express dependencies',
+                    type: 'tool',
+                    toolName: 'package_manager',
+                    parameters: { dependencies: ['express', 'cors', 'helmet', 'morgan', 'jsonwebtoken', 'bcryptjs', 'express-validator'], devDependencies: false },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'dependencies'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Install dev dependencies',
+                    type: 'tool',
+                    toolName: 'package_manager',
+                    parameters: { dependencies: ['nodemon', 'jest', 'supertest'], devDependencies: true },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'dependencies'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Create Express server',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'src/server.js', content: 'const express = require(\'express\');\nconst cors = require(\'cors\');\nconst helmet = require(\'helmet\');\nconst morgan = require(\'morgan\');\nconst authRoutes = require(\'./routes/auth\');\nconst apiRoutes = require(\'./routes/api\');\n\nconst app = express();\nconst PORT = process.env.PORT || 3000;\n\n// Middleware\napp.use(helmet());\napp.use(cors());\napp.use(morgan(\'combined\'));\napp.use(express.json());\napp.use(express.urlencoded({ extended: true }));\n\n// Routes\napp.use(\'/api/auth\', authRoutes);\napp.use(\'/api\', apiRoutes);\n\n// Health check\napp.get(\'/health\', (req, res) => {\n  res.json({ status: \'healthy\', timestamp: new Date().toISOString() });\n});\n\n// Error handling\napp.use((err, req, res, next) => {\n  console.error(err.stack);\n  res.status(500).json({ error: \'Something went wrong!\' });\n});\n\n// 404 handler\napp.use(\'*\', (req, res) => {\n  res.status(404).json({ error: \'Route not found\' });\n});\n\napp.listen(PORT, () => {\n  console.log(`🚀 Server running on port ${PORT}`);\n});\n\nmodule.exports = app;' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'implementation'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Create auth routes',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'src/routes/auth.js', content: 'const express = require(\'express\');\nconst bcrypt = require(\'bcryptjs\');\nconst jwt = require(\'jsonwebtoken\');\nconst { body, validationResult } = require(\'express-validator\');\n\nconst router = express.Router();\n\n// Mock user database (in real app, use proper database)\nconst users = [];\n\n// Register\nrouter.post(\'/register\', [\n  body(\'email\').isEmail().normalizeEmail(),\n  body(\'password\').isLength({ min: 6 })\n], async (req, res) => {\n  try {\n    const errors = validationResult(req);\n    if (!errors.isEmpty()) {\n      return res.status(400).json({ errors: errors.array() });\n    }\n\n    const { email, password } = req.body;\n    \n    // Check if user exists\n    const existingUser = users.find(user => user.email === email);\n    if (existingUser) {\n      return res.status(400).json({ error: \'User already exists\' });\n    }\n\n    // Hash password\n    const hashedPassword = await bcrypt.hash(password, 10);\n    \n    // Create user\n    const user = { id: users.length + 1, email, password: hashedPassword };\n    users.push(user);\n\n    // Generate JWT\n    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || \'secret\', { expiresIn: \'24h\' });\n\n    res.status(201).json({ token, user: { id: user.id, email: user.email } });\n  } catch (error) {\n    res.status(500).json({ error: error.message });\n  }\n});\n\n// Login\nrouter.post(\'/login\', [\n  body(\'email\').isEmail().normalizeEmail(),\n  body(\'password\').exists()\n], async (req, res) => {\n  try {\n    const errors = validationResult(req);\n    if (!errors.isEmpty()) {\n      return res.status(400).json({ errors: errors.array() });\n    }\n\n    const { email, password } = req.body;\n    \n    // Find user\n    const user = users.find(user => user.email === email);\n    if (!user) {\n      return res.status(400).json({ error: \'Invalid credentials\' });\n    }\n\n    // Check password\n    const isValidPassword = await bcrypt.compare(password, user.password);\n    if (!isValidPassword) {\n      return res.status(400).json({ error: \'Invalid credentials\' });\n    }\n\n    // Generate JWT\n    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || \'secret\', { expiresIn: \'24h\' });\n\n    res.json({ token, user: { id: user.id, email: user.email } });\n  } catch (error) {\n    res.status(500).json({ error: error.message });\n  }\n});\n\nmodule.exports = router;' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'implementation'
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: 'Create API routes',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: { filePath: 'src/routes/api.js', content: 'const express = require(\'express\');\nconst jwt = require(\'jsonwebtoken\');\n\nconst router = express.Router();\n\n// Middleware to verify JWT\nconst authenticateToken = (req, res, next) => {\n  const authHeader = req.headers[\'authorization\'];\n  const token = authHeader && authHeader.split(\' \')[1];\n\n  if (!token) {\n    return res.status(401).json({ error: \'Access token required\' });\n  }\n\n  jwt.verify(token, process.env.JWT_SECRET || \'secret\', (err, user) => {\n    if (err) {\n      return res.status(403).json({ error: \'Invalid token\' });\n    }\n    req.user = user;\n    next();\n  });\n};\n\n// Protected route example\nrouter.get(\'/profile\', authenticateToken, (req, res) => {\n  res.json({ \n    message: \'Protected route accessed successfully\',\n    user: req.user \n  });\n});\n\n// Public route example\nrouter.get(\'/public\', (req, res) => {\n  res.json({ message: \'This is a public route\' });\n});\n\nmodule.exports = router;' },
+                    status: 'pending',
+                    dependencies: [],
+                    createdAt: new Date(),
+                    projectPhase: 'implementation'
                 });
             }
             else if (intent.technology === 'fastapi') {
