@@ -84,8 +84,21 @@ app.post('/v1/chat/completions', async (req, res) => {
       purpose = 'backend API service';
       console.log('⚙️ Detected: Backend API');
     }
-    // Content Detection - More specific keywords
-    else if (input.toLowerCase().includes('roteiro') || input.toLowerCase().includes('youtube') || input.toLowerCase().includes('script') || input.toLowerCase().includes('viral') || input.toLowerCase().includes('marketing digital')) {
+    // HTML/CSS/JS Detection - HIGH PRIORITY for landing pages
+    else if (input.toLowerCase().includes('html') || input.toLowerCase().includes('css') || input.toLowerCase().includes('javascript') || 
+             input.toLowerCase().includes('landing page') || input.toLowerCase().includes('página') || 
+             (input.toLowerCase().includes('copywrite') && input.toLowerCase().includes('html'))) {
+      domain = 'frontend';
+      technology = 'html';
+      language = 'javascript';
+      features = ['styling', 'responsive', 'interactive', 'copywrite'];
+      requirements = ['modern', 'responsive', 'user-friendly'];
+      purpose = 'HTML landing page with copywriting';
+      console.log('🌐 Detected: HTML Landing Page');
+    }
+    // Content Detection - More specific keywords (only for pure scripts)
+    else if ((input.toLowerCase().includes('roteiro') || input.toLowerCase().includes('youtube') || input.toLowerCase().includes('script') || input.toLowerCase().includes('viral') || input.toLowerCase().includes('marketing digital')) &&
+             !input.toLowerCase().includes('html') && !input.toLowerCase().includes('css') && !input.toLowerCase().includes('javascript')) {
       domain = 'content';
       technology = 'markdown';
       language = 'markdown';
@@ -396,6 +409,44 @@ app.post('/v1/chat/completions', async (req, res) => {
               "parameters": { "command": "flutter analyze" },
               "dependencies": [],
               "phase": "validation"
+            }
+          ];
+        } else if (intent.domain === 'frontend' && intent.technology === 'html') {
+          tasks = [
+            {
+              "description": "Create HTML project structure",
+              "type": "tool",
+              "toolName": "file_write",
+              "parameters": { "filePath": "index.html", "content": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Landing Page</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n    <header>\n        <h1>Bem-vindo à Nossa Landing Page</h1>\n    </header>\n    <main>\n        <section class=\"hero\">\n            <h2>Descubra o Segredo que 95% das Pessoas Não Conhecem</h2>\n            <p class=\"subtitle\">Método Comprovado que Já Transformou Mais de 10.000 Negócios</p>\n            <button class=\"cta-button\">QUERO GARANTIR MINHA VAGA AGORA!</button>\n        </section>\n    </main>\n    <footer>\n        <p>© 2024 Landing Page. Todos os direitos reservados.</p>\n    </footer>\n    <script src=\"script.js\"></script>\n</body>\n</html>" },
+              "dependencies": [],
+              "phase": "setup"
+            },
+            {
+              "description": "Create CSS styles",
+              "type": "tool",
+              "toolName": "file_write",
+              "parameters": { "filePath": "style.css", "content": "body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 0;\n    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n    color: white;\n}\n\nheader {\n    text-align: center;\n    padding: 2rem;\n}\n\n.hero {\n    text-align: center;\n    padding: 4rem 2rem;\n}\n\n.cta-button {\n    background: #ff6b6b;\n    color: white;\n    border: none;\n    padding: 1rem 2rem;\n    font-size: 1.2rem;\n    border-radius: 5px;\n    cursor: pointer;\n    margin-top: 2rem;\n}\n\n.cta-button:hover {\n    background: #ff5252;\n}" },
+              "dependencies": [],
+              "phase": "implementation"
+            },
+            {
+              "description": "Create JavaScript functionality",
+              "type": "tool",
+              "toolName": "file_write",
+              "parameters": { "filePath": "script.js", "content": "document.addEventListener('DOMContentLoaded', function() {\n    const ctaButton = document.querySelector('.cta-button');\n    \n    ctaButton.addEventListener('click', function() {\n        alert('Obrigado pelo interesse! Em breve entraremos em contato.');\n    });\n});" },
+              "dependencies": [],
+              "phase": "implementation"
+            }
+          ];
+        } else if (intent.domain === 'content') {
+          tasks = [
+            {
+              "description": "Create content script structure",
+              "type": "tool",
+              "toolName": "file_write",
+              "parameters": { "filePath": "script.md", "content": "# Roteiro Viral para YouTube\n\n## ⏱️ Timing: 1 minuto (60 segundos)\n\n## 🎯 Hook (0-5 segundos)\n\"Você sabia que 90% das pessoas perdem dinheiro online porque não conhecem este segredo do marketing digital?\"\n\n## 📝 Conteúdo Principal (5-50 segundos)\n### Ponto 1: O Problema (5-20 segundos)\n- A maioria das pessoas tenta vender sem estratégia\n- Resultado: frustração e perda de tempo\n\n### Ponto 2: A Solução (20-40 segundos)\n- Marketing digital baseado em dados\n- Estratégias comprovadas que funcionam\n- Resultado: vendas consistentes\n\n### Ponto 3: Prova Social (40-50 segundos)\n- \"Mais de 1000 pessoas já transformaram seus negócios\"\n- \"Resultados em apenas 30 dias\"\n\n## 🚀 Call-to-Action (50-60 segundos)\n- \"Quer saber como? Deixe um comentário com a palavra 'QUERO' abaixo\"\n- \"Curta este vídeo se foi útil para você\"\n- \"Se inscreva no canal para mais dicas de marketing digital\"\n\n---\n*Script criado dinamicamente pelo FLUI AutoCode-Forge*" },
+              "dependencies": [],
+              "phase": "setup"
             }
           ];
         } else {

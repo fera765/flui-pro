@@ -62,7 +62,7 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
                 content: 'Processing your answers...',
                 timestamp: new Date()
             });
-            const builtInput = this.buildInputFromAnswers(answers);
+            const builtInput = this.buildInputFromAnswers(answers, userId);
             console.log(`🔍 Built input from answers: "${builtInput}"`);
             const result = await this.dynamicIntelligence.processUserInput(builtInput, this.workingDirectory);
             context.pendingQuestions = result.questions;
@@ -282,15 +282,37 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
         }
         return context;
     }
-    buildInputFromAnswers(answers) {
+    buildInputFromAnswers(answers, userId) {
         console.log(`🔍 buildInputFromAnswers called with:`, answers);
+        const context = this.getOrCreateConversationContext(userId);
+        const lastUserMessage = context.conversationHistory
+            .filter(msg => msg.role === 'user')
+            .pop();
+        if (lastUserMessage) {
+            const baseInput = lastUserMessage.content;
+            const answerParts = [];
+            for (const [key, value] of Object.entries(answers)) {
+                if (value) {
+                    if (Array.isArray(value)) {
+                        answerParts.push(`${key}: ${value.join(', ')}`);
+                    }
+                    else {
+                        answerParts.push(`${key}: ${value}`);
+                    }
+                }
+            }
+            if (answerParts.length > 0) {
+                return `${baseInput} with additional requirements: ${answerParts.join(', ')}`;
+            }
+            return baseInput;
+        }
         const parts = [];
         const techMapping = {
-            'tech-1': 'technology',
-            'lang-2': 'language',
-            'purpose-3': 'purpose',
-            'complexity-4': 'complexity',
-            'features-5': 'features'
+            'ui-framework': 'UI framework',
+            'auth-provider': 'authentication provider',
+            'database': 'database',
+            'styling': 'styling framework',
+            'testing': 'testing framework'
         };
         for (const [key, value] of Object.entries(answers)) {
             if (value) {
@@ -303,19 +325,10 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
                 }
             }
         }
-        if (answers['tech-1']) {
-            const tech = answers['tech-1'].toLowerCase();
-            if (tech.includes('node') || tech.includes('express')) {
-                parts.push('backend Node.js Express');
-            }
-            else if (tech.includes('react')) {
-                parts.push('frontend React');
-            }
-            else if (tech.includes('html')) {
-                parts.push('frontend HTML');
-            }
+        if (parts.length > 0) {
+            return `Create a complete project with the following specifications: ${parts.join(', ')}. Include all necessary files, dependencies, and configuration.`;
         }
-        return parts.join(', ');
+        return 'Create a complete project with standard configuration and best practices.';
     }
     setupEventHandlers() {
         this.on('taskCreated', (task) => {
