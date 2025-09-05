@@ -207,7 +207,7 @@ class IntentExtractor {
         return intent;
     }
     extractDomain(input) {
-        if (input.includes('frontend') || input.includes('react') || input.includes('vue') || input.includes('angular')) {
+        if (input.includes('frontend') || input.includes('react') || input.includes('vue') || input.includes('angular') || input.includes('html') || input.includes('site') || input.includes('website')) {
             return 'frontend';
         }
         else if (input.includes('backend') || input.includes('api') || input.includes('server')) {
@@ -232,7 +232,7 @@ class IntentExtractor {
     }
     extractTechnology(input) {
         const technologies = [
-            'react', 'vue', 'angular', 'svelte', 'nextjs', 'nuxt',
+            'react', 'vue', 'angular', 'svelte', 'nextjs', 'nuxt', 'html',
             'nodejs', 'express', 'fastapi', 'django', 'spring', 'rails',
             'flutter', 'react native', 'swift', 'kotlin',
             'electron', 'tauri', 'qt',

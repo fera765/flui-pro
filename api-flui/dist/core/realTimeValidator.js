@@ -42,18 +42,25 @@ const execAsync = (0, util_1.promisify)(child_process_1.exec);
 class RealTimeValidator {
     async validateProject(workingDirectory, solution) {
         const validations = [];
-        validations.push(this.validateBuild(workingDirectory, solution.buildTool, solution.scripts.build || 'npm run build'));
-        if (solution.scripts.test) {
-            validations.push(this.validateTests(workingDirectory, solution.buildTool, solution.scripts.test));
+        const hasPackageJson = fs.existsSync(path.join(workingDirectory, 'package.json'));
+        const hasHtmlFiles = fs.readdirSync(workingDirectory).some(file => file.endsWith('.html'));
+        if (!hasPackageJson && hasHtmlFiles) {
+            validations.push(this.validateHtmlProject(workingDirectory));
         }
-        if (solution.type === 'frontend' || solution.type === 'backend') {
-            const port = this.getDefaultPort(solution);
-            const url = `http://localhost:${port}`;
-            const startCommand = solution.scripts.start;
-            validations.push(this.validateServer(workingDirectory, port, url, startCommand));
-        }
-        if (solution.devDependencies.includes('eslint') || solution.devDependencies.includes('prettier')) {
-            validations.push(this.validateLinting(workingDirectory, 'eslint', 'npx eslint src/'));
+        else {
+            validations.push(this.validateBuild(workingDirectory, solution.buildTool, solution.scripts.build || 'npm run build'));
+            if (solution.scripts.test && fs.existsSync(path.join(workingDirectory, 'node_modules', 'jest'))) {
+                validations.push(this.validateTests(workingDirectory, solution.buildTool, solution.scripts.test));
+            }
+            if (solution.type === 'frontend' || solution.type === 'backend') {
+                const port = this.getDefaultPort(solution);
+                const url = `http://localhost:${port}`;
+                const startCommand = solution.scripts.start;
+                validations.push(this.validateServer(workingDirectory, port, url, startCommand));
+            }
+            if (solution.devDependencies.includes('eslint') || solution.devDependencies.includes('prettier')) {
+                validations.push(this.validateLinting(workingDirectory, 'eslint', 'npx eslint src/'));
+            }
         }
         validations.push(this.validateLogs(workingDirectory, 'app.log'));
         const results = await Promise.all(validations);
@@ -64,6 +71,37 @@ class RealTimeValidator {
             warnings: results.filter(r => r.warning).map(r => r.warning || ''),
             serverUrl: this.getServerUrl(results)
         };
+    }
+    async validateHtmlProject(workingDirectory) {
+        try {
+            const files = fs.readdirSync(workingDirectory);
+            const htmlFiles = files.filter(file => file.endsWith('.html'));
+            const cssFiles = files.filter(file => file.endsWith('.css'));
+            const jsFiles = files.filter(file => file.endsWith('.js'));
+            if (htmlFiles.length === 0) {
+                return {
+                    name: 'HTML Project',
+                    success: false,
+                    output: '',
+                    error: 'No HTML files found'
+                };
+            }
+            const hasIndex = htmlFiles.includes('index.html');
+            return {
+                name: 'HTML Project',
+                success: true,
+                output: `HTML files: ${htmlFiles.join(', ')}, CSS files: ${cssFiles.join(', ')}, JS files: ${jsFiles.join(', ')}`,
+                error: hasIndex ? '' : 'Warning: No index.html found'
+            };
+        }
+        catch (error) {
+            return {
+                name: 'HTML Project',
+                success: false,
+                output: '',
+                error: error.message
+            };
+        }
     }
     async validateBuild(workingDirectory, buildTool, command) {
         try {
