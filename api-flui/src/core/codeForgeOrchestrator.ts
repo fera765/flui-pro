@@ -80,7 +80,7 @@ export class CodeForgeOrchestrator extends EventEmitter {
   }
 
   private propagateTaskOrchestratorEvents(): void {
-    // Propagate all TaskOrchestrator events to CodeForgeOrchestrator
+    // Propagate all TaskOrchestrator events to CodeForgeOrchestrator (now 100% dynamic)
     const eventTypes = [
       'taskCreated', 'taskStarted', 'taskProgress', 'taskCompleted', 'taskFailed',
       'agentStarted', 'agentCompleted', 'agentFailed',
@@ -89,25 +89,9 @@ export class CodeForgeOrchestrator extends EventEmitter {
       'reportGenerated', 'interactionReceived', 'interactionProcessed'
     ];
 
-    // Also propagate dynamic events
-    const dynamicEventTypes = [
-      'taskCreatedDynamic', 'taskStartedDynamic', 'taskProgressDynamic', 'taskCompletedDynamic', 'taskFailedDynamic',
-      'agentStartedDynamic', 'agentCompletedDynamic', 'agentFailedDynamic',
-      'toolStartedDynamic', 'toolCompletedDynamic', 'toolFailedDynamic',
-      'testStartedDynamic', 'testCompletedDynamic', 'testFailedDynamic',
-      'reportGeneratedDynamic', 'interactionReceivedDynamic', 'interactionProcessedDynamic'
-    ];
-
     eventTypes.forEach(eventType => {
       this.taskOrchestrator.on(eventType, (data) => {
-        // Re-emit the event from CodeForgeOrchestrator
-        this.emit(eventType, data);
-      });
-    });
-
-    dynamicEventTypes.forEach(eventType => {
-      this.taskOrchestrator.on(eventType, (data) => {
-        // Re-emit the dynamic event from CodeForgeOrchestrator
+        // Re-emit the event from CodeForgeOrchestrator (now 100% dynamic)
         this.emit(eventType, data);
       });
     });

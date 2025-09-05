@@ -2,6 +2,7 @@ import { Tool } from '../types/advanced';
 export declare class DynamicTools {
     private workingDirectory;
     constructor(workingDirectory: string);
+    getTools(): Tool[];
     createProjectTypeDetector(): Tool;
     createDependencyManager(): Tool;
     createBuildValidator(): Tool;

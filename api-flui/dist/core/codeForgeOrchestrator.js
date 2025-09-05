@@ -88,19 +88,7 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
             'testStarted', 'testCompleted', 'testFailed',
             'reportGenerated', 'interactionReceived', 'interactionProcessed'
         ];
-        const dynamicEventTypes = [
-            'taskCreatedDynamic', 'taskStartedDynamic', 'taskProgressDynamic', 'taskCompletedDynamic', 'taskFailedDynamic',
-            'agentStartedDynamic', 'agentCompletedDynamic', 'agentFailedDynamic',
-            'toolStartedDynamic', 'toolCompletedDynamic', 'toolFailedDynamic',
-            'testStartedDynamic', 'testCompletedDynamic', 'testFailedDynamic',
-            'reportGeneratedDynamic', 'interactionReceivedDynamic', 'interactionProcessedDynamic'
-        ];
         eventTypes.forEach(eventType => {
-            this.taskOrchestrator.on(eventType, (data) => {
-                this.emit(eventType, data);
-            });
-        });
-        dynamicEventTypes.forEach(eventType => {
             this.taskOrchestrator.on(eventType, (data) => {
                 this.emit(eventType, data);
             });

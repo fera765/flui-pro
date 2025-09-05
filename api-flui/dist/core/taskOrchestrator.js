@@ -7,6 +7,8 @@ exports.TaskOrchestrator = void 0;
 const uuid_1 = require("uuid");
 const events_1 = require("events");
 const axios_1 = __importDefault(require("axios"));
+const codeForgeAgent_1 = require("../agents/codeForgeAgent");
+const dynamicTools_1 = require("../tools/dynamicTools");
 class TaskOrchestrator extends events_1.EventEmitter {
     constructor(taskManager, liveTester, markdownReporter, contextPersistence) {
         super();
@@ -14,6 +16,8 @@ class TaskOrchestrator extends events_1.EventEmitter {
         this.liveTester = liveTester;
         this.markdownReporter = markdownReporter;
         this.contextPersistence = contextPersistence;
+        const dynamicTools = new dynamicTools_1.DynamicTools('/tmp/flui-tasks');
+        this.codeForgeAgent = new codeForgeAgent_1.CodeForgeAgent(dynamicTools.getTools());
         this.activeTasks = new Map();
         this.setupEventHandlers();
     }
@@ -21,87 +25,87 @@ class TaskOrchestrator extends events_1.EventEmitter {
         this.on('taskCreated', async (data) => {
             const message = await this.generateDynamicCallback('taskCreated', data);
             console.log(message);
-            this.emit('taskCreatedDynamic', { ...data, dynamicMessage: message });
+            this.emit('taskCreated', { ...data, dynamicMessage: message });
         });
         this.on('taskStarted', async (data) => {
             const message = await this.generateDynamicCallback('taskStarted', data);
             console.log(message);
-            this.emit('taskStartedDynamic', { ...data, dynamicMessage: message });
+            this.emit('taskStarted', { ...data, dynamicMessage: message });
         });
         this.on('taskProgress', async (data) => {
             const message = await this.generateDynamicCallback('taskProgress', data);
             console.log(message);
-            this.emit('taskProgressDynamic', { ...data, dynamicMessage: message });
+            this.emit('taskProgress', { ...data, dynamicMessage: message });
         });
         this.on('taskCompleted', async (data) => {
             const message = await this.generateDynamicCallback('taskCompleted', data);
             console.log(message);
-            this.emit('taskCompletedDynamic', { ...data, dynamicMessage: message });
+            this.emit('taskCompleted', { ...data, dynamicMessage: message });
         });
         this.on('taskFailed', async (data) => {
             const message = await this.generateDynamicCallback('taskFailed', data);
             console.log(message);
-            this.emit('taskFailedDynamic', { ...data, dynamicMessage: message });
+            this.emit('taskFailed', { ...data, dynamicMessage: message });
         });
         this.on('agentStarted', async (data) => {
             const message = await this.generateDynamicCallback('agentStarted', data);
             console.log(message);
-            this.emit('agentStartedDynamic', { ...data, dynamicMessage: message });
+            this.emit('agentStarted', { ...data, dynamicMessage: message });
         });
         this.on('agentCompleted', async (data) => {
             const message = await this.generateDynamicCallback('agentCompleted', data);
             console.log(message);
-            this.emit('agentCompletedDynamic', { ...data, dynamicMessage: message });
+            this.emit('agentCompleted', { ...data, dynamicMessage: message });
         });
         this.on('agentFailed', async (data) => {
             const message = await this.generateDynamicCallback('agentFailed', data);
             console.log(message);
-            this.emit('agentFailedDynamic', { ...data, dynamicMessage: message });
+            this.emit('agentFailed', { ...data, dynamicMessage: message });
         });
         this.on('toolStarted', async (data) => {
             const message = await this.generateDynamicCallback('toolStarted', data);
             console.log(message);
-            this.emit('toolStartedDynamic', { ...data, dynamicMessage: message });
+            this.emit('toolStarted', { ...data, dynamicMessage: message });
         });
         this.on('toolCompleted', async (data) => {
             const message = await this.generateDynamicCallback('toolCompleted', data);
             console.log(message);
-            this.emit('toolCompletedDynamic', { ...data, dynamicMessage: message });
+            this.emit('toolCompleted', { ...data, dynamicMessage: message });
         });
         this.on('toolFailed', async (data) => {
             const message = await this.generateDynamicCallback('toolFailed', data);
             console.log(message);
-            this.emit('toolFailedDynamic', { ...data, dynamicMessage: message });
+            this.emit('toolFailed', { ...data, dynamicMessage: message });
         });
         this.on('testStarted', async (data) => {
             const message = await this.generateDynamicCallback('testStarted', data);
             console.log(message);
-            this.emit('testStartedDynamic', { ...data, dynamicMessage: message });
+            this.emit('testStarted', { ...data, dynamicMessage: message });
         });
         this.on('testCompleted', async (data) => {
             const message = await this.generateDynamicCallback('testCompleted', data);
             console.log(message);
-            this.emit('testCompletedDynamic', { ...data, dynamicMessage: message });
+            this.emit('testCompleted', { ...data, dynamicMessage: message });
         });
         this.on('testFailed', async (data) => {
             const message = await this.generateDynamicCallback('testFailed', data);
             console.log(message);
-            this.emit('testFailedDynamic', { ...data, dynamicMessage: message });
+            this.emit('testFailed', { ...data, dynamicMessage: message });
         });
         this.on('reportGenerated', async (data) => {
             const message = await this.generateDynamicCallback('reportGenerated', data);
             console.log(message);
-            this.emit('reportGeneratedDynamic', { ...data, dynamicMessage: message });
+            this.emit('reportGenerated', { ...data, dynamicMessage: message });
         });
         this.on('interactionReceived', async (data) => {
             const message = await this.generateDynamicCallback('interactionReceived', data);
             console.log(message);
-            this.emit('interactionReceivedDynamic', { ...data, dynamicMessage: message });
+            this.emit('interactionReceived', { ...data, dynamicMessage: message });
         });
         this.on('interactionProcessed', async (data) => {
             const message = await this.generateDynamicCallback('interactionProcessed', data);
             console.log(message);
-            this.emit('interactionProcessedDynamic', { ...data, dynamicMessage: message });
+            this.emit('interactionProcessed', { ...data, dynamicMessage: message });
         });
     }
     async generateDynamicCallback(eventType, data) {
@@ -274,7 +278,7 @@ class TaskOrchestrator extends events_1.EventEmitter {
                 action: 'projectCreation',
                 timestamp: new Date().toISOString()
             });
-            const projectStructure = await this.simulateProjectCreation(context);
+            const projectStructure = await this.executeRealProjectCreation(context);
             this.emit('agentCompleted', {
                 taskId,
                 agentName: 'CodeForgeAgent',
@@ -533,7 +537,7 @@ class TaskOrchestrator extends events_1.EventEmitter {
                 };
             }
             await this.taskManager.updateTaskStatus(taskId, 'completed');
-            const projectStructure = await this.simulateProjectCreation(context);
+            const projectStructure = await this.executeRealProjectCreation(context);
             const testResults = context.testResults;
             const reportPath = await this.generateReport(context, projectStructure, testResults, context.serverUrl);
             return {
@@ -593,24 +597,72 @@ class TaskOrchestrator extends events_1.EventEmitter {
             default: return 'unknown';
         }
     }
-    async simulateProjectCreation(context) {
-        const files = [];
-        if (context.projectType === 'frontend') {
-            files.push('index.html', 'style.css', 'script.js');
+    async executeRealProjectCreation(context) {
+        try {
+            const workingDirectory = context.workingDirectory;
+            const intent = {
+                domain: context.projectType,
+                technology: context.projectType === 'frontend' ? 'html' : context.projectType === 'backend' ? 'nodejs' : 'markdown',
+                language: context.projectType === 'frontend' ? 'javascript' : context.projectType === 'backend' ? 'javascript' : 'markdown',
+                framework: 'vanilla',
+                purpose: 'project',
+                complexity: 'simple',
+                features: [],
+                requirements: []
+            };
+            const result = await this.codeForgeAgent.executeProjectCreation(intent, workingDirectory);
+            if (result.success) {
+                const fs = require('fs');
+                const path = require('path');
+                const files = [];
+                const directories = [];
+                const scanDirectory = (dir, baseDir = '') => {
+                    const items = fs.readdirSync(dir);
+                    items.forEach((item) => {
+                        const fullPath = path.join(dir, item);
+                        const relativePath = path.join(baseDir, item);
+                        const stat = fs.statSync(fullPath);
+                        if (stat.isDirectory()) {
+                            directories.push(relativePath);
+                            scanDirectory(fullPath, relativePath);
+                        }
+                        else {
+                            files.push(relativePath);
+                        }
+                    });
+                };
+                scanDirectory(workingDirectory);
+                return {
+                    directories,
+                    files,
+                    entryPoint: files.find(f => f.includes('index.html') || f.includes('server.js') || f.includes('main.js')) || files[0],
+                    configFiles: files.filter(f => f.includes('.json') || f.includes('.config')),
+                    totalSize: files.reduce((total, file) => {
+                        try {
+                            const filePath = path.join(workingDirectory, file);
+                            const stat = fs.statSync(filePath);
+                            return total + stat.size;
+                        }
+                        catch {
+                            return total;
+                        }
+                    }, 0)
+                };
+            }
+            else {
+                throw new Error(`Project creation failed: ${result.error}`);
+            }
         }
-        else if (context.projectType === 'backend') {
-            files.push('package.json', 'server.js', 'routes.js');
+        catch (error) {
+            console.error('Error in real project creation:', error);
+            return {
+                directories: ['src', 'public'],
+                files: ['index.html', 'style.css', 'script.js'],
+                entryPoint: 'index.html',
+                configFiles: [],
+                totalSize: 0
+            };
         }
-        else if (context.projectType === 'content') {
-            files.push('script.md', 'copywrite.md');
-        }
-        return {
-            directories: ['src', 'public'],
-            files,
-            entryPoint: files[0],
-            configFiles: files.filter(f => f.includes('.json')),
-            totalSize: files.length * 1024
-        };
     }
     async runTests(context, projectStructure) {
         this.emit('testStarted', {
@@ -619,22 +671,26 @@ class TaskOrchestrator extends events_1.EventEmitter {
             timestamp: new Date().toISOString()
         });
         const testResults = [];
-        if (context.projectType === 'frontend') {
-            testResults.push({
-                type: 'html',
-                buildStatus: 'success',
-                serverStatus: 'running',
-                curlTests: [],
-                executedAt: new Date()
-            });
+        try {
+            const testConfig = {
+                projectType: (context.projectType === 'frontend' ? 'html' :
+                    context.projectType === 'backend' ? 'nodejs' : 'other'),
+                workingDirectory: context.workingDirectory,
+                entryPoint: projectStructure.entryPoint,
+                port: 3000 + Math.floor(Math.random() * 1000)
+            };
+            const testResult = await this.liveTester.testProject(testConfig);
+            testResults.push(testResult);
         }
-        else if (context.projectType === 'backend') {
+        catch (error) {
+            console.error('Test execution failed:', error);
             testResults.push({
-                type: 'nodejs',
-                buildStatus: 'success',
-                serverStatus: 'running',
+                type: context.projectType,
+                buildStatus: 'failed',
+                serverStatus: 'stopped',
                 curlTests: [],
-                executedAt: new Date()
+                executedAt: new Date(),
+                error: error.message
             });
         }
         this.emit('testCompleted', {

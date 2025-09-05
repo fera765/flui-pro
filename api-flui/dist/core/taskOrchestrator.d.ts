@@ -9,6 +9,7 @@ export declare class TaskOrchestrator extends EventEmitter {
     private liveTester;
     private markdownReporter;
     private contextPersistence;
+    private codeForgeAgent;
     private activeTasks;
     constructor(taskManager: TaskManager, liveTester: LiveTester, markdownReporter: MarkdownReporter, contextPersistence: ContextPersistence);
     private setupEventHandlers;
@@ -25,7 +26,7 @@ export declare class TaskOrchestrator extends EventEmitter {
     deleteTask(taskId: string): Promise<TaskOrchestratorResult>;
     private detectTechnology;
     private detectLanguage;
-    private simulateProjectCreation;
+    private executeRealProjectCreation;
     private runTests;
     private startServer;
     private generateReport;

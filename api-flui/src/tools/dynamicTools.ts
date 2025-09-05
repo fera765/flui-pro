@@ -15,6 +15,21 @@ export class DynamicTools {
     this.workingDirectory = workingDirectory;
   }
 
+  getTools(): Tool[] {
+    return [
+      this.createProjectTypeDetector(),
+      this.createDependencyManager(),
+      this.createBuildValidator(),
+      this.createTestRunner(),
+      this.createServerValidator(),
+      this.createFileBackupManager(),
+      this.createProjectAnalyzer(),
+      this.createShellTool(),
+      this.createPackageManagerTool(),
+      this.createFileWriteTool()
+    ];
+  }
+
   createProjectTypeDetector(): Tool {
     return {
       name: 'project_type_detector',
