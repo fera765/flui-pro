@@ -224,6 +224,28 @@ export class CodeForgeOrchestrator extends EventEmitter {
           modificationRequest: result.modificationRequest, 
           userId 
         });
+        
+        // Execute modification automatically
+        if (context.currentProject) {
+          console.log(`🔧 Executing modification automatically: ${result.modificationRequest.description}`);
+          try {
+            const modificationResult = await this.codeForgeAgent.handleModificationRequest(
+              context.currentProject, 
+              result.modificationRequest
+            );
+            
+            if (modificationResult.success) {
+              console.log(`✅ Modification executed successfully: ${result.modificationRequest.description}`);
+              result.response += ` ✅ Modificação executada com sucesso!`;
+            } else {
+              console.log(`❌ Modification failed: ${modificationResult.error}`);
+              result.response += ` ⚠️ Erro na execução: ${modificationResult.error}`;
+            }
+          } catch (error) {
+            console.error('Error executing modification:', error);
+            result.response += ` ⚠️ Erro na execução da modificação.`;
+          }
+        }
       }
       
       // Handle download request if present
