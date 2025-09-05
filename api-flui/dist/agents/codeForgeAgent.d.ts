@@ -2,6 +2,7 @@ import { Intent, Project, ModificationRequest, DownloadRequest, ValidationResult
 import { AgentTask, AgentResponse, Tool } from '../types/advanced';
 export declare class CodeForgeAgent {
     private eventEmitter;
+    private dynamicIntelligence;
     private solutionArchitect;
     private validator;
     private tools;

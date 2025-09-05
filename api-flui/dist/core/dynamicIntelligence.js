@@ -598,5 +598,455 @@ class SolutionArchitect {
             time += 20;
         return time;
     }
+    async generateDynamicSetupTasks(intent, context) {
+        const tasks = [];
+        const taskPlan = await this.analyzeIntentForTaskGeneration(intent, context);
+        for (const taskInfo of taskPlan) {
+            tasks.push({
+                id: (0, uuid_1.v4)(),
+                description: taskInfo.description,
+                type: taskInfo.type,
+                toolName: taskInfo.toolName,
+                parameters: taskInfo.parameters,
+                status: 'pending',
+                dependencies: taskInfo.dependencies,
+                createdAt: new Date(),
+                projectPhase: taskInfo.phase
+            });
+        }
+        return tasks;
+    }
+    async analyzeIntentForTaskGeneration(intent, context) {
+        const tasks = [];
+        const domain = intent.domain;
+        const technology = intent.technology;
+        const language = intent.language;
+        const features = intent.features || [];
+        const requirements = intent.requirements || [];
+        if (technology) {
+            const initTask = await this.generateInitializationTask(technology, language || 'javascript', domain, intent);
+            if (initTask)
+                tasks.push(initTask);
+        }
+        const dependencyTasks = await this.generateDependencyTasks(features, requirements, technology || 'unknown');
+        tasks.push(...dependencyTasks);
+        const implementationTasks = await this.generateImplementationTasks(features, technology || 'unknown', language || 'javascript');
+        tasks.push(...implementationTasks);
+        const validationTasks = await this.generateValidationTasks(technology || 'unknown', domain);
+        tasks.push(...validationTasks);
+        return tasks;
+    }
+    async generateInitializationTask(technology, language, domain, intent) {
+        let command = '';
+        let description = '';
+        if (technology.toLowerCase().includes('react')) {
+            command = 'npx create-react-app temp-react-app --template typescript && cp -r temp-react-app/* . && cp -r temp-react-app/.* . 2>/dev/null || true && rm -rf temp-react-app';
+            description = 'Initialize React project with TypeScript';
+        }
+        else if (technology.toLowerCase().includes('vue')) {
+            command = 'npm create vue@latest .';
+            description = 'Initialize Vue project';
+        }
+        else if (technology.toLowerCase().includes('angular')) {
+            command = 'ng new . --routing --style=scss';
+            description = 'Initialize Angular project';
+        }
+        else if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+            command = 'npm init -y';
+            description = 'Initialize Node.js project';
+        }
+        else if (technology.toLowerCase().includes('html')) {
+            return {
+                description: 'Create HTML project structure',
+                type: 'tool',
+                toolName: 'file_write',
+                parameters: {
+                    filePath: 'index.html',
+                    content: this.generateDynamicHTMLContent(intent || { domain, technology, language, features: [], requirements: [] })
+                },
+                dependencies: [],
+                phase: 'setup'
+            };
+        }
+        else {
+            command = `echo "Initializing ${technology} project"`;
+            description = `Initialize ${technology} project`;
+        }
+        return {
+            description,
+            type: 'tool',
+            toolName: 'shell',
+            parameters: { command },
+            dependencies: [],
+            phase: 'setup'
+        };
+    }
+    async generateDependencyTasks(features, requirements, technology) {
+        const tasks = [];
+        const dependencies = this.analyzeFeaturesForDependencies(features, technology);
+        const devDependencies = this.analyzeFeaturesForDevDependencies(features, technology);
+        if (dependencies.length > 0) {
+            tasks.push({
+                description: 'Install project dependencies',
+                type: 'tool',
+                toolName: 'package_manager',
+                parameters: { dependencies, devDependencies: false },
+                dependencies: [],
+                phase: 'dependencies'
+            });
+        }
+        if (devDependencies.length > 0) {
+            tasks.push({
+                description: 'Install development dependencies',
+                type: 'tool',
+                toolName: 'package_manager',
+                parameters: { dependencies: devDependencies, devDependencies: true },
+                dependencies: [],
+                phase: 'dependencies'
+            });
+        }
+        return tasks;
+    }
+    async generateImplementationTasks(features, technology, language) {
+        const tasks = [];
+        for (const feature of features) {
+            const task = await this.generateFeatureImplementationTask(feature, technology, language);
+            if (task)
+                tasks.push(task);
+        }
+        return tasks;
+    }
+    async generateValidationTasks(technology, domain) {
+        const tasks = [];
+        tasks.push({
+            description: 'Validate project build',
+            type: 'tool',
+            toolName: 'shell',
+            parameters: { command: this.generateBuildCommand(technology) },
+            dependencies: [],
+            phase: 'validation'
+        });
+        if (domain === 'backend' || domain === 'frontend') {
+            tasks.push({
+                description: 'Validate server accessibility',
+                type: 'tool',
+                toolName: 'shell',
+                parameters: { command: this.generateServerValidationCommand(technology) },
+                dependencies: [],
+                phase: 'validation'
+            });
+        }
+        return tasks;
+    }
+    analyzeFeaturesForDependencies(features, technology) {
+        const dependencies = [];
+        if (features.includes('authentication')) {
+            if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+                dependencies.push('jsonwebtoken', 'bcryptjs', 'express-validator');
+            }
+        }
+        if (features.includes('api')) {
+            if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+                dependencies.push('express', 'cors', 'helmet', 'morgan');
+            }
+        }
+        if (features.includes('styling')) {
+            if (technology.toLowerCase().includes('react')) {
+                dependencies.push('styled-components', 'emotion');
+            }
+        }
+        return dependencies;
+    }
+    analyzeFeaturesForDevDependencies(features, technology) {
+        const devDependencies = [];
+        if (features.includes('testing')) {
+            devDependencies.push('jest', 'supertest');
+        }
+        if (technology.toLowerCase().includes('node') || technology.toLowerCase().includes('express')) {
+            devDependencies.push('nodemon');
+        }
+        return devDependencies;
+    }
+    async generateFeatureImplementationTask(feature, technology, language) {
+        switch (feature) {
+            case 'authentication':
+                return {
+                    description: 'Implement authentication system',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: this.generateAuthFilePath(technology),
+                        content: this.generateAuthContent(technology, language)
+                    },
+                    dependencies: [],
+                    phase: 'implementation'
+                };
+            case 'api':
+                return {
+                    description: 'Create API routes',
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: this.generateAPIFilePath(technology),
+                        content: this.generateAPIContent(technology, language)
+                    },
+                    dependencies: [],
+                    phase: 'implementation'
+                };
+            default:
+                return null;
+        }
+    }
+    generateBuildCommand(technology) {
+        if (technology.toLowerCase().includes('react') || technology.toLowerCase().includes('vue') || technology.toLowerCase().includes('angular')) {
+            return 'npm run build';
+        }
+        else if (technology.toLowerCase().includes('node') || technology.toLowerCase().includes('express')) {
+            return 'echo "No build step required for Node.js"';
+        }
+        return 'echo "Build validation completed"';
+    }
+    generateServerValidationCommand(technology) {
+        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+            return 'curl -s http://localhost:3000/health || echo "Server not accessible"';
+        }
+        return 'echo "Server validation completed"';
+    }
+    generateAuthFilePath(technology) {
+        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+            return 'src/routes/auth.js';
+        }
+        else if (technology.toLowerCase().includes('react')) {
+            return 'src/components/Auth.js';
+        }
+        return 'auth.js';
+    }
+    generateAPIFilePath(technology) {
+        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+            return 'src/routes/api.js';
+        }
+        return 'api.js';
+    }
+    generateAuthContent(technology, language) {
+        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+            return this.generateExpressAuthContent();
+        }
+        else if (technology.toLowerCase().includes('react')) {
+            return this.generateReactAuthContent();
+        }
+        return '// Authentication implementation';
+    }
+    generateAPIContent(technology, language) {
+        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
+            return this.generateExpressAPIContent();
+        }
+        return '// API implementation';
+    }
+    generateExpressAuthContent() {
+        return `const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
+
+const router = express.Router();
+const users = [];
+
+// Register endpoint
+router.post('/register', [
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+    const existingUser = users.find(user => user.email === email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = { id: users.length + 1, email, password: hashedPassword };
+    users.push(user);
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+    res.status(201).json({ token, user: { id: user.id, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Login endpoint
+router.post('/login', [
+  body('email').isEmail().normalizeEmail(),
+  body('password').exists()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+    const user = users.find(user => user.email === email);
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+    res.json({ token, user: { id: user.id, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;`;
+    }
+    generateExpressAPIContent() {
+        return `const express = require('express');
+const jwt = require('jsonwebtoken');
+
+const router = express.Router();
+
+// JWT verification middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Protected route
+router.get('/profile', authenticateToken, (req, res) => {
+  res.json({ 
+    message: 'Protected route accessed successfully',
+    user: req.user 
+  });
+});
+
+// Public route
+router.get('/public', (req, res) => {
+  res.json({ message: 'This is a public route' });
+});
+
+module.exports = router;`;
+    }
+    generateReactAuthContent() {
+        return `import React, { useState, createContext, useContext } from 'react';
+
+const AuthContext = createContext();
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const login = async (email, password) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        localStorage.setItem('token', data.token);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+  };
+
+  const value = {
+    user,
+    login,
+    logout,
+    loading
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};`;
+    }
+    generateDynamicHTMLContent(intent) {
+        const title = intent.purpose ? `${intent.purpose} Website` : 'My Website';
+        const features = intent.features || [];
+        let content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Welcome to ${title}</h1>
+    <p>This is a dynamic website created by FLUI AutoCode-Forge.</p>`;
+        if (features.includes('authentication')) {
+            content += `
+    <div id="auth-section">
+        <h2>Authentication</h2>
+        <form id="login-form">
+            <input type="email" placeholder="Email" required>
+            <input type="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>`;
+        }
+        if (features.includes('api')) {
+            content += `
+    <div id="api-section">
+        <h2>API Integration</h2>
+        <button id="fetch-data">Fetch Data</button>
+        <div id="data-display"></div>
+    </div>`;
+        }
+        content += `
+    <script src="script.js"></script>
+</body>
+</html>`;
+        return content;
+    }
 }
 //# sourceMappingURL=dynamicIntelligence.js.map
