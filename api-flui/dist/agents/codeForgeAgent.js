@@ -4,11 +4,13 @@ exports.CodeForgeAgent = void 0;
 const uuid_1 = require("uuid");
 const events_1 = require("events");
 const dynamicSolutionArchitect_1 = require("../core/dynamicSolutionArchitect");
+const dynamicIntelligence_1 = require("../core/dynamicIntelligence");
 const realTimeValidator_1 = require("../core/realTimeValidator");
 class CodeForgeAgent {
     constructor(availableTools) {
         this.eventEmitter = new events_1.EventEmitter();
-        this.solutionArchitect = new dynamicSolutionArchitect_1.DynamicSolutionArchitect();
+        this.dynamicIntelligence = new dynamicIntelligence_1.DynamicIntelligence();
+        this.solutionArchitect = new dynamicSolutionArchitect_1.DynamicSolutionArchitect(this.dynamicIntelligence);
         this.validator = new realTimeValidator_1.RealTimeValidator();
         this.tools = new Map();
         this.currentProjects = new Map();

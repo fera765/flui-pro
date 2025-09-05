@@ -10,10 +10,12 @@ import {
 } from '../types/dynamic';
 import { AgentTask, AgentResponse, Tool } from '../types/advanced';
 import { DynamicSolutionArchitect } from '../core/dynamicSolutionArchitect';
+import { DynamicIntelligence } from '../core/dynamicIntelligence';
 import { RealTimeValidator } from '../core/realTimeValidator';
 
 export class CodeForgeAgent {
   private eventEmitter: EventEmitter;
+  private dynamicIntelligence: DynamicIntelligence;
   private solutionArchitect: DynamicSolutionArchitect;
   private validator: RealTimeValidator;
   private tools: Map<string, Tool>;
@@ -23,7 +25,8 @@ export class CodeForgeAgent {
 
   constructor(availableTools: Tool[]) {
     this.eventEmitter = new EventEmitter();
-    this.solutionArchitect = new DynamicSolutionArchitect();
+    this.dynamicIntelligence = new DynamicIntelligence();
+    this.solutionArchitect = new DynamicSolutionArchitect(this.dynamicIntelligence);
     this.validator = new RealTimeValidator();
     this.tools = new Map();
     this.currentProjects = new Map();

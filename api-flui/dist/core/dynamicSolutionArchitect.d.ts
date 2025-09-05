@@ -1,5 +1,8 @@
 import { Intent, SolutionArchitecture, ContextAnalysis, DynamicTask } from '../types/dynamic';
+import { DynamicIntelligence } from './dynamicIntelligence';
 export declare class DynamicSolutionArchitect {
+    private dynamicIntelligence;
+    constructor(dynamicIntelligence: DynamicIntelligence);
     designSolution(intent: Intent, context: ContextAnalysis): Promise<SolutionArchitecture>;
     generateDynamicTasks(intent: Intent, context: ContextAnalysis): Promise<DynamicTask[]>;
     getBuildTool(intent: Intent): string;
@@ -11,6 +14,25 @@ export declare class DynamicSolutionArchitect {
     getValidations(intent: Intent): any[];
     getEstimatedTime(intent: Intent): number;
     private generateSetupTasks;
+    private generateDynamicTasksFromIntent;
+    private generateInitializationTask;
+    private generateDependencyTasksFromFeatures;
+    private generateImplementationTasksFromFeatures;
+    private generateValidationTasksFromTechnology;
+    private analyzeFeaturesForDependencies;
+    private analyzeFeaturesForDevDependencies;
+    private generateFeatureImplementationTask;
+    private generateBuildCommand;
+    private generateServerValidationCommand;
+    private generateAuthFilePath;
+    private generateAPIFilePath;
+    private generateAuthContent;
+    private generateAPIContent;
+    private generateExpressAuthContent;
+    private generateExpressAPIContent;
+    private generateExpressServerContent;
+    private generateReactAuthContent;
+    private generateDynamicHTMLContent;
     private generateDependencyTasks;
     private generateConfigurationTasks;
     private generateImplementationTasks;
