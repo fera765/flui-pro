@@ -62,7 +62,9 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
                 content: 'Processing your answers...',
                 timestamp: new Date()
             });
-            const result = await this.dynamicIntelligence.processUserInput(this.buildInputFromAnswers(answers), this.workingDirectory);
+            const builtInput = this.buildInputFromAnswers(answers);
+            console.log(`🔍 Built input from answers: "${builtInput}"`);
+            const result = await this.dynamicIntelligence.processUserInput(builtInput, this.workingDirectory);
             context.pendingQuestions = result.questions;
             this.emit('userAnswersProcessed', { userId, answers, result });
             return result;
@@ -281,6 +283,7 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
         return context;
     }
     buildInputFromAnswers(answers) {
+        console.log(`🔍 buildInputFromAnswers called with:`, answers);
         const parts = [];
         const techMapping = {
             'tech-1': 'technology',

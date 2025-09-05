@@ -207,7 +207,7 @@ class IntentExtractor {
         return intent;
     }
     extractDomain(input) {
-        if (input.includes('frontend') || input.includes('react') || input.includes('vue') || input.includes('angular') || input.includes('html') || input.includes('site') || input.includes('website')) {
+        if (input.includes('frontend') || input.includes('react') || input.includes('vue') || input.includes('angular') || input.includes('html') || input.includes('site') || input.includes('website') || input.includes('landing page') || input.includes('página') || input.includes('página de vendas')) {
             return 'frontend';
         }
         else if (input.includes('backend') || input.includes('api') || input.includes('server')) {
@@ -228,6 +228,9 @@ class IntentExtractor {
         else if (input.includes('script') || input.includes('automation') || input.includes('tool')) {
             return 'script';
         }
+        else if (input.includes('content') || input.includes('roteiro') || input.includes('youtube') || input.includes('video') || input.includes('marketing')) {
+            return 'content';
+        }
         return 'unknown';
     }
     extractTechnology(input) {
@@ -237,7 +240,8 @@ class IntentExtractor {
             'flutter', 'react native', 'swift', 'kotlin',
             'electron', 'tauri', 'qt',
             'tensorflow', 'pytorch', 'scikit-learn',
-            'solidity', 'web3', 'anchor'
+            'solidity', 'web3', 'anchor',
+            'content creation', 'script', 'youtube', 'marketing'
         ];
         for (const tech of technologies) {
             if (input.includes(tech)) {
@@ -308,6 +312,42 @@ class IntentExtractor {
         }
         if (input.includes('deploy') || input.includes('docker')) {
             features.push('deployment');
+        }
+        if (input.includes('landing page') || input.includes('página de vendas') || input.includes('vendas')) {
+            features.push('landing page');
+        }
+        if (input.includes('saúde') || input.includes('health') || input.includes('plano')) {
+            features.push('healthcare');
+        }
+        if (input.includes('forms') || input.includes('formulário') || input.includes('formularios')) {
+            features.push('forms');
+        }
+        if (input.includes('interactivity') || input.includes('interativo') || input.includes('javascript')) {
+            features.push('interactivity');
+        }
+        if (input.includes('styling') || input.includes('css') || input.includes('design')) {
+            features.push('styling');
+        }
+        if (input.includes('responsive') || input.includes('mobile') || input.includes('responsive design')) {
+            features.push('responsive');
+        }
+        if (input.includes('script') || input.includes('roteiro') || input.includes('guion')) {
+            features.push('script');
+        }
+        if (input.includes('timing') || input.includes('tempo') || input.includes('duração')) {
+            features.push('timing');
+        }
+        if (input.includes('hooks') || input.includes('gancho') || input.includes('atenção')) {
+            features.push('hooks');
+        }
+        if (input.includes('call-to-action') || input.includes('cta') || input.includes('ação')) {
+            features.push('call-to-action');
+        }
+        if (input.includes('copywrite') || input.includes('copy') || input.includes('texto de vendas')) {
+            features.push('copywrite');
+        }
+        if (input.includes('sales') || input.includes('vendas') || input.includes('página de vendas')) {
+            features.push('sales');
         }
         return features;
     }

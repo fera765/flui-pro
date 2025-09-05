@@ -13,10 +13,18 @@ export class RealTimeValidator {
     // Check if it's a simple HTML project (no package.json)
     const hasPackageJson = fs.existsSync(path.join(workingDirectory, 'package.json'));
     const hasHtmlFiles = fs.readdirSync(workingDirectory).some(file => file.endsWith('.html'));
+    const hasScriptFiles = fs.readdirSync(workingDirectory).some(file => file.endsWith('.md') || file.endsWith('.txt'));
+    
+    console.log(`🔍 Validator: hasPackageJson=${hasPackageJson}, hasHtmlFiles=${hasHtmlFiles}, hasScriptFiles=${hasScriptFiles}`);
     
     if (!hasPackageJson && hasHtmlFiles) {
       // Simple HTML project validation
+      console.log(`🔍 Validator: Using HTML project validation`);
       validations.push(this.validateHtmlProject(workingDirectory));
+    } else if (!hasPackageJson && hasScriptFiles) {
+      // Content/Script project validation
+      console.log(`🔍 Validator: Using content project validation`);
+      validations.push(this.validateContentProject(workingDirectory));
     } else {
       // Standard project validation
       // Validate build
@@ -84,6 +92,48 @@ export class RealTimeValidator {
     } catch (error: any) {
       return {
         name: 'HTML Project',
+        success: false,
+        output: '',
+        error: error.message
+      };
+    }
+  }
+
+  private async validateContentProject(workingDirectory: string): Promise<ValidationStepResult> {
+    try {
+      const files = fs.readdirSync(workingDirectory);
+      const scriptFiles = files.filter(file => file.endsWith('.md') || file.endsWith('.txt'));
+      const otherFiles = files.filter(file => !file.endsWith('.md') && !file.endsWith('.txt'));
+      
+      if (scriptFiles.length === 0) {
+        return {
+          name: 'Content Project',
+          success: false,
+          output: '',
+          error: 'No script files found'
+        };
+      }
+      
+      // Check if script.md exists
+      const hasScriptMd = scriptFiles.includes('script.md');
+      if (!hasScriptMd) {
+        return {
+          name: 'Content Project',
+          success: false,
+          output: '',
+          error: 'script.md not found'
+        };
+      }
+      
+      return {
+        name: 'Content Project',
+        success: true,
+        output: `Content project validated: ${scriptFiles.length} script files, ${otherFiles.length} other files`,
+        data: { scriptFiles, otherFiles }
+      };
+    } catch (error: any) {
+      return {
+        name: 'Content Project',
         success: false,
         output: '',
         error: error.message
