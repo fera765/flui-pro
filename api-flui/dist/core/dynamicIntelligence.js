@@ -142,14 +142,7 @@ REGRAS:
         }
         catch (error) {
             console.error('❌ LLM Intent extraction failed:', error.message);
-            return {
-                domain: 'unknown',
-                technology: undefined,
-                language: undefined,
-                features: [],
-                requirements: [],
-                purpose: undefined
-            };
+            throw new Error(`LLM Intent extraction failed: ${error.message}`);
         }
     }
     async generateQuestionsWithLLM(intent, context) {
@@ -216,15 +209,7 @@ REGRAS:
         }
         catch (error) {
             console.error('❌ LLM Questions generation failed:', error.message);
-            return [
-                {
-                    id: 'tech-1',
-                    text: 'Qual tecnologia você prefere usar?',
-                    type: 'choice',
-                    options: ['React', 'Vue', 'Angular', 'HTML/CSS/JS'],
-                    required: false
-                }
-            ];
+            throw new Error(`LLM Questions generation failed: ${error.message}`);
         }
     }
     calculateConfidence(intent, questionCount) {
@@ -517,724 +502,160 @@ class IntentExtractor {
 }
 class QuestionGenerator {
     async generate(intent) {
-        const questions = [];
-        if (!intent.technology) {
-            questions.push(this.generateTechnologyQuestion(intent.domain));
-        }
-        if (!intent.language) {
-            questions.push(this.generateLanguageQuestion(intent.domain));
-        }
-        if (!intent.purpose) {
-            questions.push(this.generatePurposeQuestion(intent.domain));
-        }
-        if (!intent.complexity) {
-            questions.push(this.generateComplexityQuestion());
-        }
-        if (!intent.features || intent.features.length === 0) {
-            questions.push(this.generateFeaturesQuestion(intent.domain));
-        }
-        return questions.slice(0, 5);
-    }
-    generateTechnologyQuestion(domain) {
-        const options = this.getTechnologyOptions(domain);
-        return {
-            id: (0, uuid_1.v4)(),
-            text: `Qual tecnologia você prefere para ${domain}?`,
-            type: 'choice',
-            options,
-            required: true,
-            context: 'technology_selection'
-        };
-    }
-    generateLanguageQuestion(domain) {
-        const options = this.getLanguageOptions(domain);
-        return {
-            id: (0, uuid_1.v4)(),
-            text: `Qual linguagem de programação você prefere?`,
-            type: 'choice',
-            options,
-            required: true,
-            context: 'language_selection'
-        };
-    }
-    generatePurposeQuestion(domain) {
-        return {
-            id: (0, uuid_1.v4)(),
-            text: `Para que será usado este ${domain}? (empresa, pessoal, estudo, etc.)`,
-            type: 'text',
-            required: true,
-            context: 'purpose_clarification'
-        };
-    }
-    generateComplexityQuestion() {
-        return {
-            id: (0, uuid_1.v4)(),
-            text: `Qual o nível de complexidade?`,
-            type: 'choice',
-            options: ['Simples', 'Médio', 'Avançado'],
-            required: true,
-            context: 'complexity_selection'
-        };
-    }
-    generateFeaturesQuestion(domain) {
-        const options = this.getFeatureOptions(domain);
-        return {
-            id: (0, uuid_1.v4)(),
-            text: `Quais funcionalidades você precisa?`,
-            type: 'choice',
-            options,
-            required: false,
-            context: 'features_selection'
-        };
-    }
-    getTechnologyOptions(domain) {
-        switch (domain) {
-            case 'frontend':
-                return ['React', 'Vue', 'Angular', 'Svelte', 'HTML/CSS/JS', 'Next.js', 'Nuxt'];
-            case 'backend':
-                return ['Node.js', 'Python', 'Java', 'C#', 'Go', 'Rust', 'PHP', 'Ruby'];
-            case 'mobile':
-                return ['React Native', 'Flutter', 'iOS (Swift)', 'Android (Kotlin)', 'Ionic'];
-            case 'desktop':
-                return ['Electron', 'Tauri', 'Qt', 'WPF', 'GTK'];
-            case 'ai':
-                return ['TensorFlow', 'PyTorch', 'Scikit-learn', 'Hugging Face', 'OpenAI'];
-            case 'blockchain':
-                return ['Solidity', 'Rust (Solana)', 'Move (Aptos)', 'Web3.js'];
-            default:
-                return ['React', 'Node.js', 'Python', 'Java', 'Go'];
-        }
-    }
-    getLanguageOptions(domain) {
-        switch (domain) {
-            case 'frontend':
-                return ['JavaScript', 'TypeScript', 'Dart'];
-            case 'backend':
-                return ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'Go', 'Rust', 'PHP', 'Ruby'];
-            case 'mobile':
-                return ['JavaScript', 'TypeScript', 'Dart', 'Swift', 'Kotlin'];
-            case 'desktop':
-                return ['JavaScript', 'TypeScript', 'C++', 'C#', 'Rust', 'Python'];
-            case 'ai':
-                return ['Python', 'R', 'Julia', 'JavaScript'];
-            case 'blockchain':
-                return ['Solidity', 'Rust', 'Move', 'JavaScript', 'Python'];
-            default:
-                return ['JavaScript', 'TypeScript', 'Python', 'Java', 'Go'];
-        }
-    }
-    getFeatureOptions(domain) {
-        switch (domain) {
-            case 'frontend':
-                return ['Autenticação', 'Roteamento', 'Estado Global', 'Testes', 'PWA', 'SEO'];
-            case 'backend':
-                return ['Autenticação JWT', 'Banco de Dados', 'API REST', 'GraphQL', 'Testes', 'Docker'];
-            case 'mobile':
-                return ['Autenticação', 'Navegação', 'Notificações', 'Câmera', 'GPS', 'Testes'];
-            case 'desktop':
-                return ['Menu', 'Janelas', 'Sistema de Arquivos', 'Notificações', 'Auto-update'];
-            case 'ai':
-                return ['Treinamento', 'Inferência', 'Visualização', 'API', 'Modelo Pré-treinado'];
-            case 'blockchain':
-                return ['Smart Contracts', 'DeFi', 'NFTs', 'DAO', 'Web3 Integration'];
-            default:
-                return ['Autenticação', 'Banco de Dados', 'API', 'Testes', 'Documentação'];
-        }
+        return [];
     }
 }
 class SolutionArchitect {
     async design(intent, context) {
-        return {
-            type: intent.domain,
-            framework: intent.technology || 'default',
-            language: intent.language || 'javascript',
-            buildTool: this.getBuildTool(intent),
-            packageManager: this.getPackageManager(intent),
-            dependencies: this.getDependencies(intent),
-            devDependencies: this.getDevDependencies(intent),
-            scripts: this.getScripts(intent),
-            structure: this.getProjectStructure(intent),
-            validations: this.getValidations(intent),
-            estimatedTime: this.getEstimatedTime(intent)
-        };
-    }
-    getBuildTool(intent) {
-        if (intent.technology === 'react' || intent.technology === 'vue') {
-            return 'vite';
-        }
-        else if (intent.technology === 'angular') {
-            return 'angular-cli';
-        }
-        else if (intent.language === 'rust') {
-            return 'cargo';
-        }
-        else if (intent.language === 'java') {
-            return 'maven';
-        }
-        else if (intent.language === 'go') {
-            return 'go';
-        }
-        return 'npm';
-    }
-    getPackageManager(intent) {
-        if (intent.language === 'python') {
-            return 'pip';
-        }
-        else if (intent.language === 'rust') {
-            return 'cargo';
-        }
-        else if (intent.language === 'java') {
-            return 'maven';
-        }
-        else if (intent.language === 'go') {
-            return 'go';
-        }
-        else if (intent.language === 'php') {
-            return 'composer';
-        }
-        else if (intent.language === 'ruby') {
-            return 'bundler';
-        }
-        return 'npm';
-    }
-    getDependencies(intent) {
-        const deps = [];
-        if (intent.technology === 'react') {
-            deps.push('react', 'react-dom');
-        }
-        else if (intent.technology === 'vue') {
-            deps.push('vue');
-        }
-        else if (intent.technology === 'express') {
-            deps.push('express');
-        }
-        else if (intent.technology === 'fastapi') {
-            deps.push('fastapi');
-        }
-        if (intent.features?.includes('authentication')) {
-            deps.push('jsonwebtoken', 'bcrypt');
-        }
-        if (intent.features?.includes('database')) {
-            deps.push('mongoose', 'mongodb');
-        }
-        return deps;
-    }
-    getDevDependencies(intent) {
-        const deps = [];
-        if (intent.language === 'typescript') {
-            deps.push('typescript', '@types/node');
-        }
-        if (intent.technology === 'react') {
-            deps.push('@types/react', '@types/react-dom');
-        }
-        if (intent.features?.includes('testing')) {
-            deps.push('jest', '@testing-library/react');
-        }
-        return deps;
-    }
-    getScripts(intent) {
-        const scripts = {};
-        if (intent.domain === 'frontend') {
-            scripts.start = 'npm start';
-            scripts.build = 'npm run build';
-            scripts.test = 'npm test';
-        }
-        else if (intent.domain === 'backend') {
-            scripts.start = 'node server.js';
-            scripts.dev = 'nodemon server.js';
-            scripts.test = 'jest';
-        }
-        return scripts;
-    }
-    getProjectStructure(intent) {
-        return {
-            directories: ['src', 'public', 'tests'],
-            files: [],
-            entryPoint: 'src/index.js',
-            configFiles: ['package.json']
-        };
-    }
-    getValidations(intent) {
-        return [
-            {
-                name: 'Build',
-                command: 'npm run build',
-                timeout: 60000,
-                retries: 3
-            },
-            {
-                name: 'Test',
-                command: 'npm test',
-                timeout: 30000,
-                retries: 2
-            }
-        ];
-    }
-    getEstimatedTime(intent) {
-        let time = 10;
-        if (intent.complexity === 'simple')
-            time += 5;
-        else if (intent.complexity === 'medium')
-            time += 15;
-        else if (intent.complexity === 'advanced')
-            time += 30;
-        if (intent.features?.includes('authentication'))
-            time += 10;
-        if (intent.features?.includes('database'))
-            time += 15;
-        if (intent.features?.includes('api'))
-            time += 20;
-        return time;
-    }
-    async generateDynamicSetupTasks(intent, context) {
-        const tasks = [];
-        const taskPlan = await this.analyzeIntentForTaskGeneration(intent, context);
-        for (const taskInfo of taskPlan) {
-            tasks.push({
-                id: (0, uuid_1.v4)(),
-                description: taskInfo.description,
-                type: taskInfo.type,
-                toolName: taskInfo.toolName,
-                parameters: taskInfo.parameters,
-                status: 'pending',
-                dependencies: taskInfo.dependencies,
-                createdAt: new Date(),
-                projectPhase: taskInfo.phase
+        try {
+            console.log(`🤖 Using LLM to design solution architecture for:`, intent);
+            const prompt = `Com base no intent e contexto fornecidos, projete uma arquitetura de solução completa:
+
+INTENT: ${JSON.stringify(intent, null, 2)}
+CONTEXT: ${JSON.stringify(context, null, 2)}
+
+Retorne APENAS um JSON válido com a arquitetura da solução:
+
+{
+  "type": "tipo do projeto",
+  "framework": "framework principal",
+  "language": "linguagem principal",
+  "buildTool": "ferramenta de build",
+  "packageManager": "gerenciador de pacotes",
+  "dependencies": ["array", "de", "dependências"],
+  "devDependencies": ["array", "de", "dev", "dependencies"],
+  "scripts": {
+    "start": "comando de start",
+    "build": "comando de build",
+    "test": "comando de test",
+    "dev": "comando de desenvolvimento"
+  },
+  "structure": ["array", "da", "estrutura", "de", "pastas"],
+  "validations": ["array", "de", "validações"],
+  "estimatedTime": "tempo estimado em minutos"
+}
+
+REGRAS:
+- Seja específico e técnico
+- Use as melhores práticas para cada tecnologia
+- Inclua todas as dependências necessárias
+- Defina scripts apropriados
+- Estruture o projeto de forma profissional`;
+            const response = await axios_1.default.post('http://localhost:3000/v1/chat/completions', {
+                model: 'gpt-4',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Você é um arquiteto de software sênior. Projete arquiteturas completas e profissionais.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.2,
+                max_tokens: 1000
+            }, {
+                timeout: 15000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
-        }
-        return tasks;
-    }
-    async analyzeIntentForTaskGeneration(intent, context) {
-        const tasks = [];
-        const domain = intent.domain;
-        const technology = intent.technology;
-        const language = intent.language;
-        const features = intent.features || [];
-        const requirements = intent.requirements || [];
-        if (technology) {
-            const initTask = await this.generateInitializationTask(technology, language || 'javascript', domain, intent);
-            if (initTask)
-                tasks.push(initTask);
-        }
-        const dependencyTasks = await this.generateDependencyTasks(features, requirements, technology || 'unknown');
-        tasks.push(...dependencyTasks);
-        const implementationTasks = await this.generateImplementationTasks(features, technology || 'unknown', language || 'javascript');
-        tasks.push(...implementationTasks);
-        const validationTasks = await this.generateValidationTasks(technology || 'unknown', domain);
-        tasks.push(...validationTasks);
-        return tasks;
-    }
-    async generateInitializationTask(technology, language, domain, intent) {
-        let command = '';
-        let description = '';
-        if (technology.toLowerCase().includes('react')) {
-            command = 'npx create-react-app temp-react-app --template typescript && cp -r temp-react-app/* . && cp -r temp-react-app/.* . 2>/dev/null || true && rm -rf temp-react-app';
-            description = 'Initialize React project with TypeScript';
-        }
-        else if (technology.toLowerCase().includes('vue')) {
-            command = 'npm create vue@latest .';
-            description = 'Initialize Vue project';
-        }
-        else if (technology.toLowerCase().includes('angular')) {
-            command = 'ng new . --routing --style=scss';
-            description = 'Initialize Angular project';
-        }
-        else if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-            command = 'npm init -y';
-            description = 'Initialize Node.js project';
-        }
-        else if (technology.toLowerCase().includes('html')) {
+            const content = response.data.choices[0].message.content.trim();
+            console.log(`🤖 LLM Architecture Response: ${content}`);
+            const architecture = JSON.parse(content);
             return {
-                description: 'Create HTML project structure',
-                type: 'tool',
-                toolName: 'file_write',
-                parameters: {
-                    filePath: 'index.html',
-                    content: this.generateDynamicHTMLContent(intent || { domain, technology, language, features: [], requirements: [] })
-                },
-                dependencies: [],
-                phase: 'setup'
+                type: architecture.type || intent.domain,
+                framework: architecture.framework || intent.technology,
+                language: architecture.language || intent.language,
+                buildTool: architecture.buildTool || 'npm',
+                packageManager: architecture.packageManager || 'npm',
+                dependencies: Array.isArray(architecture.dependencies) ? architecture.dependencies : [],
+                devDependencies: Array.isArray(architecture.devDependencies) ? architecture.devDependencies : [],
+                scripts: architecture.scripts || {},
+                structure: Array.isArray(architecture.structure) ? architecture.structure : [],
+                validations: Array.isArray(architecture.validations) ? architecture.validations : [],
+                estimatedTime: architecture.estimatedTime || '30'
             };
         }
-        else {
-            command = `echo "Initializing ${technology} project"`;
-            description = `Initialize ${technology} project`;
+        catch (error) {
+            console.error('❌ LLM Architecture design failed:', error.message);
+            throw new Error(`LLM Architecture design failed: ${error.message}`);
         }
-        return {
-            description,
-            type: 'tool',
-            toolName: 'shell',
-            parameters: { command },
-            dependencies: [],
-            phase: 'setup'
-        };
     }
-    async generateDependencyTasks(features, requirements, technology) {
-        const tasks = [];
-        const dependencies = this.analyzeFeaturesForDependencies(features, technology);
-        const devDependencies = this.analyzeFeaturesForDevDependencies(features, technology);
-        if (dependencies.length > 0) {
-            tasks.push({
-                description: 'Install project dependencies',
-                type: 'tool',
-                toolName: 'package_manager',
-                parameters: { dependencies, devDependencies: false },
-                dependencies: [],
-                phase: 'dependencies'
-            });
-        }
-        if (devDependencies.length > 0) {
-            tasks.push({
-                description: 'Install development dependencies',
-                type: 'tool',
-                toolName: 'package_manager',
-                parameters: { dependencies: devDependencies, devDependencies: true },
-                dependencies: [],
-                phase: 'dependencies'
-            });
-        }
-        return tasks;
-    }
-    async generateImplementationTasks(features, technology, language) {
-        const tasks = [];
-        for (const feature of features) {
-            const task = await this.generateFeatureImplementationTask(feature, technology, language);
-            if (task)
-                tasks.push(task);
-        }
-        return tasks;
-    }
-    async generateValidationTasks(technology, domain) {
-        const tasks = [];
-        tasks.push({
-            description: 'Validate project build',
-            type: 'tool',
-            toolName: 'shell',
-            parameters: { command: this.generateBuildCommand(technology) },
-            dependencies: [],
-            phase: 'validation'
-        });
-        if (domain === 'backend' || domain === 'frontend') {
-            tasks.push({
-                description: 'Validate server accessibility',
-                type: 'tool',
-                toolName: 'shell',
-                parameters: { command: this.generateServerValidationCommand(technology) },
-                dependencies: [],
-                phase: 'validation'
-            });
-        }
-        return tasks;
-    }
-    analyzeFeaturesForDependencies(features, technology) {
-        const dependencies = [];
-        if (features.includes('authentication')) {
-            if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-                dependencies.push('jsonwebtoken', 'bcryptjs', 'express-validator');
-            }
-        }
-        if (features.includes('api')) {
-            if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-                dependencies.push('express', 'cors', 'helmet', 'morgan');
-            }
-        }
-        if (features.includes('styling')) {
-            if (technology.toLowerCase().includes('react')) {
-                dependencies.push('styled-components', 'emotion');
-            }
-        }
-        return dependencies;
-    }
-    analyzeFeaturesForDevDependencies(features, technology) {
-        const devDependencies = [];
-        if (features.includes('testing')) {
-            devDependencies.push('jest', 'supertest');
-        }
-        if (technology.toLowerCase().includes('node') || technology.toLowerCase().includes('express')) {
-            devDependencies.push('nodemon');
-        }
-        return devDependencies;
-    }
-    async generateFeatureImplementationTask(feature, technology, language) {
-        switch (feature) {
-            case 'authentication':
-                return {
-                    description: 'Implement authentication system',
-                    type: 'tool',
-                    toolName: 'file_write',
-                    parameters: {
-                        filePath: this.generateAuthFilePath(technology),
-                        content: this.generateAuthContent(technology, language)
+    async generateDynamicSetupTasks(intent, context) {
+        try {
+            console.log(`🤖 Using LLM to generate dynamic setup tasks for:`, intent);
+            const prompt = `Com base no intent e contexto fornecidos, gere uma lista completa de tasks para criar o projeto:
+
+INTENT: ${JSON.stringify(intent, null, 2)}
+CONTEXT: ${JSON.stringify(context, null, 2)}
+
+Retorne APENAS um JSON array com as tasks necessárias:
+
+[
+  {
+    "description": "descrição da task",
+    "type": "tool",
+    "toolName": "nome_do_tool",
+    "parameters": {
+      "param1": "valor1",
+      "param2": "valor2"
+    },
+    "dependencies": [],
+    "phase": "setup|implementation|validation"
+  }
+]
+
+REGRAS:
+- Gere tasks específicas para a tecnologia e features mencionadas
+- Use tools apropriados: shell, file_write, file_read, etc.
+- Inclua todas as fases: setup, implementation, validation
+- Seja específico nos parâmetros
+- Ordene as tasks por dependências`;
+            const response = await axios_1.default.post('http://localhost:3000/v1/chat/completions', {
+                model: 'gpt-4',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Você é um especialista em automação de desenvolvimento. Gere tasks específicas e técnicas para criar projetos.'
                     },
-                    dependencies: [],
-                    phase: 'implementation'
-                };
-            case 'api':
-                return {
-                    description: 'Create API routes',
-                    type: 'tool',
-                    toolName: 'file_write',
-                    parameters: {
-                        filePath: this.generateAPIFilePath(technology),
-                        content: this.generateAPIContent(technology, language)
-                    },
-                    dependencies: [],
-                    phase: 'implementation'
-                };
-            default:
-                return null;
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.3,
+                max_tokens: 1500
+            }, {
+                timeout: 15000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const content = response.data.choices[0].message.content.trim();
+            console.log(`🤖 LLM Tasks Response: ${content}`);
+            const taskPlan = JSON.parse(content);
+            const tasks = [];
+            for (const taskInfo of taskPlan) {
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: taskInfo.description || 'Dynamic task',
+                    type: taskInfo.type || 'tool',
+                    toolName: taskInfo.toolName || 'shell',
+                    parameters: taskInfo.parameters || {},
+                    status: 'pending',
+                    dependencies: taskInfo.dependencies || [],
+                    createdAt: new Date(),
+                    projectPhase: taskInfo.phase || 'setup'
+                });
+            }
+            return tasks;
         }
-    }
-    generateBuildCommand(technology) {
-        if (technology.toLowerCase().includes('react') || technology.toLowerCase().includes('vue') || technology.toLowerCase().includes('angular')) {
-            return 'npm run build';
+        catch (error) {
+            console.error('❌ LLM Task generation failed:', error.message);
+            throw new Error(`LLM Task generation failed: ${error.message}`);
         }
-        else if (technology.toLowerCase().includes('node') || technology.toLowerCase().includes('express')) {
-            return 'echo "No build step required for Node.js"';
-        }
-        return 'echo "Build validation completed"';
-    }
-    generateServerValidationCommand(technology) {
-        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-            return 'curl -s http://localhost:3000/health || echo "Server not accessible"';
-        }
-        return 'echo "Server validation completed"';
-    }
-    generateAuthFilePath(technology) {
-        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-            return 'src/routes/auth.js';
-        }
-        else if (technology.toLowerCase().includes('react')) {
-            return 'src/components/Auth.js';
-        }
-        return 'auth.js';
-    }
-    generateAPIFilePath(technology) {
-        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-            return 'src/routes/api.js';
-        }
-        return 'api.js';
-    }
-    generateAuthContent(technology, language) {
-        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-            return this.generateExpressAuthContent();
-        }
-        else if (technology.toLowerCase().includes('react')) {
-            return this.generateReactAuthContent();
-        }
-        return '// Authentication implementation';
-    }
-    generateAPIContent(technology, language) {
-        if (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node')) {
-            return this.generateExpressAPIContent();
-        }
-        return '// API implementation';
-    }
-    generateExpressAuthContent() {
-        return `const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
-
-const router = express.Router();
-const users = [];
-
-// Register endpoint
-router.post('/register', [
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 })
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, password } = req.body;
-    const existingUser = users.find(user => user.email === email);
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = { id: users.length + 1, email, password: hashedPassword };
-    users.push(user);
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
-    res.status(201).json({ token, user: { id: user.id, email: user.email } });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Login endpoint
-router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
-  body('password').exists()
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, password } = req.body;
-    const user = users.find(user => user.email === email);
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
-    res.json({ token, user: { id: user.id, email: user.email } });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-module.exports = router;`;
-    }
-    generateExpressAPIContent() {
-        return `const express = require('express');
-const jwt = require('jsonwebtoken');
-
-const router = express.Router();
-
-// JWT verification middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
-// Protected route
-router.get('/profile', authenticateToken, (req, res) => {
-  res.json({ 
-    message: 'Protected route accessed successfully',
-    user: req.user 
-  });
-});
-
-// Public route
-router.get('/public', (req, res) => {
-  res.json({ message: 'This is a public route' });
-});
-
-module.exports = router;`;
-    }
-    generateReactAuthContent() {
-        return `import React, { useState, createContext, useContext } from 'react';
-
-const AuthContext = createContext();
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const login = async (email, password) => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('token', data.token);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('token');
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};`;
-    }
-    generateDynamicHTMLContent(intent) {
-        const title = intent.purpose ? `${intent.purpose} Website` : 'My Website';
-        const features = intent.features || [];
-        let content = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>Welcome to ${title}</h1>
-    <p>This is a dynamic website created by FLUI AutoCode-Forge.</p>`;
-        if (features.includes('authentication')) {
-            content += `
-    <div id="auth-section">
-        <h2>Authentication</h2>
-        <form id="login-form">
-            <input type="email" placeholder="Email" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-    </div>`;
-        }
-        if (features.includes('api')) {
-            content += `
-    <div id="api-section">
-        <h2>API Integration</h2>
-        <button id="fetch-data">Fetch Data</button>
-        <div id="data-display"></div>
-    </div>`;
-        }
-        content += `
-    <script src="script.js"></script>
-</body>
-</html>`;
-        return content;
     }
 }
 //# sourceMappingURL=dynamicIntelligence.js.map
