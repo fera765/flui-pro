@@ -108,7 +108,7 @@ export interface Project {
 export interface DynamicTask {
   id: string;
   description: string;
-  type: 'agent' | 'tool';
+  type: 'agent' | 'tool' | 'file_write' | 'shell' | 'package_manager';
   agentId?: string;
   toolName?: string;
   parameters?: any;

@@ -25,28 +25,8 @@ export class DynamicSolutionArchitect {
   }
 
   async generateDynamicTasks(intent: Intent, context: ContextAnalysis): Promise<DynamicTask[]> {
-    const tasks: DynamicTask[] = [];
-    
-    // Generate setup tasks
-    const setupTasks = await this.generateSetupTasks(intent, context);
-    tasks.push(...setupTasks);
-    
-    // Generate dependency tasks
-    tasks.push(...this.generateDependencyTasks(intent, context));
-    
-    // Generate configuration tasks
-    tasks.push(...this.generateConfigurationTasks(intent, context));
-    
-    // Generate implementation tasks
-    tasks.push(...this.generateImplementationTasks(intent, context));
-    
-    // Generate testing tasks
-    tasks.push(...this.generateTestingTasks(intent, context));
-    
-    // Generate validation tasks
-    tasks.push(...this.generateValidationTasks(intent, context));
-    
-    return tasks;
+    // Use LLM to generate dynamic tasks
+    return await this.generateDynamicTasksFromIntent(intent, context);
   }
 
   getBuildTool(intent: Intent): string {

@@ -22,15 +22,7 @@ class DynamicSolutionArchitect {
         };
     }
     async generateDynamicTasks(intent, context) {
-        const tasks = [];
-        const setupTasks = await this.generateSetupTasks(intent, context);
-        tasks.push(...setupTasks);
-        tasks.push(...this.generateDependencyTasks(intent, context));
-        tasks.push(...this.generateConfigurationTasks(intent, context));
-        tasks.push(...this.generateImplementationTasks(intent, context));
-        tasks.push(...this.generateTestingTasks(intent, context));
-        tasks.push(...this.generateValidationTasks(intent, context));
-        return tasks;
+        return await this.generateDynamicTasksFromIntent(intent, context);
     }
     getBuildTool(intent) {
         if (intent.technology === 'react' || intent.technology === 'vue') {

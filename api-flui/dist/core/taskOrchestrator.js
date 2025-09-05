@@ -599,7 +599,9 @@ class TaskOrchestrator extends events_1.EventEmitter {
     }
     async executeRealProjectCreation(context) {
         try {
+            console.log('🚀 TaskOrchestrator: Starting real project creation');
             const workingDirectory = context.workingDirectory;
+            console.log('🚀 TaskOrchestrator: Working directory:', workingDirectory);
             const intent = {
                 domain: context.projectType,
                 technology: context.projectType === 'frontend' ? 'html' : context.projectType === 'backend' ? 'nodejs' : 'markdown',
@@ -610,7 +612,10 @@ class TaskOrchestrator extends events_1.EventEmitter {
                 features: [],
                 requirements: []
             };
+            console.log('🚀 TaskOrchestrator: Intent created:', intent);
+            console.log('🚀 TaskOrchestrator: Calling codeForgeAgent.executeProjectCreation');
             const result = await this.codeForgeAgent.executeProjectCreation(intent, workingDirectory);
+            console.log('🚀 TaskOrchestrator: CodeForgeAgent result:', result);
             if (result.success) {
                 const fs = require('fs');
                 const path = require('path');

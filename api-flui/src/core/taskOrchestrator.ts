@@ -793,8 +793,10 @@ export class TaskOrchestrator extends EventEmitter {
 
   private async executeRealProjectCreation(context: TaskExecutionContext): Promise<any> {
     try {
+      console.log('🚀 TaskOrchestrator: Starting real project creation');
       // Use CodeForgeAgent to execute real project creation
       const workingDirectory = context.workingDirectory;
+      console.log('🚀 TaskOrchestrator: Working directory:', workingDirectory);
       
       // Process user input through CodeForgeAgent
       const intent: Intent = {
@@ -808,7 +810,10 @@ export class TaskOrchestrator extends EventEmitter {
         requirements: []
       };
       
+      console.log('🚀 TaskOrchestrator: Intent created:', intent);
+      console.log('🚀 TaskOrchestrator: Calling codeForgeAgent.executeProjectCreation');
       const result = await this.codeForgeAgent.executeProjectCreation(intent, workingDirectory);
+      console.log('🚀 TaskOrchestrator: CodeForgeAgent result:', result);
       
       if (result.success) {
         // Get actual project structure from the working directory

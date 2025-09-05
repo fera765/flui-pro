@@ -114,9 +114,32 @@ export class CodeForgeOrchestrator extends EventEmitter {
       
       // Process input with dynamic intelligence
       const result = await this.dynamicIntelligence.processUserInput(input, this.workingDirectory);
+      console.log(`🚀 CodeForgeOrchestrator: Processing result:`, result);
       
       // Update context with processing result
       context.pendingQuestions = result.questions;
+      
+      // If we have a clear intent, create a persistent task
+      if (result.intent && !result.questions.length) {
+        console.log(`🚀 Creating persistent task for intent:`, result.intent);
+        
+        const taskRequest = {
+          name: `${result.intent.domain}-project`,
+          description: `Create a ${result.intent.domain} project based on: ${input}`,
+          projectType: result.intent.domain,
+          userId,
+          initialPrompt: input
+        };
+        
+        const taskResult = await this.taskOrchestrator.createPersistentTask(taskRequest);
+        console.log(`🚀 Task created:`, taskResult);
+        
+        // Execute the task immediately
+        if (taskResult.success && taskResult.taskId) {
+          console.log(`🚀 Executing task:`, taskResult.taskId);
+          await this.taskOrchestrator.executeTask(taskResult.taskId);
+        }
+      }
       
       // Emit processing event
       this.emit('userInputProcessed', { userId, input, result });
