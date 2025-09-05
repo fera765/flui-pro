@@ -10,6 +10,7 @@ export declare class CodeForgeOrchestrator extends EventEmitter {
     private codeForgeAgent;
     private dynamicTools;
     private workingDirectory;
+    private taskOrchestrator;
     constructor(workingDirectory?: string);
     processUserInput(input: string, userId?: string): Promise<ProcessingResult>;
     handleUserAnswers(answers: Record<string, any>, userId: string): Promise<ProcessingResult>;
@@ -45,5 +46,31 @@ export declare class CodeForgeOrchestrator extends EventEmitter {
     private getOrCreateConversationContext;
     private buildInputFromAnswers;
     private setupEventHandlers;
+    createPersistentTask(name: string, description: string, projectType: string, userId: string, initialPrompt: string): Promise<{
+        success: boolean;
+        taskId?: string;
+        error?: string;
+    }>;
+    executePersistentTask(taskId: string): Promise<{
+        success: boolean;
+        reportPath?: string;
+        liveUrl?: string;
+        error?: string;
+    }>;
+    interactWithPersistentTask(taskId: string, interaction: string, userId: string): Promise<{
+        success: boolean;
+        response?: string;
+        error?: string;
+    }>;
+    listPersistentTasks(userId: string): Promise<{
+        success: boolean;
+        tasks?: any[];
+        error?: string;
+    }>;
+    getPersistentTaskStatus(taskId: string): Promise<{
+        success: boolean;
+        status?: any;
+        error?: string;
+    }>;
 }
 //# sourceMappingURL=codeForgeOrchestrator.d.ts.map

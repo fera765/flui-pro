@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
+import * as path from 'path';
 import { 
   Intent, 
   Project, 
@@ -13,6 +14,12 @@ import { DynamicIntelligence } from './dynamicIntelligence';
 import { CodeForgeAgent } from '../agents/codeForgeAgent';
 import { DynamicTools } from '../tools/dynamicTools';
 import { SpecializedAgents } from '../agents/specializedAgents';
+import { TaskOrchestrator } from './taskOrchestrator';
+import { TaskManager } from './taskManager';
+import { LiveTester } from './liveTester';
+import { MarkdownReporter } from './markdownReporter';
+import { ContextPersistence } from './contextPersistence';
+import { TaskCreationRequest } from '../types/taskOrchestrator';
 
 export class CodeForgeOrchestrator extends EventEmitter {
   private tasks: Map<string, any> = new Map();
@@ -25,6 +32,7 @@ export class CodeForgeOrchestrator extends EventEmitter {
   private codeForgeAgent: CodeForgeAgent;
   private dynamicTools: DynamicTools;
   private workingDirectory: string;
+  private taskOrchestrator: TaskOrchestrator;
 
   constructor(workingDirectory: string = process.cwd()) {
     super();
@@ -47,6 +55,23 @@ export class CodeForgeOrchestrator extends EventEmitter {
     ];
     
     this.codeForgeAgent = new CodeForgeAgent(availableTools);
+    
+    // Initialize Task Orchestrator components
+    const tasksDir = path.join(workingDirectory, 'tasks');
+    const reportsDir = path.join(workingDirectory, 'reports');
+    const contextsDir = path.join(workingDirectory, 'contexts');
+    
+    const taskManager = new TaskManager(tasksDir);
+    const liveTester = new LiveTester();
+    const markdownReporter = new MarkdownReporter(reportsDir);
+    const contextPersistence = new ContextPersistence(contextsDir);
+    
+    this.taskOrchestrator = new TaskOrchestrator(
+      taskManager,
+      liveTester,
+      markdownReporter,
+      contextPersistence
+    );
     
     this.setupEventHandlers();
   }
@@ -541,5 +566,134 @@ export class CodeForgeOrchestrator extends EventEmitter {
     this.on('interactiveMessageHandled', ({ userId, message, result }: { userId: string; message: string; result: any }) => {
       console.log(`💬 Interactive message handled for user ${userId}`);
     });
+  }
+
+  // New Task Orchestrator methods
+  async createPersistentTask(
+    name: string,
+    description: string,
+    projectType: string,
+    userId: string,
+    initialPrompt: string
+  ): Promise<{ success: boolean; taskId?: string; error?: string }> {
+    try {
+      const request: TaskCreationRequest = {
+        name,
+        description,
+        projectType,
+        userId,
+        initialPrompt,
+        options: {
+          autoStartServer: true,
+          autoRunTests: true,
+          generateReport: true,
+          keepAlive: true,
+          maxExecutionTime: 300000,
+          retryOnFailure: true,
+          maxRetries: 3,
+          cleanupOnComplete: false
+        }
+      };
+
+      const result = await this.taskOrchestrator.createPersistentTask(request);
+      return result;
+
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error).message
+      };
+    }
+  }
+
+  async executePersistentTask(taskId: string): Promise<{ success: boolean; reportPath?: string; liveUrl?: string; error?: string }> {
+    try {
+      const result = await this.taskOrchestrator.executeTask(taskId);
+      return result;
+
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error).message
+      };
+    }
+  }
+
+  async interactWithPersistentTask(
+    taskId: string,
+    interaction: string,
+    userId: string
+  ): Promise<{ success: boolean; response?: string; error?: string }> {
+    try {
+      // Determine interaction type
+      let interactionRequest;
+      
+      if (interaction.toLowerCase().includes('status') || interaction.toLowerCase().includes('progresso')) {
+        interactionRequest = {
+          taskId,
+          question: interaction,
+          userId
+        };
+      } else if (interaction.toLowerCase().includes('adicionar') || interaction.toLowerCase().includes('modificar')) {
+        interactionRequest = {
+          taskId,
+          type: 'add_feature' as const,
+          description: interaction,
+          priority: 'medium' as const,
+          userId
+        };
+      } else if (interaction.toLowerCase().includes('download') || interaction.toLowerCase().includes('baixar')) {
+        interactionRequest = {
+          taskId,
+          userId,
+          includeNodeModules: false,
+          format: 'zip' as const
+        };
+      } else {
+        interactionRequest = {
+          taskId,
+          question: interaction,
+          userId
+        };
+      }
+
+      const result = await this.taskOrchestrator.interactWithTask(interactionRequest);
+      return result;
+
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error).message
+      };
+    }
+  }
+
+  async listPersistentTasks(userId: string): Promise<{ success: boolean; tasks?: any[]; error?: string }> {
+    try {
+      const result = await this.taskOrchestrator.listTasks(userId);
+      return result;
+
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error).message
+      };
+    }
+  }
+
+  async getPersistentTaskStatus(taskId: string): Promise<{ success: boolean; status?: any; error?: string }> {
+    try {
+      const result = await this.taskOrchestrator.getTaskStatus(taskId);
+      return {
+        success: true,
+        status: result
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error).message
+      };
+    }
   }
 }

@@ -1,11 +1,50 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CodeForgeOrchestrator = void 0;
 const uuid_1 = require("uuid");
 const events_1 = require("events");
+const path = __importStar(require("path"));
 const dynamicIntelligence_1 = require("./dynamicIntelligence");
 const codeForgeAgent_1 = require("../agents/codeForgeAgent");
 const dynamicTools_1 = require("../tools/dynamicTools");
+const taskOrchestrator_1 = require("./taskOrchestrator");
+const taskManager_1 = require("./taskManager");
+const liveTester_1 = require("./liveTester");
+const markdownReporter_1 = require("./markdownReporter");
+const contextPersistence_1 = require("./contextPersistence");
 class CodeForgeOrchestrator extends events_1.EventEmitter {
     constructor(workingDirectory = process.cwd()) {
         super();
@@ -30,6 +69,14 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
             this.dynamicTools.createFileWriteTool()
         ];
         this.codeForgeAgent = new codeForgeAgent_1.CodeForgeAgent(availableTools);
+        const tasksDir = path.join(workingDirectory, 'tasks');
+        const reportsDir = path.join(workingDirectory, 'reports');
+        const contextsDir = path.join(workingDirectory, 'contexts');
+        const taskManager = new taskManager_1.TaskManager(tasksDir);
+        const liveTester = new liveTester_1.LiveTester();
+        const markdownReporter = new markdownReporter_1.MarkdownReporter(reportsDir);
+        const contextPersistence = new contextPersistence_1.ContextPersistence(contextsDir);
+        this.taskOrchestrator = new taskOrchestrator_1.TaskOrchestrator(taskManager, liveTester, markdownReporter, contextPersistence);
         this.setupEventHandlers();
     }
     async processUserInput(input, userId = 'default') {
@@ -385,6 +432,118 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
         this.on('interactiveMessageHandled', ({ userId, message, result }) => {
             console.log(`💬 Interactive message handled for user ${userId}`);
         });
+    }
+    async createPersistentTask(name, description, projectType, userId, initialPrompt) {
+        try {
+            const request = {
+                name,
+                description,
+                projectType,
+                userId,
+                initialPrompt,
+                options: {
+                    autoStartServer: true,
+                    autoRunTests: true,
+                    generateReport: true,
+                    keepAlive: true,
+                    maxExecutionTime: 300000,
+                    retryOnFailure: true,
+                    maxRetries: 3,
+                    cleanupOnComplete: false
+                }
+            };
+            const result = await this.taskOrchestrator.createPersistentTask(request);
+            return result;
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+    async executePersistentTask(taskId) {
+        try {
+            const result = await this.taskOrchestrator.executeTask(taskId);
+            return result;
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+    async interactWithPersistentTask(taskId, interaction, userId) {
+        try {
+            let interactionRequest;
+            if (interaction.toLowerCase().includes('status') || interaction.toLowerCase().includes('progresso')) {
+                interactionRequest = {
+                    taskId,
+                    question: interaction,
+                    userId
+                };
+            }
+            else if (interaction.toLowerCase().includes('adicionar') || interaction.toLowerCase().includes('modificar')) {
+                interactionRequest = {
+                    taskId,
+                    type: 'add_feature',
+                    description: interaction,
+                    priority: 'medium',
+                    userId
+                };
+            }
+            else if (interaction.toLowerCase().includes('download') || interaction.toLowerCase().includes('baixar')) {
+                interactionRequest = {
+                    taskId,
+                    userId,
+                    includeNodeModules: false,
+                    format: 'zip'
+                };
+            }
+            else {
+                interactionRequest = {
+                    taskId,
+                    question: interaction,
+                    userId
+                };
+            }
+            const result = await this.taskOrchestrator.interactWithTask(interactionRequest);
+            return result;
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+    async listPersistentTasks(userId) {
+        try {
+            const result = await this.taskOrchestrator.listTasks(userId);
+            return result;
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+    async getPersistentTaskStatus(taskId) {
+        try {
+            const result = await this.taskOrchestrator.getTaskStatus(taskId);
+            return {
+                success: true,
+                status: result
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     }
 }
 exports.CodeForgeOrchestrator = CodeForgeOrchestrator;
