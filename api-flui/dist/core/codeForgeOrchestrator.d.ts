@@ -12,6 +12,7 @@ export declare class CodeForgeOrchestrator extends EventEmitter {
     private workingDirectory;
     private taskOrchestrator;
     constructor(workingDirectory?: string);
+    private propagateTaskOrchestratorEvents;
     processUserInput(input: string, userId?: string): Promise<ProcessingResult>;
     handleUserAnswers(answers: Record<string, any>, userId: string): Promise<ProcessingResult>;
     executeProjectCreation(intent: Intent, userId: string): Promise<{

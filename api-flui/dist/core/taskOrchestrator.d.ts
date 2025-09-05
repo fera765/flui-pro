@@ -12,6 +12,8 @@ export declare class TaskOrchestrator extends EventEmitter {
     private activeTasks;
     constructor(taskManager: TaskManager, liveTester: LiveTester, markdownReporter: MarkdownReporter, contextPersistence: ContextPersistence);
     private setupEventHandlers;
+    private generateDynamicCallback;
+    private buildCallbackPrompt;
     createPersistentTask(request: TaskCreationRequest): Promise<TaskOrchestratorResult>;
     executeTask(taskId: string): Promise<TaskOrchestratorResult>;
     interactWithTask(request: TaskQuestionRequest | TaskModificationRequest | TaskDownloadRequest): Promise<TaskInteractionResult>;

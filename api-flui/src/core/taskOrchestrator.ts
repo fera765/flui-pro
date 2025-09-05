@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
+import axios from 'axios';
 import { TaskManager } from './taskManager';
 import { LiveTester } from './liveTester';
 import { MarkdownReporter } from './markdownReporter';
@@ -44,79 +45,223 @@ export class TaskOrchestrator extends EventEmitter {
   }
 
   private setupEventHandlers(): void {
-    // Task lifecycle events
-    this.on('taskCreated', (data) => {
-      console.log(`📋 Task created: ${data.taskId} - ${data.name}`);
+    // Task lifecycle events - ALL DYNAMIC VIA LLM
+    this.on('taskCreated', async (data) => {
+      const message = await this.generateDynamicCallback('taskCreated', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('taskCreatedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('taskStarted', (data) => {
-      console.log(`🚀 Task started: ${data.taskId} - ${data.name}`);
+    this.on('taskStarted', async (data) => {
+      const message = await this.generateDynamicCallback('taskStarted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('taskStartedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('taskProgress', (data) => {
-      console.log(`📊 Task progress: ${data.taskId} - ${data.progress}%`);
+    this.on('taskProgress', async (data) => {
+      const message = await this.generateDynamicCallback('taskProgress', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('taskProgressDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('taskCompleted', (data) => {
-      console.log(`✅ Task completed: ${data.taskId} - ${data.name}`);
+    this.on('taskCompleted', async (data) => {
+      const message = await this.generateDynamicCallback('taskCompleted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('taskCompletedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('taskFailed', (data) => {
-      console.log(`❌ Task failed: ${data.taskId} - ${data.error}`);
+    this.on('taskFailed', async (data) => {
+      const message = await this.generateDynamicCallback('taskFailed', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('taskFailedDynamic', { ...data, dynamicMessage: message });
     });
 
-    // Agent events
-    this.on('agentStarted', (data) => {
-      console.log(`🤖 Agent started: ${data.agentName} for task ${data.taskId}`);
+    // Agent events - ALL DYNAMIC VIA LLM
+    this.on('agentStarted', async (data) => {
+      const message = await this.generateDynamicCallback('agentStarted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('agentStartedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('agentCompleted', (data) => {
-      console.log(`✅ Agent completed: ${data.agentName} for task ${data.taskId}`);
+    this.on('agentCompleted', async (data) => {
+      const message = await this.generateDynamicCallback('agentCompleted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('agentCompletedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('agentFailed', (data) => {
-      console.log(`❌ Agent failed: ${data.agentName} for task ${data.taskId} - ${data.error}`);
+    this.on('agentFailed', async (data) => {
+      const message = await this.generateDynamicCallback('agentFailed', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('agentFailedDynamic', { ...data, dynamicMessage: message });
     });
 
-    // Tool events
-    this.on('toolStarted', (data) => {
-      console.log(`🔧 Tool started: ${data.toolName} for task ${data.taskId}`);
+    // Tool events - ALL DYNAMIC VIA LLM
+    this.on('toolStarted', async (data) => {
+      const message = await this.generateDynamicCallback('toolStarted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('toolStartedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('toolCompleted', (data) => {
-      console.log(`✅ Tool completed: ${data.toolName} for task ${data.taskId}`);
+    this.on('toolCompleted', async (data) => {
+      const message = await this.generateDynamicCallback('toolCompleted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('toolCompletedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('toolFailed', (data) => {
-      console.log(`❌ Tool failed: ${data.toolName} for task ${data.taskId} - ${data.error}`);
+    this.on('toolFailed', async (data) => {
+      const message = await this.generateDynamicCallback('toolFailed', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('toolFailedDynamic', { ...data, dynamicMessage: message });
     });
 
-    // Test events
-    this.on('testStarted', (data) => {
-      console.log(`🧪 Test started: ${data.testType} for task ${data.taskId}`);
+    // Test events - ALL DYNAMIC VIA LLM
+    this.on('testStarted', async (data) => {
+      const message = await this.generateDynamicCallback('testStarted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('testStartedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('testCompleted', (data) => {
-      console.log(`✅ Test completed: ${data.testType} for task ${data.taskId} - ${data.result}`);
+    this.on('testCompleted', async (data) => {
+      const message = await this.generateDynamicCallback('testCompleted', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('testCompletedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('testFailed', (data) => {
-      console.log(`❌ Test failed: ${data.testType} for task ${data.taskId} - ${data.error}`);
+    this.on('testFailed', async (data) => {
+      const message = await this.generateDynamicCallback('testFailed', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('testFailedDynamic', { ...data, dynamicMessage: message });
     });
 
-    // Report events
-    this.on('reportGenerated', (data) => {
-      console.log(`📊 Report generated: ${data.reportPath} for task ${data.taskId}`);
+    // Report events - ALL DYNAMIC VIA LLM
+    this.on('reportGenerated', async (data) => {
+      const message = await this.generateDynamicCallback('reportGenerated', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('reportGeneratedDynamic', { ...data, dynamicMessage: message });
     });
 
-    // Interaction events
-    this.on('interactionReceived', (data) => {
-      console.log(`💬 Interaction received: ${data.type} for task ${data.taskId}`);
+    // Interaction events - ALL DYNAMIC VIA LLM
+    this.on('interactionReceived', async (data) => {
+      const message = await this.generateDynamicCallback('interactionReceived', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('interactionReceivedDynamic', { ...data, dynamicMessage: message });
     });
 
-    this.on('interactionProcessed', (data) => {
-      console.log(`✅ Interaction processed: ${data.type} for task ${data.taskId}`);
+    this.on('interactionProcessed', async (data) => {
+      const message = await this.generateDynamicCallback('interactionProcessed', data);
+      console.log(message);
+      // Re-emit with dynamic message
+      this.emit('interactionProcessedDynamic', { ...data, dynamicMessage: message });
     });
+  }
+
+  private async generateDynamicCallback(eventType: string, data: any): Promise<string> {
+    try {
+      const prompt = this.buildCallbackPrompt(eventType, data);
+      
+      const response = await axios.post('http://localhost:3000/v1/chat/completions', {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é um assistente especializado em gerar mensagens de callback dinâmicas e personalizadas para um sistema de desenvolvimento autônomo. Gere mensagens claras, informativas e com emojis apropriados.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.7
+      });
+
+      const callbackMessage = response.data.choices[0].message.content;
+      return callbackMessage;
+
+    } catch (error) {
+      // Fallback para mensagem básica se LLM falhar
+      return `📋 ${eventType}: ${JSON.stringify(data)}`;
+    }
+  }
+
+  private buildCallbackPrompt(eventType: string, data: any): string {
+    const baseContext = {
+      eventType,
+      data,
+      timestamp: new Date().toISOString()
+    };
+
+    switch (eventType) {
+      case 'taskCreated':
+        return `Gere uma mensagem de callback para quando uma tarefa é criada. Dados: ${JSON.stringify(data)}. A mensagem deve ser clara e informativa sobre a criação da tarefa.`;
+      
+      case 'taskStarted':
+        return `Gere uma mensagem de callback para quando uma tarefa inicia execução. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que a tarefa começou a ser executada.`;
+      
+      case 'taskProgress':
+        return `Gere uma mensagem de callback para progresso da tarefa. Dados: ${JSON.stringify(data)}. A mensagem deve mostrar o progresso atual e o que está sendo executado.`;
+      
+      case 'taskCompleted':
+        return `Gere uma mensagem de callback para quando uma tarefa é completada com sucesso. Dados: ${JSON.stringify(data)}. A mensagem deve celebrar a conclusão e mostrar resultados.`;
+      
+      case 'taskFailed':
+        return `Gere uma mensagem de callback para quando uma tarefa falha. Dados: ${JSON.stringify(data)}. A mensagem deve informar sobre o erro de forma clara.`;
+      
+      case 'agentStarted':
+        return `Gere uma mensagem de callback para quando um agente inicia execução. Dados: ${JSON.stringify(data)}. A mensagem deve indicar qual agente está trabalhando.`;
+      
+      case 'agentCompleted':
+        return `Gere uma mensagem de callback para quando um agente completa execução. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que o agente terminou com sucesso.`;
+      
+      case 'agentFailed':
+        return `Gere uma mensagem de callback para quando um agente falha. Dados: ${JSON.stringify(data)}. A mensagem deve informar sobre a falha do agente.`;
+      
+      case 'toolStarted':
+        return `Gere uma mensagem de callback para quando uma ferramenta inicia execução. Dados: ${JSON.stringify(data)}. A mensagem deve indicar qual ferramenta está sendo usada.`;
+      
+      case 'toolCompleted':
+        return `Gere uma mensagem de callback para quando uma ferramenta completa execução. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que a ferramenta terminou com sucesso.`;
+      
+      case 'toolFailed':
+        return `Gere uma mensagem de callback para quando uma ferramenta falha. Dados: ${JSON.stringify(data)}. A mensagem deve informar sobre a falha da ferramenta.`;
+      
+      case 'testStarted':
+        return `Gere uma mensagem de callback para quando um teste inicia. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que os testes estão sendo executados.`;
+      
+      case 'testCompleted':
+        return `Gere uma mensagem de callback para quando um teste é completado com sucesso. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que os testes passaram.`;
+      
+      case 'testFailed':
+        return `Gere uma mensagem de callback para quando um teste falha. Dados: ${JSON.stringify(data)}. A mensagem deve informar sobre a falha nos testes.`;
+      
+      case 'reportGenerated':
+        return `Gere uma mensagem de callback para quando um relatório é gerado. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que o relatório foi criado.`;
+      
+      case 'interactionReceived':
+        return `Gere uma mensagem de callback para quando uma interação é recebida. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que uma interação foi recebida.`;
+      
+      case 'interactionProcessed':
+        return `Gere uma mensagem de callback para quando uma interação é processada. Dados: ${JSON.stringify(data)}. A mensagem deve indicar que a interação foi processada.`;
+      
+      default:
+        return `Gere uma mensagem de callback para o evento: ${eventType}. Dados: ${JSON.stringify(data)}. A mensagem deve ser informativa e clara.`;
+    }
   }
 
   async createPersistentTask(request: TaskCreationRequest): Promise<TaskOrchestratorResult> {

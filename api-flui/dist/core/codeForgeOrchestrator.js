@@ -77,7 +77,34 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
         const markdownReporter = new markdownReporter_1.MarkdownReporter(reportsDir);
         const contextPersistence = new contextPersistence_1.ContextPersistence(contextsDir);
         this.taskOrchestrator = new taskOrchestrator_1.TaskOrchestrator(taskManager, liveTester, markdownReporter, contextPersistence);
+        this.propagateTaskOrchestratorEvents();
         this.setupEventHandlers();
+    }
+    propagateTaskOrchestratorEvents() {
+        const eventTypes = [
+            'taskCreated', 'taskStarted', 'taskProgress', 'taskCompleted', 'taskFailed',
+            'agentStarted', 'agentCompleted', 'agentFailed',
+            'toolStarted', 'toolCompleted', 'toolFailed',
+            'testStarted', 'testCompleted', 'testFailed',
+            'reportGenerated', 'interactionReceived', 'interactionProcessed'
+        ];
+        const dynamicEventTypes = [
+            'taskCreatedDynamic', 'taskStartedDynamic', 'taskProgressDynamic', 'taskCompletedDynamic', 'taskFailedDynamic',
+            'agentStartedDynamic', 'agentCompletedDynamic', 'agentFailedDynamic',
+            'toolStartedDynamic', 'toolCompletedDynamic', 'toolFailedDynamic',
+            'testStartedDynamic', 'testCompletedDynamic', 'testFailedDynamic',
+            'reportGeneratedDynamic', 'interactionReceivedDynamic', 'interactionProcessedDynamic'
+        ];
+        eventTypes.forEach(eventType => {
+            this.taskOrchestrator.on(eventType, (data) => {
+                this.emit(eventType, data);
+            });
+        });
+        dynamicEventTypes.forEach(eventType => {
+            this.taskOrchestrator.on(eventType, (data) => {
+                this.emit(eventType, data);
+            });
+        });
     }
     async processUserInput(input, userId = 'default') {
         try {
