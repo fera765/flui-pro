@@ -45,9 +45,10 @@ const fileGenerator_1 = require("./fileGenerator");
 const pluginLoader_1 = require("./pluginLoader");
 const timeoutManager_1 = require("./timeoutManager");
 const concurrentTaskManager_1 = require("./concurrentTaskManager");
+const emotionMemory_1 = require("./emotionMemory");
 const path = __importStar(require("path"));
 class AdvancedOrchestrator {
-    constructor(config, classifier, planner, worker, supervisor) {
+    constructor(config, classifier, planner, worker, supervisor, emotionMemoryConfig) {
         this.config = config;
         this.classifier = classifier;
         this.planner = planner;
@@ -68,6 +69,18 @@ class AdvancedOrchestrator {
         this.timeoutManager = new timeoutManager_1.TimeoutManager(timeoutConfig);
         this.pluginLoader = new pluginLoader_1.PluginLoader();
         this.concurrentTaskManager = new concurrentTaskManager_1.ConcurrentTaskManager(this.timeoutManager, 3);
+        const defaultEmotionConfig = {
+            emotionThreshold: 0.7,
+            maxMemories: 1000,
+            memoryDecay: 0.95,
+            contextWindow: 3,
+            hashLength: 8
+        };
+        const emotionConfig = emotionMemoryConfig || defaultEmotionConfig;
+        const episodicStore = new emotionMemory_1.EpisodicStore(emotionConfig);
+        const emotionHash = new emotionMemory_1.EmotionHash();
+        const contextInjector = new emotionMemory_1.ContextInjector();
+        this.sriProtocol = new emotionMemory_1.SRIProtocol(episodicStore, emotionHash, contextInjector, emotionConfig);
         this.tools = new advancedTools_1.AdvancedTools(workingDir, this.pluginLoader);
         this.contextManager = new fluiContext_1.FluiContextManager('', workingDir);
         this.todoPlanner = new todoPlanner_1.TodoPlanner();
@@ -241,12 +254,33 @@ class AdvancedOrchestrator {
         try {
             this.updateTaskStatus(taskId, 'running');
             this.emitEvent(taskId, 'task_started', { task });
+            const contextMessages = this.buildContextMessages(task);
+            const sriResult = await this.sriProtocol.optimizeContext(contextMessages, taskId);
+            const optimizedTask = {
+                ...task,
+                prompt: sriResult.context,
+                metadata: {
+                    ...task.metadata,
+                    sriOptimization: {
+                        originalTokens: sriResult.originalTokens,
+                        optimizedTokens: sriResult.optimizedTokens,
+                        reductionPercentage: sriResult.reductionPercentage,
+                        injectedMemories: sriResult.injectedMemories.length
+                    }
+                }
+            };
+            let result;
             if (task.metadata.isSimple) {
-                const result = await this.worker.executeTask(task);
+                result = await this.worker.executeTask(optimizedTask);
+            }
+            else {
+                result = await this.executeComplexTask(optimizedTask);
+            }
+            await this.sriProtocol.storeExperience(taskId, task.prompt, result);
+            if (result.success) {
                 return this.handleSimpleTaskResult(taskId, result);
             }
             else {
-                const result = await this.executeComplexTask(task);
                 return this.handleComplexTaskResult(taskId, result);
             }
         }
@@ -482,6 +516,66 @@ class AdvancedOrchestrator {
             return this.contextManager.getContext();
         }
         return undefined;
+    }
+    buildContextMessages(task) {
+        const messages = [];
+        messages.push({
+            role: 'system',
+            content: 'You are FLUI Advanced, an autonomous AI assistant with specialized agents. Use relevant memories to improve your responses.'
+        });
+        messages.push({
+            role: 'user',
+            content: task.prompt
+        });
+        if (task.metadata.conversationHistory) {
+            for (const msg of task.metadata.conversationHistory) {
+                messages.push(msg);
+            }
+        }
+        if (!task.metadata.isSimple) {
+            const context = this.contextManager.getContext();
+            if (context.todos.length > 0) {
+                messages.push({
+                    role: 'system',
+                    content: `Current todos: ${context.todos.map(t => t.description).join(', ')}`
+                });
+            }
+        }
+        return messages;
+    }
+    async getEmotionMemoryStats() {
+        return await this.sriProtocol.getMemoryStats();
+    }
+    async clearEmotionMemories() {
+        await this.sriProtocol.clearMemories();
+    }
+    async optimizeContextForAgent(agentId, context, taskId) {
+        const contextMessages = [{ role: 'user', content: context }];
+        return await this.sriProtocol.optimizeContextForAgent(agentId, contextMessages, taskId);
+    }
+    async getPerformanceMetrics() {
+        return this.sriProtocol.getPerformanceMetrics();
+    }
+    async getAlerts() {
+        return this.sriProtocol.getAlerts();
+    }
+    async getAgentMetrics(agentId) {
+        return this.sriProtocol.getAgentMetrics(agentId);
+    }
+    async getMemoriesByDomain(domain) {
+        return [];
+    }
+    async getMemoriesByAgent(agentId) {
+        return [];
+    }
+    async getMostEffectiveMemories(limit = 10) {
+        return [];
+    }
+    async getTuningRecommendations() {
+        return [];
+    }
+    async applyTuningRecommendations(recommendations) {
+        return this.config;
     }
 }
 exports.AdvancedOrchestrator = AdvancedOrchestrator;

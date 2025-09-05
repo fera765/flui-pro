@@ -11,8 +11,10 @@ import { knowledgeRoutes } from './routes/knowledge';
 import { mcpRoutes } from './routes/mcp';
 import { createEmotionMemoryRoutes } from './routes/emotionMemory';
 import { createAnalyticsRoutes } from './routes/analytics';
+import { createCodeForgeRoutes } from './routes/codeForge';
 import { Orchestrator } from './core/orchestrator';
 import { AdvancedOrchestrator } from './core/advancedOrchestrator';
+import { CodeForgeOrchestrator } from './core/codeForgeOrchestrator';
 import { Classifier } from './core/classifier';
 import { Planner } from './core/planner';
 import { Worker } from './core/worker';
@@ -72,6 +74,9 @@ const advancedOrchestrator = new AdvancedOrchestrator(
   supervisor,
   emotionMemoryConfig
 );
+
+// Initialize CodeForge orchestrator
+const codeForgeOrchestrator = new CodeForgeOrchestrator();
 
 // Middleware
 app.use(helmet());
@@ -136,6 +141,7 @@ const pluginLoader = new PluginLoader();
 // API routes
 app.use('/v1/tasks', taskRoutes(orchestrator));
 app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
+app.use('/v1/code-forge', createCodeForgeRoutes(codeForgeOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
 app.use('/v1/knowledge', knowledgeRoutes(knowledgeManager));
 app.use('/v1/emotion-memory', createEmotionMemoryRoutes(orchestrator, advancedOrchestrator));
