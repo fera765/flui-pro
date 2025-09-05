@@ -11,9 +11,13 @@ export class TaskManager {
     this.tasksDirectory = tasksDirectory;
     this.activeTasks = new Map();
     
-    // Ensure tasks directory exists
-    if (!fs.existsSync(tasksDirectory)) {
-      fs.mkdirSync(tasksDirectory, { recursive: true });
+    // Ensure tasks directory exists (with error handling)
+    try {
+      if (!fs.existsSync(tasksDirectory)) {
+        fs.mkdirSync(tasksDirectory, { recursive: true });
+      }
+    } catch (error) {
+      console.warn('Could not create tasks directory in constructor:', (error as Error).message);
     }
     
     // Load existing tasks (async, but don't await in constructor)
