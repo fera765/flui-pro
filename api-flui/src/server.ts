@@ -9,6 +9,8 @@ import { streamRoutes } from './routes/stream';
 import { createPluginRoutes } from './routes/plugins';
 import { knowledgeRoutes } from './routes/knowledge';
 import { mcpRoutes } from './routes/mcp';
+import { createEmotionMemoryRoutes } from './routes/emotionMemory';
+import { createAnalyticsRoutes } from './routes/analytics';
 import { Orchestrator } from './core/orchestrator';
 import { AdvancedOrchestrator } from './core/advancedOrchestrator';
 import { Classifier } from './core/classifier';
@@ -44,12 +46,22 @@ const orchestratorConfig = {
   enableStreaming: true
 };
 
+// Emotion memory configuration
+const emotionMemoryConfig = {
+  emotionThreshold: parseFloat((process.env as any)['EMOTION_THRESHOLD'] || '0.7'),
+  maxMemories: parseInt((process.env as any)['MAX_MEMORIES'] || '1000'),
+  memoryDecay: parseFloat((process.env as any)['MEMORY_DECAY'] || '0.95'),
+  contextWindow: parseInt((process.env as any)['CONTEXT_WINDOW'] || '3'),
+  hashLength: parseInt((process.env as any)['HASH_LENGTH'] || '8')
+};
+
 const orchestrator = new Orchestrator(
   orchestratorConfig,
   classifier,
   planner,
   worker,
-  supervisor
+  supervisor,
+  emotionMemoryConfig
 );
 
 const advancedOrchestrator = new AdvancedOrchestrator(
@@ -57,7 +69,8 @@ const advancedOrchestrator = new AdvancedOrchestrator(
   classifier,
   planner,
   worker,
-  supervisor
+  supervisor,
+  emotionMemoryConfig
 );
 
 // Middleware
@@ -125,6 +138,8 @@ app.use('/v1/tasks', taskRoutes(orchestrator));
 app.use('/v1/advanced-tasks', advancedTaskRoutes(advancedOrchestrator));
 app.use('/v1/stream', streamRoutes(orchestrator));
 app.use('/v1/knowledge', knowledgeRoutes(knowledgeManager));
+app.use('/v1/emotion-memory', createEmotionMemoryRoutes(orchestrator, advancedOrchestrator));
+app.use('/v1/analytics', createAnalyticsRoutes(orchestrator, advancedOrchestrator));
 app.use('/mcp', mcpRoutes(mcpRegistry, mcpToolProxy));
 app.use('/v1', createPluginRoutes(pluginLoader));
 

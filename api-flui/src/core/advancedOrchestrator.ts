@@ -16,6 +16,8 @@ import { PluginLoader } from './pluginLoader';
 import { TimeoutManager } from './timeoutManager';
 import { ConcurrentTaskManager } from './concurrentTaskManager';
 import { TimeoutConfig } from '../types/timeout';
+import { SRIProtocol, EpisodicStore, EmotionHash, ContextInjector } from './emotionMemory';
+import { EmotionMemoryConfig } from '../types/emotionMemory';
 import * as path from 'path';
 
 export class AdvancedOrchestrator {
@@ -30,13 +32,15 @@ export class AdvancedOrchestrator {
   private pluginLoader: PluginLoader;
   private timeoutManager: TimeoutManager;
   private concurrentTaskManager: ConcurrentTaskManager;
+  private sriProtocol: SRIProtocol;
 
   constructor(
     private config: OrchestratorConfig,
     private classifier: Classifier,
     private planner: Planner,
     private worker: Worker,
-    private supervisor: Supervisor
+    private supervisor: Supervisor,
+    emotionMemoryConfig?: EmotionMemoryConfig
   ) {
     // Initialize working directory
     const workingDir = path.join(process.cwd(), 'flui-projects', uuidv4());
@@ -59,6 +63,22 @@ export class AdvancedOrchestrator {
     
     // Initialize concurrent task manager
     this.concurrentTaskManager = new ConcurrentTaskManager(this.timeoutManager, 3);
+    
+    // Initialize emotion memory system
+    const defaultEmotionConfig: EmotionMemoryConfig = {
+      emotionThreshold: 0.7,
+      maxMemories: 1000,
+      memoryDecay: 0.95,
+      contextWindow: 3,
+      hashLength: 8
+    };
+
+    const emotionConfig = emotionMemoryConfig || defaultEmotionConfig;
+    const episodicStore = new EpisodicStore(emotionConfig);
+    const emotionHash = new EmotionHash();
+    const contextInjector = new ContextInjector();
+    
+    this.sriProtocol = new SRIProtocol(episodicStore, emotionHash, contextInjector, emotionConfig);
     
     // Initialize components
     this.tools = new AdvancedTools(workingDir, this.pluginLoader);
@@ -286,13 +306,40 @@ export class AdvancedOrchestrator {
       this.updateTaskStatus(taskId, 'running');
       this.emitEvent(taskId, 'task_started', { task });
 
+      // Apply SRI Protocol to optimize context before execution
+      const contextMessages = this.buildContextMessages(task);
+      const sriResult = await this.sriProtocol.optimizeContext(contextMessages, taskId);
+      
+      // Update task with optimized context
+      const optimizedTask = {
+        ...task,
+        prompt: sriResult.context,
+        metadata: {
+          ...task.metadata,
+          sriOptimization: {
+            originalTokens: sriResult.originalTokens,
+            optimizedTokens: sriResult.optimizedTokens,
+            reductionPercentage: sriResult.reductionPercentage,
+            injectedMemories: sriResult.injectedMemories.length
+          }
+        }
+      };
+
+      let result: TaskResult;
       if (task.metadata.isSimple) {
-        // Execute simple task
-        const result = await this.worker.executeTask(task);
+        // Execute simple task with optimized context
+        result = await this.worker.executeTask(optimizedTask);
+      } else {
+        // Execute complex task with todo management and optimized context
+        result = await this.executeComplexTask(optimizedTask);
+      }
+
+      // Store experience in emotion memory
+      await this.sriProtocol.storeExperience(taskId, task.prompt, result);
+
+      if (result.success) {
         return this.handleSimpleTaskResult(taskId, result);
       } else {
-        // Execute complex task with todo management
-        const result = await this.executeComplexTask(task);
         return this.handleComplexTaskResult(taskId, result);
       }
 
@@ -596,5 +643,127 @@ export class AdvancedOrchestrator {
       return this.contextManager.getContext();
     }
     return undefined;
+  }
+
+  /**
+   * Build context messages from task and conversation history
+   */
+  private buildContextMessages(task: Task): Array<{ role: 'user' | 'assistant' | 'system'; content: string }> {
+    const messages = [];
+    
+    // Add system message
+    messages.push({
+      role: 'system' as const,
+      content: 'You are FLUI Advanced, an autonomous AI assistant with specialized agents. Use relevant memories to improve your responses.'
+    });
+    
+    // Add task prompt as user message
+    messages.push({
+      role: 'user' as const,
+      content: task.prompt
+    });
+    
+    // Add conversation history if available
+    if (task.metadata.conversationHistory) {
+      for (const msg of task.metadata.conversationHistory) {
+        messages.push(msg);
+      }
+    }
+    
+    // Add context from FluiContextManager if available
+    if (!task.metadata.isSimple) {
+      const context = this.contextManager.getContext();
+      if (context.todos.length > 0) {
+        messages.push({
+          role: 'system' as const,
+          content: `Current todos: ${context.todos.map(t => t.description).join(', ')}`
+        });
+      }
+    }
+    
+    return messages;
+  }
+
+  /**
+   * Get emotion memory statistics
+   */
+  async getEmotionMemoryStats(): Promise<any> {
+    return await this.sriProtocol.getMemoryStats();
+  }
+
+  /**
+   * Clear emotion memories (for testing)
+   */
+  async clearEmotionMemories(): Promise<void> {
+    await this.sriProtocol.clearMemories();
+  }
+
+  /**
+   * Optimize context for specific agent
+   */
+  async optimizeContextForAgent(agentId: string, context: string, taskId: string): Promise<any> {
+    const contextMessages = [{ role: 'user' as const, content: context }];
+    return await this.sriProtocol.optimizeContextForAgent(agentId, contextMessages, taskId);
+  }
+
+  /**
+   * Get performance metrics
+   */
+  async getPerformanceMetrics(): Promise<any> {
+    return this.sriProtocol.getPerformanceMetrics();
+  }
+
+  /**
+   * Get real-time alerts
+   */
+  async getAlerts(): Promise<any[]> {
+    return this.sriProtocol.getAlerts();
+  }
+
+  /**
+   * Get agent-specific metrics
+   */
+  async getAgentMetrics(agentId: string): Promise<any[]> {
+    return this.sriProtocol.getAgentMetrics(agentId);
+  }
+
+  /**
+   * Get memories by domain
+   */
+  async getMemoriesByDomain(domain: string): Promise<any[]> {
+    // This would need to be implemented in the episodic store
+    return [];
+  }
+
+  /**
+   * Get memories by agent
+   */
+  async getMemoriesByAgent(agentId: string): Promise<any[]> {
+    // This would need to be implemented in the episodic store
+    return [];
+  }
+
+  /**
+   * Get most effective memories
+   */
+  async getMostEffectiveMemories(limit: number = 10): Promise<any[]> {
+    // This would need to be implemented in the episodic store
+    return [];
+  }
+
+  /**
+   * Get tuning recommendations
+   */
+  async getTuningRecommendations(): Promise<any[]> {
+    // This would need to be implemented with the adaptive tuner
+    return [];
+  }
+
+  /**
+   * Apply tuning recommendations
+   */
+  async applyTuningRecommendations(recommendations: any[]): Promise<any> {
+    // This would need to be implemented with the adaptive tuner
+    return this.config;
   }
 }
