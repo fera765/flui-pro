@@ -411,13 +411,16 @@ class CodeForgeAgent {
             console.log(`❌ Project error: ${project.name}`);
         });
         this.eventEmitter.on('taskStart', (task) => {
-            console.log(`🔧 Task started: ${task.prompt}`);
+            const taskName = task.prompt || task.description || 'Unknown task';
+            console.log(`🔧 Task started: ${taskName}`);
         });
         this.eventEmitter.on('taskComplete', (task) => {
-            console.log(`✅ Task completed: ${task.prompt}`);
+            const taskName = task.prompt || task.description || 'Unknown task';
+            console.log(`✅ Task completed: ${taskName}`);
         });
         this.eventEmitter.on('taskError', (task) => {
-            console.log(`❌ Task error: ${task.prompt}`);
+            const taskName = task.prompt || task.description || 'Unknown task';
+            console.log(`❌ Task error: ${taskName}`);
         });
         this.eventEmitter.on('modificationStart', (modification) => {
             console.log(`🔧 Modification started: ${modification.description}`);

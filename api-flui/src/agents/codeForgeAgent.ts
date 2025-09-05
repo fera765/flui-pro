@@ -492,16 +492,19 @@ export class CodeForgeAgent {
       console.log(`❌ Project error: ${project.name}`);
     });
     
-    this.eventEmitter.on('taskStart', (task: AgentTask) => {
-      console.log(`🔧 Task started: ${task.prompt}`);
+    this.eventEmitter.on('taskStart', (task: any) => {
+      const taskName = task.prompt || task.description || 'Unknown task';
+      console.log(`🔧 Task started: ${taskName}`);
     });
     
-    this.eventEmitter.on('taskComplete', (task: AgentTask) => {
-      console.log(`✅ Task completed: ${task.prompt}`);
+    this.eventEmitter.on('taskComplete', (task: any) => {
+      const taskName = task.prompt || task.description || 'Unknown task';
+      console.log(`✅ Task completed: ${taskName}`);
     });
     
-    this.eventEmitter.on('taskError', (task: AgentTask) => {
-      console.log(`❌ Task error: ${task.prompt}`);
+    this.eventEmitter.on('taskError', (task: any) => {
+      const taskName = task.prompt || task.description || 'Unknown task';
+      console.log(`❌ Task error: ${taskName}`);
     });
     
     this.eventEmitter.on('modificationStart', (modification: ModificationRequest) => {
