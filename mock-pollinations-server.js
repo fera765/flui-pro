@@ -25,6 +25,8 @@ app.post('/v1/chat/completions', async (req, res) => {
     // Dynamic intent extraction based on input content
     const input = userMessage.match(/INPUT: "(.+?)"/)?.[1] || userMessage;
     
+    console.log('🔍 Analyzing input:', input);
+    
     let domain = 'unknown';
     let technology = null;
     let language = null;
@@ -32,59 +34,65 @@ app.post('/v1/chat/completions', async (req, res) => {
     let requirements = [];
     let purpose = null;
     
-    // AI/ML Detection
-    if (input.toLowerCase().includes('machine learning') || input.toLowerCase().includes('tensorflow') || input.toLowerCase().includes('python') || input.toLowerCase().includes('ai')) {
+    // AI/ML Detection - More specific keywords
+    if (input.toLowerCase().includes('machine learning') || input.toLowerCase().includes('tensorflow') || input.toLowerCase().includes('sistema de recomendação') || input.toLowerCase().includes('processamento de dados')) {
       domain = 'ai';
       technology = 'tensorflow';
       language = 'python';
-      features = ['machine-learning', 'data-processing', 'model-training', 'visualization'];
-      requirements = ['real-time', 'data-pipeline'];
-      purpose = 'AI/ML system';
+      features = ['machine-learning', 'data-processing', 'model-training', 'visualization', 'recommendation-system'];
+      requirements = ['real-time', 'data-pipeline', 'web-interface'];
+      purpose = 'AI/ML recommendation system';
+      console.log('🤖 Detected: AI/ML System');
     }
-    // Blockchain Detection
-    else if (input.toLowerCase().includes('blockchain') || input.toLowerCase().includes('defi') || input.toLowerCase().includes('solidity') || input.toLowerCase().includes('metamask')) {
+    // Blockchain Detection - More specific keywords
+    else if (input.toLowerCase().includes('defi') || input.toLowerCase().includes('smart contracts') || input.toLowerCase().includes('solidity') || input.toLowerCase().includes('metamask') || input.toLowerCase().includes('staking') || input.toLowerCase().includes('tokenomics')) {
       domain = 'blockchain';
       technology = 'solidity';
       language = 'javascript';
-      features = ['smart-contracts', 'web3', 'staking', 'tokenomics'];
-      requirements = ['wallet-integration', 'decentralized'];
-      purpose = 'DeFi application';
+      features = ['smart-contracts', 'web3', 'staking', 'tokenomics', 'wallet-integration'];
+      requirements = ['wallet-integration', 'decentralized', 'defi-protocols'];
+      purpose = 'DeFi application with staking';
+      console.log('🔗 Detected: Blockchain DeFi');
     }
-    // Mobile Detection
-    else if (input.toLowerCase().includes('flutter') || input.toLowerCase().includes('mobile') || input.toLowerCase().includes('app') || input.toLowerCase().includes('delivery')) {
+    // Mobile Detection - More specific keywords
+    else if (input.toLowerCase().includes('flutter') || input.toLowerCase().includes('aplicativo de delivery') || input.toLowerCase().includes('geolocalização') || input.toLowerCase().includes('chat em tempo real')) {
       domain = 'mobile';
       technology = 'flutter';
       language = 'dart';
-      features = ['geolocation', 'payments', 'chat', 'notifications'];
-      requirements = ['real-time', 'offline-support'];
-      purpose = 'mobile application';
+      features = ['geolocation', 'payments', 'chat', 'notifications', 'delivery-system'];
+      requirements = ['real-time', 'offline-support', 'location-tracking'];
+      purpose = 'food delivery mobile app';
+      console.log('📱 Detected: Mobile Delivery App');
     }
-    // Frontend Detection
-    else if (input.toLowerCase().includes('react') || input.toLowerCase().includes('frontend') || input.toLowerCase().includes('dashboard') || input.toLowerCase().includes('interface')) {
+    // Frontend Detection - More specific keywords
+    else if (input.toLowerCase().includes('react') || input.toLowerCase().includes('frontend') || input.toLowerCase().includes('dashboard') || input.toLowerCase().includes('interface web')) {
       domain = 'frontend';
       technology = 'react';
       language = 'typescript';
-      features = ['dashboard', 'authentication', 'charts', 'reports'];
-      requirements = ['real-time', 'responsive'];
-      purpose = 'web application';
+      features = ['dashboard', 'authentication', 'charts', 'reports', 'web-interface'];
+      requirements = ['real-time', 'responsive', 'data-visualization'];
+      purpose = 'web application dashboard';
+      console.log('🌐 Detected: Frontend Web App');
     }
-    // Backend Detection
-    else if (input.toLowerCase().includes('api') || input.toLowerCase().includes('backend') || input.toLowerCase().includes('server') || input.toLowerCase().includes('express')) {
+    // Backend Detection - More specific keywords
+    else if (input.toLowerCase().includes('api') || input.toLowerCase().includes('backend') || input.toLowerCase().includes('server') || input.toLowerCase().includes('express') || input.toLowerCase().includes('node.js')) {
       domain = 'backend';
       technology = 'express';
       language = 'javascript';
-      features = ['api', 'authentication', 'database', 'middleware'];
-      requirements = ['scalable', 'secure'];
-      purpose = 'backend service';
+      features = ['api', 'authentication', 'database', 'middleware', 'rest-api'];
+      requirements = ['scalable', 'secure', 'api-endpoints'];
+      purpose = 'backend API service';
+      console.log('⚙️ Detected: Backend API');
     }
-    // Content Detection
-    else if (input.toLowerCase().includes('script') || input.toLowerCase().includes('roteiro') || input.toLowerCase().includes('youtube') || input.toLowerCase().includes('content')) {
+    // Content Detection - More specific keywords
+    else if (input.toLowerCase().includes('roteiro') || input.toLowerCase().includes('youtube') || input.toLowerCase().includes('script') || input.toLowerCase().includes('viral') || input.toLowerCase().includes('marketing digital')) {
       domain = 'content';
       technology = 'markdown';
       language = 'markdown';
-      features = ['script-writing', 'content-creation'];
-      requirements = ['engaging', 'viral'];
-      purpose = 'content creation';
+      features = ['script-writing', 'content-creation', 'video-script', 'marketing-content'];
+      requirements = ['engaging', 'viral', 'youtube-optimized'];
+      purpose = 'YouTube viral script';
+      console.log('📝 Detected: Content Script');
     }
     
     response = {

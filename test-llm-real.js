@@ -20,7 +20,7 @@ async function testLLMReal() {
     const aiInput = 'Crie um sistema de recomendação de produtos usando machine learning com Python, TensorFlow, processamento de dados em tempo real e interface web para visualização dos resultados';
     
     console.log(`📝 Input: "${aiInput}"`);
-    const aiResult = await orchestrator.processUserInput('ai-user', aiInput);
+    const aiResult = await orchestrator.processUserInput(aiInput, 'ai-user');
     console.log(`✅ Intent detected:`, JSON.stringify(aiResult.intent, null, 2));
     console.log(`📊 Confidence: ${aiResult.confidence}`);
     console.log(`❓ Questions generated: ${aiResult.questions.length}`);
@@ -31,7 +31,7 @@ async function testLLMReal() {
     const blockchainInput = 'Desenvolva uma aplicação DeFi com smart contracts em Solidity, interface React, integração com MetaMask, sistema de staking e tokenomics personalizada';
     
     console.log(`📝 Input: "${blockchainInput}"`);
-    const blockchainResult = await orchestrator.processUserInput('blockchain-user', blockchainInput);
+    const blockchainResult = await orchestrator.processUserInput(blockchainInput, 'blockchain-user');
     console.log(`✅ Intent detected:`, JSON.stringify(blockchainResult.intent, null, 2));
     console.log(`📊 Confidence: ${blockchainResult.confidence}`);
     console.log(`❓ Questions generated: ${blockchainResult.questions.length}`);
@@ -42,7 +42,7 @@ async function testLLMReal() {
     const mobileInput = 'Crie um aplicativo de delivery de comida com Flutter, geolocalização, pagamentos integrados, chat em tempo real e sistema de avaliações';
     
     console.log(`📝 Input: "${mobileInput}"`);
-    const mobileResult = await orchestrator.processUserInput('mobile-user', mobileInput);
+    const mobileResult = await orchestrator.processUserInput(mobileInput, 'mobile-user');
     console.log(`✅ Intent detected:`, JSON.stringify(mobileResult.intent, null, 2));
     console.log(`📊 Confidence: ${mobileResult.confidence}`);
     console.log(`❓ Questions generated: ${mobileResult.questions.length}`);
