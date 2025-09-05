@@ -710,4 +710,102 @@ export class DynamicTools {
 
     return structure;
   }
+
+  // Additional tools needed by DynamicSolutionArchitect
+  createShellTool(): Tool {
+    return {
+      name: 'shell',
+      description: 'Execute shell commands safely within the working directory',
+      parameters: {
+        command: {
+          type: 'string',
+          description: 'Shell command to execute',
+          required: true
+        }
+      },
+      execute: async (params: { command: string }): Promise<ToolResponse> => {
+        try {
+          const result = await this.runShellCommand(params.command);
+          return {
+            success: true,
+            data: result,
+            context: `Command executed: ${params.command}`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    };
+  }
+
+  createPackageManagerTool(): Tool {
+    return {
+      name: 'package_manager',
+      description: 'Manage package dependencies',
+      parameters: {
+        dependencies: {
+          type: 'array',
+          description: 'List of dependencies to install',
+          required: true
+        },
+        devDependencies: {
+          type: 'boolean',
+          description: 'Whether these are dev dependencies',
+          required: false
+        }
+      },
+      execute: async (params: { dependencies: string[], devDependencies?: boolean }): Promise<ToolResponse> => {
+        try {
+          const result = await this.installDependencies('npm', params.dependencies, params.devDependencies ? params.dependencies : []);
+          return {
+            success: true,
+            data: result,
+            context: `Dependencies installed: ${params.dependencies.join(', ')}`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    };
+  }
+
+  createFileWriteTool(): Tool {
+    return {
+      name: 'file_write',
+      description: 'Write content to a file',
+      parameters: {
+        filePath: {
+          type: 'string',
+          description: 'Path to the file to write',
+          required: true
+        },
+        content: {
+          type: 'string',
+          description: 'Content to write to the file',
+          required: true
+        }
+      },
+      execute: async (params: { filePath: string, content: string }): Promise<ToolResponse> => {
+        try {
+          await this.createFile(params.filePath, params.content);
+          return {
+            success: true,
+            data: { filePath: params.filePath, content: params.content },
+            context: `File created: ${params.filePath}`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    };
+  }
 }

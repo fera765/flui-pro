@@ -675,6 +675,103 @@ class DynamicTools {
         }
         return structure;
     }
+    createShellTool() {
+        return {
+            name: 'shell',
+            description: 'Execute shell commands safely within the working directory',
+            parameters: {
+                command: {
+                    type: 'string',
+                    description: 'Shell command to execute',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const result = await this.runShellCommand(params.command);
+                    return {
+                        success: true,
+                        data: result,
+                        context: `Command executed: ${params.command}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createPackageManagerTool() {
+        return {
+            name: 'package_manager',
+            description: 'Manage package dependencies',
+            parameters: {
+                dependencies: {
+                    type: 'array',
+                    description: 'List of dependencies to install',
+                    required: true
+                },
+                devDependencies: {
+                    type: 'boolean',
+                    description: 'Whether these are dev dependencies',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const result = await this.installDependencies('npm', params.dependencies, params.devDependencies ? params.dependencies : []);
+                    return {
+                        success: true,
+                        data: result,
+                        context: `Dependencies installed: ${params.dependencies.join(', ')}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createFileWriteTool() {
+        return {
+            name: 'file_write',
+            description: 'Write content to a file',
+            parameters: {
+                filePath: {
+                    type: 'string',
+                    description: 'Path to the file to write',
+                    required: true
+                },
+                content: {
+                    type: 'string',
+                    description: 'Content to write to the file',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    await this.createFile(params.filePath, params.content);
+                    return {
+                        success: true,
+                        data: { filePath: params.filePath, content: params.content },
+                        context: `File created: ${params.filePath}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
 }
 exports.DynamicTools = DynamicTools;
 //# sourceMappingURL=dynamicTools.js.map
