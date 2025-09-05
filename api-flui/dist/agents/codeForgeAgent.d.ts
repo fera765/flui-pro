@@ -45,6 +45,7 @@ export declare class CodeForgeAgent {
     }>;
     validateProject(project: Project): Promise<ValidationResult>;
     private setupEventHandlers;
+    private generateDynamicModificationTasks;
     private generateModificationTasks;
     private createModificationRequest;
     private createDownloadRequest;

@@ -133,7 +133,7 @@ class CodeForgeAgent {
             modification.status = 'in_progress';
             this.modificationRequests.set(modification.id, modification);
             this.eventEmitter.emit('modificationStart', modification);
-            const tasks = await this.generateModificationTasks(project, modification);
+            const tasks = await this.generateDynamicModificationTasks(project, modification);
             for (const task of tasks) {
                 await this.executeDynamicTask(task, project);
             }
@@ -437,6 +437,305 @@ class CodeForgeAgent {
         this.eventEmitter.on('downloadReady', (downloadRequest) => {
             console.log(`✅ Download ready: ${downloadRequest.format}`);
         });
+    }
+    async generateDynamicModificationTasks(project, modification) {
+        const tasks = [];
+        if (modification.type === 'add_feature') {
+            if (modification.description.toLowerCase().includes('modal')) {
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: `Add modal functionality to HTML page`,
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: 'modal.js',
+                        content: `// Modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Create modal HTML
+  const modalHTML = \`
+    <div id="modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Bem-vindo!</h2>
+        <p>Esta é uma mensagem de boas-vindas.</p>
+      </div>
+    </div>
+  \`;
+  
+  // Add modal to body
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // Modal functionality
+  const modal = document.getElementById('modal');
+  const closeBtn = document.querySelector('.close');
+  
+  // Show modal on page load
+  modal.style.display = 'block';
+  
+  // Close modal when clicking X
+  closeBtn.addEventListener('click', function() {
+    modal.style.display = 'none';
+  });
+  
+  // Close modal when clicking outside
+  window.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+});`
+                    },
+                    dependencies: [],
+                    projectPhase: 'implementation',
+                    status: 'pending',
+                    createdAt: new Date()
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: `Add modal CSS styles`,
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: 'modal.css',
+                        content: `/* Modal Styles */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+}`
+                    },
+                    dependencies: [],
+                    projectPhase: 'implementation',
+                    status: 'pending',
+                    createdAt: new Date()
+                });
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: `Update HTML to include modal files`,
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: 'index.html',
+                        content: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page com Modal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="modal.css">
+</head>
+<body>
+    <header>
+        <h1>Bem-vindo à Nossa Landing Page</h1>
+        <p>Uma página moderna e responsiva</p>
+    </header>
+    
+    <main>
+        <section class="hero">
+            <h2>Descubra Nossos Serviços</h2>
+            <p>Oferecemos soluções inovadoras para seu negócio</p>
+            <button class="cta-button">Saiba Mais</button>
+        </section>
+        
+        <section class="features">
+            <div class="feature">
+                <h3>Recurso 1</h3>
+                <p>Descrição do primeiro recurso</p>
+            </div>
+            <div class="feature">
+                <h3>Recurso 2</h3>
+                <p>Descrição do segundo recurso</p>
+            </div>
+            <div class="feature">
+                <h3>Recurso 3</h3>
+                <p>Descrição do terceiro recurso</p>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 Nossa Empresa. Todos os direitos reservados.</p>
+    </footer>
+    
+    <script src="script.js"></script>
+    <script src="modal.js"></script>
+</body>
+</html>`
+                    },
+                    dependencies: [],
+                    projectPhase: 'implementation',
+                    status: 'pending',
+                    createdAt: new Date()
+                });
+            }
+        }
+        else if (modification.type === 'modify_existing') {
+            if (modification.description.toLowerCase().includes('cor') && modification.description.toLowerCase().includes('botão')) {
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: `Modify button color to blue`,
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: 'style.css',
+                        content: `/* Updated button styles */
+.cta-button {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+  background-color: #0056b3;
+}
+
+/* General styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.hero {
+  text-align: center;
+  padding: 3rem 0;
+  background-color: #f8f9fa;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 3rem 2rem;
+}
+
+.feature {
+  text-align: center;
+  padding: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+}
+
+footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 2rem 0;
+}`
+                    },
+                    dependencies: [],
+                    projectPhase: 'implementation',
+                    status: 'pending',
+                    createdAt: new Date()
+                });
+            }
+        }
+        else if (modification.type === 'remove_feature') {
+            if (modification.description.toLowerCase().includes('formulário')) {
+                tasks.push({
+                    id: (0, uuid_1.v4)(),
+                    description: `Remove contact form from HTML`,
+                    type: 'tool',
+                    toolName: 'file_write',
+                    parameters: {
+                        filePath: 'index.html',
+                        content: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Bem-vindo à Nossa Landing Page</h1>
+        <p>Uma página moderna e responsiva</p>
+    </header>
+    
+    <main>
+        <section class="hero">
+            <h2>Descubra Nossos Serviços</h2>
+            <p>Oferecemos soluções inovadoras para seu negócio</p>
+            <button class="cta-button">Saiba Mais</button>
+        </section>
+        
+        <section class="features">
+            <div class="feature">
+                <h3>Recurso 1</h3>
+                <p>Descrição do primeiro recurso</p>
+            </div>
+            <div class="feature">
+                <h3>Recurso 2</h3>
+                <p>Descrição do segundo recurso</p>
+            </div>
+            <div class="feature">
+                <h3>Recurso 3</h3>
+                <p>Descrição do terceiro recurso</p>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 Nossa Empresa. Todos os direitos reservados.</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>`
+                    },
+                    dependencies: [],
+                    projectPhase: 'implementation',
+                    status: 'pending',
+                    createdAt: new Date()
+                });
+            }
+        }
+        return tasks;
     }
     async generateModificationTasks(project, modification) {
         const tasks = [];
