@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Orchestrator = void 0;
 const uuid_1 = require("uuid");
+const emotionMemory_1 = require("./emotionMemory");
 class Orchestrator {
-    constructor(config, classifier, planner, worker, supervisor) {
+    constructor(config, classifier, planner, worker, supervisor, emotionMemoryConfig) {
         this.config = config;
         this.classifier = classifier;
         this.planner = planner;
@@ -11,6 +12,18 @@ class Orchestrator {
         this.supervisor = supervisor;
         this.tasks = new Map();
         this.events = new Map();
+        const defaultEmotionConfig = {
+            emotionThreshold: 0.7,
+            maxMemories: 1000,
+            memoryDecay: 0.95,
+            contextWindow: 3,
+            hashLength: 8
+        };
+        const emotionConfig = emotionMemoryConfig || defaultEmotionConfig;
+        const episodicStore = new emotionMemory_1.EpisodicStore(emotionConfig);
+        const emotionHash = new emotionMemory_1.EmotionHash();
+        const contextInjector = new emotionMemory_1.ContextInjector();
+        this.sriProtocol = new emotionMemory_1.SRIProtocol(episodicStore, emotionHash, contextInjector, emotionConfig);
     }
     async createTask(prompt) {
         const classification = await this.classifier.classifyTask(prompt);
@@ -60,7 +73,23 @@ class Orchestrator {
             if (task.depth >= this.config.maxDepth) {
                 throw new Error('Max depth exceeded');
             }
-            const result = await this.worker.executeTask(task);
+            const contextMessages = this.buildContextMessages(task);
+            const sriResult = await this.sriProtocol.optimizeContext(contextMessages, taskId);
+            const optimizedTask = {
+                ...task,
+                prompt: sriResult.context,
+                metadata: {
+                    ...task.metadata,
+                    sriOptimization: {
+                        originalTokens: sriResult.originalTokens,
+                        optimizedTokens: sriResult.optimizedTokens,
+                        reductionPercentage: sriResult.reductionPercentage,
+                        injectedMemories: sriResult.injectedMemories.length
+                    }
+                }
+            };
+            const result = await this.worker.executeTask(optimizedTask);
+            await this.sriProtocol.storeExperience(taskId, task.prompt, result);
             if (result.success) {
                 this.updateTaskStatus(taskId, 'completed', result.data);
                 this.emitEvent(taskId, 'task_completed', { task, result });
@@ -225,6 +254,29 @@ class Orchestrator {
             this.events.set(taskId, []);
         }
         this.events.get(taskId).push(event);
+    }
+    buildContextMessages(task) {
+        const messages = [];
+        messages.push({
+            role: 'system',
+            content: 'You are FLUI, an autonomous AI assistant. Use relevant memories to improve your responses.'
+        });
+        messages.push({
+            role: 'user',
+            content: task.prompt
+        });
+        if (task.metadata.conversationHistory) {
+            for (const msg of task.metadata.conversationHistory) {
+                messages.push(msg);
+            }
+        }
+        return messages;
+    }
+    async getEmotionMemoryStats() {
+        return await this.sriProtocol.getMemoryStats();
+    }
+    async clearEmotionMemories() {
+        await this.sriProtocol.clearMemories();
     }
 }
 exports.Orchestrator = Orchestrator;

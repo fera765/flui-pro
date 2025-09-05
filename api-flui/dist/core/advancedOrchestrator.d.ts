@@ -4,6 +4,7 @@ import { Classifier } from './classifier';
 import { Planner } from './planner';
 import { Worker } from './worker';
 import { Supervisor } from './supervisor';
+import { EmotionMemoryConfig } from '../types/emotionMemory';
 export declare class AdvancedOrchestrator {
     private config;
     private classifier;
@@ -21,7 +22,8 @@ export declare class AdvancedOrchestrator {
     private pluginLoader;
     private timeoutManager;
     private concurrentTaskManager;
-    constructor(config: OrchestratorConfig, classifier: Classifier, planner: Planner, worker: Worker, supervisor: Supervisor);
+    private sriProtocol;
+    constructor(config: OrchestratorConfig, classifier: Classifier, planner: Planner, worker: Worker, supervisor: Supervisor, emotionMemoryConfig?: EmotionMemoryConfig);
     private initializeAgents;
     private initializePlugins;
     private setupConcurrentTaskListeners;
@@ -44,5 +46,17 @@ export declare class AdvancedOrchestrator {
     getAllTasks(): Task[];
     getTaskEvents(taskId: string): any[];
     getContext(taskId: string): FluiContext | undefined;
+    private buildContextMessages;
+    getEmotionMemoryStats(): Promise<any>;
+    clearEmotionMemories(): Promise<void>;
+    optimizeContextForAgent(agentId: string, context: string, taskId: string): Promise<any>;
+    getPerformanceMetrics(): Promise<any>;
+    getAlerts(): Promise<any[]>;
+    getAgentMetrics(agentId: string): Promise<any[]>;
+    getMemoriesByDomain(domain: string): Promise<any[]>;
+    getMemoriesByAgent(agentId: string): Promise<any[]>;
+    getMostEffectiveMemories(limit?: number): Promise<any[]>;
+    getTuningRecommendations(): Promise<any[]>;
+    applyTuningRecommendations(recommendations: any[]): Promise<any>;
 }
 //# sourceMappingURL=advancedOrchestrator.d.ts.map

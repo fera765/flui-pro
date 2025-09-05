@@ -14,8 +14,12 @@ const stream_1 = require("./routes/stream");
 const plugins_1 = require("./routes/plugins");
 const knowledge_1 = require("./routes/knowledge");
 const mcp_1 = require("./routes/mcp");
+const emotionMemory_1 = require("./routes/emotionMemory");
+const analytics_1 = require("./routes/analytics");
+const codeForge_1 = require("./routes/codeForge");
 const orchestrator_1 = require("./core/orchestrator");
 const advancedOrchestrator_1 = require("./core/advancedOrchestrator");
+const codeForgeOrchestrator_1 = require("./core/codeForgeOrchestrator");
 const classifier_1 = require("./core/classifier");
 const planner_1 = require("./core/planner");
 const worker_1 = require("./core/worker");
@@ -42,8 +46,16 @@ const orchestratorConfig = {
     taskTimeoutMs: parseInt(process.env['TASK_TIMEOUT_MS'] || '300000'),
     enableStreaming: true
 };
-const orchestrator = new orchestrator_1.Orchestrator(orchestratorConfig, classifier, planner, worker, supervisor);
-const advancedOrchestrator = new advancedOrchestrator_1.AdvancedOrchestrator(orchestratorConfig, classifier, planner, worker, supervisor);
+const emotionMemoryConfig = {
+    emotionThreshold: parseFloat(process.env['EMOTION_THRESHOLD'] || '0.7'),
+    maxMemories: parseInt(process.env['MAX_MEMORIES'] || '1000'),
+    memoryDecay: parseFloat(process.env['MEMORY_DECAY'] || '0.95'),
+    contextWindow: parseInt(process.env['CONTEXT_WINDOW'] || '3'),
+    hashLength: parseInt(process.env['HASH_LENGTH'] || '8')
+};
+const orchestrator = new orchestrator_1.Orchestrator(orchestratorConfig, classifier, planner, worker, supervisor, emotionMemoryConfig);
+const advancedOrchestrator = new advancedOrchestrator_1.AdvancedOrchestrator(orchestratorConfig, classifier, planner, worker, supervisor, emotionMemoryConfig);
+const codeForgeOrchestrator = new codeForgeOrchestrator_1.CodeForgeOrchestrator();
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
     origin: process.env['NODE_ENV'] === 'production' ? false : true,
@@ -95,8 +107,11 @@ const pluginLoader = new pluginLoader_1.PluginLoader();
 })();
 app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
 app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
+app.use('/v1/code-forge', (0, codeForge_1.createCodeForgeRoutes)(codeForgeOrchestrator));
 app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));
 app.use('/v1/knowledge', (0, knowledge_1.knowledgeRoutes)(knowledgeManager));
+app.use('/v1/emotion-memory', (0, emotionMemory_1.createEmotionMemoryRoutes)(orchestrator, advancedOrchestrator));
+app.use('/v1/analytics', (0, analytics_1.createAnalyticsRoutes)(orchestrator, advancedOrchestrator));
 app.use('/mcp', (0, mcp_1.mcpRoutes)(mcpRegistry, mcpToolProxy));
 app.use('/v1', (0, plugins_1.createPluginRoutes)(pluginLoader));
 app.get('/', (_req, res) => {
