@@ -9,6 +9,8 @@ export declare class DynamicIntelligence {
     generateQuestions(intent: Intent): Promise<Question[]>;
     analyzeContext(workingDir: string): Promise<ContextAnalysis>;
     private isIntentComplete;
+    private extractIntentWithLLM;
+    private generateQuestionsWithLLM;
     private calculateConfidence;
 }
 //# sourceMappingURL=dynamicIntelligence.d.ts.map

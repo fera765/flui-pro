@@ -32,10 +32,14 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DynamicIntelligence = void 0;
 const uuid_1 = require("uuid");
 const fs = __importStar(require("fs"));
+const axios_1 = __importDefault(require("axios"));
 class DynamicIntelligence {
     constructor() {
         this.contextAnalyzer = new ContextAnalyzer();
@@ -46,8 +50,8 @@ class DynamicIntelligence {
     async processUserInput(input, workingDir = process.cwd()) {
         try {
             const context = await this.contextAnalyzer.analyze(workingDir);
-            const intent = await this.intentExtractor.extract(input, context);
-            const questions = await this.questionGenerator.generate(intent);
+            const intent = await this.extractIntentWithLLM(input);
+            const questions = await this.generateQuestionsWithLLM(intent, context);
             let solution;
             if (this.isIntentComplete(intent)) {
                 solution = await this.solutionArchitect.design(intent, context);
@@ -78,6 +82,150 @@ class DynamicIntelligence {
             intent.language &&
             intent.purpose &&
             intent.complexity);
+    }
+    async extractIntentWithLLM(input) {
+        try {
+            console.log(`🤖 Using LLM to extract intent from: "${input}"`);
+            const prompt = `Analise o seguinte input do usuário e extraia as informações de forma precisa:
+
+INPUT: "${input}"
+
+Extraia e retorne APENAS um JSON válido com as seguintes informações:
+
+{
+  "domain": "frontend|backend|mobile|desktop|ai|blockchain|content|script|unknown",
+  "technology": "tecnologia específica mencionada ou null se não especificada",
+  "language": "linguagem de programação mencionada ou null se não especificada", 
+  "features": ["array", "de", "features", "mencionadas"],
+  "requirements": ["array", "de", "requisitos", "específicos"],
+  "purpose": "propósito ou objetivo mencionado ou null"
+}
+
+REGRAS:
+- Seja preciso e específico
+- Se não souber algo, use null ou array vazio
+- Para domain, escolha a categoria mais apropriada
+- Para features, extraia funcionalidades específicas mencionadas
+- Para requirements, extraia requisitos técnicos específicos
+- Retorne APENAS o JSON, sem explicações`;
+            const response = await axios_1.default.post('http://localhost:3000/v1/chat/completions', {
+                model: 'gpt-4',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Você é um especialista em análise de requisitos de software. Analise inputs e extraia informações técnicas precisas.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.1,
+                max_tokens: 500
+            }, {
+                timeout: 10000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const content = response.data.choices[0].message.content.trim();
+            console.log(`🤖 LLM Response: ${content}`);
+            const intent = JSON.parse(content);
+            return {
+                domain: intent.domain || 'unknown',
+                technology: intent.technology || undefined,
+                language: intent.language || undefined,
+                features: Array.isArray(intent.features) ? intent.features : [],
+                requirements: Array.isArray(intent.requirements) ? intent.requirements : [],
+                purpose: intent.purpose || undefined
+            };
+        }
+        catch (error) {
+            console.error('❌ LLM Intent extraction failed:', error.message);
+            return {
+                domain: 'unknown',
+                technology: undefined,
+                language: undefined,
+                features: [],
+                requirements: [],
+                purpose: undefined
+            };
+        }
+    }
+    async generateQuestionsWithLLM(intent, context) {
+        try {
+            console.log(`🤖 Using LLM to generate questions for intent:`, intent);
+            const prompt = `Com base no intent extraído, gere perguntas clarificadoras relevantes:
+
+INTENT: ${JSON.stringify(intent, null, 2)}
+CONTEXT: ${JSON.stringify(context, null, 2)}
+
+Gere até 5 perguntas clarificadoras que ajudem a entender melhor os requisitos do usuário.
+Retorne APENAS um JSON array com as perguntas:
+
+[
+  {
+    "id": "tech-1",
+    "text": "Qual tecnologia você prefere usar?",
+    "type": "choice",
+    "options": ["React", "Vue", "Angular", "HTML/CSS/JS"]
+  },
+  {
+    "id": "lang-2", 
+    "text": "Qual linguagem de programação?",
+    "type": "choice",
+    "options": ["JavaScript", "TypeScript", "Python", "Java"]
+  }
+]
+
+REGRAS:
+- Gere apenas perguntas relevantes para o intent
+- Se o intent já estiver completo, retorne array vazio []
+- Use tipos: "choice", "text", "number", "boolean"
+- Seja específico e útil`;
+            const response = await axios_1.default.post('http://localhost:3000/v1/chat/completions', {
+                model: 'gpt-4',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Você é um especialista em análise de requisitos. Gere perguntas clarificadoras úteis e específicas.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.3,
+                max_tokens: 800
+            }, {
+                timeout: 10000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const content = response.data.choices[0].message.content.trim();
+            console.log(`🤖 LLM Questions Response: ${content}`);
+            const questions = JSON.parse(content);
+            return questions.map((q) => ({
+                id: q.id || (0, uuid_1.v4)(),
+                text: q.text || '',
+                type: q.type || 'text',
+                options: q.options || [],
+                required: q.required || false
+            }));
+        }
+        catch (error) {
+            console.error('❌ LLM Questions generation failed:', error.message);
+            return [
+                {
+                    id: 'tech-1',
+                    text: 'Qual tecnologia você prefere usar?',
+                    type: 'choice',
+                    options: ['React', 'Vue', 'Angular', 'HTML/CSS/JS'],
+                    required: false
+                }
+            ];
+        }
     }
     calculateConfidence(intent, questionCount) {
         let confidence = 0.5;
