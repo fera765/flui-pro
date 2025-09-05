@@ -40,7 +40,10 @@ export class CodeForgeOrchestrator extends EventEmitter {
       this.dynamicTools.createTestRunner(),
       this.dynamicTools.createServerValidator(),
       this.dynamicTools.createFileBackupManager(),
-      this.dynamicTools.createProjectAnalyzer()
+      this.dynamicTools.createProjectAnalyzer(),
+      this.dynamicTools.createShellTool(),
+      this.dynamicTools.createPackageManagerTool(),
+      this.dynamicTools.createFileWriteTool()
     ];
     
     this.codeForgeAgent = new CodeForgeAgent(availableTools);
