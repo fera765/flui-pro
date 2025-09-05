@@ -33,6 +33,8 @@ export declare class DynamicSolutionArchitect {
     private generateExpressServerContent;
     private generateReactAuthContent;
     private generateDynamicHTMLContent;
+    private generateDynamicScriptContent;
+    private generateDynamicCopywriteContent;
     private generateDependencyTasks;
     private generateConfigurationTasks;
     private generateImplementationTasks;

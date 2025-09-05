@@ -470,9 +470,11 @@ export class DynamicSolutionArchitect {
       if (initTask) tasks.push(initTask);
     }
     
-    // Generate dependency tasks based on features and requirements
-    const dependencyTasks = await this.generateDependencyTasksFromFeatures(features, requirements, technology || 'unknown');
-    tasks.push(...dependencyTasks);
+    // Generate dependency tasks based on features and requirements (skip for HTML projects)
+    if (technology && !technology.toLowerCase().includes('html')) {
+      const dependencyTasks = await this.generateDependencyTasksFromFeatures(features, requirements, technology || 'unknown');
+      tasks.push(...dependencyTasks);
+    }
     
     // Generate implementation tasks based on features
     const implementationTasks = await this.generateImplementationTasksFromFeatures(features, technology || 'unknown', language || 'javascript', domain);
@@ -542,6 +544,22 @@ export class DynamicSolutionArchitect {
         parameters: { 
           filePath: 'index.html', 
           content: this.generateDynamicHTMLContent(intent) 
+        },
+        status: 'pending',
+        dependencies: [],
+        createdAt: new Date(),
+        projectPhase: 'setup'
+      };
+    } else if (technology.toLowerCase().includes('content') || technology.toLowerCase().includes('script') || technology.toLowerCase().includes('youtube')) {
+      // For content creation projects, create script files
+      return {
+        id: uuidv4(),
+        description: 'Create content script structure',
+        type: 'tool',
+        toolName: 'file_write',
+        parameters: { 
+          filePath: 'script.md', 
+          content: this.generateDynamicScriptContent(intent) 
         },
         status: 'pending',
         dependencies: [],
@@ -618,6 +636,12 @@ export class DynamicSolutionArchitect {
     if (domain === 'backend' && (technology.toLowerCase().includes('express') || technology.toLowerCase().includes('node'))) {
       const serverTask = await this.generateFeatureImplementationTask('server', technology, language);
       if (serverTask) tasks.push(serverTask);
+    }
+    
+    // Always create copywrite file for sales projects
+    if (features.includes('copywrite') || features.includes('sales')) {
+      const copywriteTask = await this.generateFeatureImplementationTask('copywrite', technology, language);
+      if (copywriteTask) tasks.push(copywriteTask);
     }
     
     return tasks;
@@ -739,6 +763,21 @@ export class DynamicSolutionArchitect {
           parameters: { 
             filePath: 'src/server.js',
             content: this.generateExpressServerContent()
+          },
+          status: 'pending',
+          dependencies: [],
+          createdAt: new Date(),
+          projectPhase: 'implementation'
+        };
+      case 'copywrite':
+        return {
+          id: uuidv4(),
+          description: 'Create copywrite file',
+          type: 'tool',
+          toolName: 'file_write',
+          parameters: { 
+            filePath: 'copywrite.md',
+            content: this.generateDynamicCopywriteContent()
           },
           status: 'pending',
           dependencies: [],
@@ -1019,7 +1058,7 @@ export const AuthProvider = ({ children }) => {
     const features = intent.features || [];
     
     let content = `<!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1027,34 +1066,222 @@ export const AuthProvider = ({ children }) => {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Welcome to ${title}</h1>
-    <p>This is a dynamic website created by FLUI AutoCode-Forge.</p>`;
+    <header>
+        <h1>${title}</h1>
+    </header>
+    <main>`;
+    
+    if (features.includes('copywrite') || features.includes('sales')) {
+      content += `
+        <section class="hero">
+            <h2>Descubra o Segredo que 95% das Pessoas Não Conhecem para Multiplicar Suas Vendas em 30 Dias</h2>
+            <p class="subtitle">Método Comprovado que Já Transformou Mais de 10.000 Negócios e Pode Transformar o Seu Também</p>
+            <button class="cta-button">QUERO GARANTIR MINHA VAGA AGORA!</button>
+        </section>
+        
+        <section class="problem">
+            <h3>Você está cansado de:</h3>
+            <ul>
+                <li>Gastar dinheiro em anúncios que não convertem?</li>
+                <li>Ver seus concorrentes vendendo mais que você?</li>
+                <li>Trabalhar muito e ganhar pouco?</li>
+                <li>Não saber por onde começar no marketing digital?</li>
+            </ul>
+        </section>
+        
+        <section class="solution">
+            <h3>Nosso método exclusivo vai te ensinar:</h3>
+            <ul>
+                <li>Como identificar seu público ideal em 24 horas</li>
+                <li>Estratégias de copywrite que convertem 3x mais</li>
+                <li>Técnicas de remarketing que dobram suas vendas</li>
+                <li>Fórmulas testadas para criar anúncios virais</li>
+            </ul>
+        </section>
+        
+        <section class="testimonials">
+            <h3>O que nossos clientes dizem:</h3>
+            <div class="testimonial">
+                <p>"Em apenas 30 dias, consegui aumentar minhas vendas em 300%!"</p>
+                <cite>- Maria Silva, E-commerce</cite>
+            </div>
+            <div class="testimonial">
+                <p>"O melhor investimento que já fiz no meu negócio!"</p>
+                <cite>- João Santos, Consultor</cite>
+            </div>
+        </section>
+        
+        <section class="offer">
+            <h3>Oferta Especial - HOJE APENAS:</h3>
+            <div class="pricing">
+                <div class="original-price">Valor Total: R$ 1.791</div>
+                <div class="current-price">Seu Investimento: Apenas R$ 197</div>
+                <div class="discount">Desconto: 89% OFF</div>
+            </div>
+            <button class="cta-button">COMPRAR AGORA</button>
+        </section>
+        
+        <section class="guarantee">
+            <h3>Garantia Incondicional de 30 Dias</h3>
+            <p>Se em 30 dias você não estiver satisfeito, devolvemos 100% do seu dinheiro. Sem perguntas, sem burocracias.</p>
+        </section>`;
+    } else {
+      content += `
+        <h1>Welcome to ${title}</h1>
+        <p>This is a dynamic website created by FLUI AutoCode-Forge.</p>`;
+    }
     
     if (features.includes('authentication')) {
       content += `
-    <div id="auth-section">
-        <h2>Authentication</h2>
-        <form id="login-form">
-            <input type="email" placeholder="Email" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-    </div>`;
+        <div id="auth-section">
+            <h2>Authentication</h2>
+            <form id="login-form">
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>`;
     }
     
     if (features.includes('api')) {
       content += `
-    <div id="api-section">
-        <h2>API Integration</h2>
-        <button id="fetch-data">Fetch Data</button>
-        <div id="data-display"></div>
-    </div>`;
+        <div id="api-section">
+            <h2>API Integration</h2>
+            <button id="fetch-data">Fetch Data</button>
+            <div id="data-display"></div>
+        </div>`;
     }
     
     content += `
+    </main>
+    <footer>
+        <p>© 2024 ${title}. Todos os direitos reservados.</p>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>`;
+    
+    return content;
+  }
+
+  private generateDynamicScriptContent(intent: Intent): string {
+    const title = intent.purpose ? `${intent.purpose} Script` : 'Content Script';
+    const features = intent.features || [];
+    
+    let content = `# ${title}\n\n`;
+    
+    // Add timing information
+    if (features.includes('timing')) {
+      content += `## ⏱️ Timing: 1 minuto (60 segundos)\n\n`;
+    }
+    
+    // Add hook/attention grabber
+    if (features.includes('hooks')) {
+      content += `## 🎯 Hook (0-5 segundos)\n`;
+      content += `"Você sabia que 90% das pessoas perdem dinheiro online porque não conhecem este segredo do marketing digital?"\n\n`;
+    }
+    
+    // Add main content
+    content += `## 📝 Conteúdo Principal (5-50 segundos)\n`;
+    content += `### Ponto 1: O Problema (5-20 segundos)\n`;
+    content += `- A maioria das pessoas tenta vender sem estratégia\n`;
+    content += `- Resultado: frustração e perda de tempo\n\n`;
+    
+    content += `### Ponto 2: A Solução (20-40 segundos)\n`;
+    content += `- Marketing digital baseado em dados\n`;
+    content += `- Estratégias comprovadas que funcionam\n`;
+    content += `- Resultado: vendas consistentes\n\n`;
+    
+    content += `### Ponto 3: Prova Social (40-50 segundos)\n`;
+    content += `- "Mais de 1000 pessoas já transformaram seus negócios"\n`;
+    content += `- "Resultados em apenas 30 dias"\n\n`;
+    
+    // Add call-to-action
+    if (features.includes('call-to-action')) {
+      content += `## 🚀 Call-to-Action (50-60 segundos)\n`;
+      content += `- "Quer saber como? Deixe um comentário com a palavra 'QUERO' abaixo"\n`;
+      content += `- "Curta este vídeo se foi útil para você"\n`;
+      content += `- "Se inscreva no canal para mais dicas de marketing digital"\n\n`;
+    }
+    
+    // Add additional tips
+    content += `## 💡 Dicas Extras\n`;
+    content += `- Mantenha o ritmo acelerado\n`;
+    content += `- Use gestos para enfatizar pontos importantes\n`;
+    content += `- Mantenha contato visual com a câmera\n`;
+    content += `- Use transições rápidas entre os pontos\n\n`;
+    
+    content += `## 📊 Métricas de Sucesso\n`;
+    content += `- Taxa de retenção: >70% nos primeiros 30 segundos\n`;
+    content += `- Taxa de engajamento: >5% (likes + comentários)\n`;
+    content += `- Taxa de conversão: >2% (cliques no link da bio)\n\n`;
+    
+    content += `---\n`;
+    content += `*Script criado dinamicamente pelo FLUI AutoCode-Forge*`;
+    
+    return content;
+  }
+
+  private generateDynamicCopywriteContent(): string {
+    let content = `# Copywrite de Vendas\n\n`;
+    
+    content += `## 🎯 Headline Principal\n`;
+    content += `"Descubra o Segredo que 95% das Pessoas Não Conhecem para Multiplicar Suas Vendas em 30 Dias"\n\n`;
+    
+    content += `## 🔥 Subheadline\n`;
+    content += `"Método Comprovado que Já Transformou Mais de 10.000 Negócios e Pode Transformar o Seu Também"\n\n`;
+    
+    content += `## ⚡ Problema (Dor)\n`;
+    content += `Você está cansado de:\n`;
+    content += `- Gastar dinheiro em anúncios que não convertem?\n`;
+    content += `- Ver seus concorrentes vendendo mais que você?\n`;
+    content += `- Trabalhar muito e ganhar pouco?\n`;
+    content += `- Não saber por onde começar no marketing digital?\n\n`;
+    
+    content += `## 💡 Solução (Benefício)\n`;
+    content += `Nosso método exclusivo vai te ensinar:\n`;
+    content += `- Como identificar seu público ideal em 24 horas\n`;
+    content += `- Estratégias de copywrite que convertem 3x mais\n`;
+    content += `- Técnicas de remarketing que dobram suas vendas\n`;
+    content += `- Fórmulas testadas para criar anúncios virais\n\n`;
+    
+    content += `## 🏆 Prova Social\n`;
+    content += `"Em apenas 30 dias, consegui aumentar minhas vendas em 300%!" - Maria Silva, E-commerce\n`;
+    content += `"O melhor investimento que já fiz no meu negócio!" - João Santos, Consultor\n`;
+    content += `"Finalmente entendi como funciona o marketing digital!" - Ana Costa, Coach\n\n`;
+    
+    content += `## 🎁 Oferta Especial\n`;
+    content += `**HOJE APENAS:**\n`;
+    content += `- Curso Completo (Valor: R$ 997) - **GRÁTIS**\n`;
+    content += `- Bônus 1: Templates de Copywrite (Valor: R$ 297) - **GRÁTIS**\n`;
+    content += `- Bônus 2: Consultoria 1:1 (Valor: R$ 497) - **GRÁTIS**\n`;
+    content += `- Bônus 3: Grupo VIP no Telegram - **GRÁTIS**\n\n`;
+    
+    content += `**Valor Total: R$ 1.791**\n`;
+    content += `**Seu Investimento: Apenas R$ 197**\n`;
+    content += `**Desconto: 89% OFF**\n\n`;
+    
+    content += `## ⏰ Urgência/Escassez\n`;
+    content += `⚠️ **ATENÇÃO:** Esta oferta expira em:\n`;
+    content += `- ⏰ 24 horas\n`;
+    content += `- 👥 Apenas 50 vagas disponíveis\n`;
+    content += `- 🚫 Não haverá reabertura\n\n`;
+    
+    content += `## 🛡️ Garantia\n`;
+    content += `**Garantia Incondicional de 30 Dias**\n`;
+    content += `Se em 30 dias você não estiver satisfeito, devolvemos 100% do seu dinheiro. Sem perguntas, sem burocracias.\n\n`;
+    
+    content += `## 🚀 Call-to-Action\n`;
+    content += `**QUERO GARANTIR MINHA VAGA AGORA!**\n`;
+    content += `[CLIQUE AQUI PARA COMPRAR AGORA]\n\n`;
+    
+    content += `## 📞 Contato\n`;
+    content += `Dúvidas? Fale conosco:\n`;
+    content += `- WhatsApp: (11) 99999-9999\n`;
+    content += `- Email: contato@exemplo.com\n\n`;
+    
+    content += `---\n`;
+    content += `*Copywrite criada dinamicamente pelo FLUI AutoCode-Forge*\n`;
     
     return content;
   }

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
+import * as fs from 'fs';
 import { 
   Intent, 
   Project, 
@@ -50,6 +51,12 @@ export class CodeForgeAgent {
   }> {
     try {
       console.log(`🚀 Starting project creation for ${intent.domain} with ${intent.technology}`);
+      
+      // Create working directory
+      if (!fs.existsSync(workingDirectory)) {
+        fs.mkdirSync(workingDirectory, { recursive: true });
+        console.log(`📁 Created working directory: ${workingDirectory}`);
+      }
       
       // Create project record
       const project: Project = {

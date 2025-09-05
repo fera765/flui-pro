@@ -97,8 +97,10 @@ export class CodeForgeOrchestrator extends EventEmitter {
       });
       
       // Process answers with dynamic intelligence
+      const builtInput = this.buildInputFromAnswers(answers);
+      console.log(`🔍 Built input from answers: "${builtInput}"`);
       const result = await this.dynamicIntelligence.processUserInput(
-        this.buildInputFromAnswers(answers), 
+        builtInput, 
         this.workingDirectory
       );
       
@@ -404,6 +406,7 @@ export class CodeForgeOrchestrator extends EventEmitter {
   }
 
   private buildInputFromAnswers(answers: Record<string, any>): string {
+    console.log(`🔍 buildInputFromAnswers called with:`, answers);
     const parts: string[] = [];
     
     // Map answer keys to meaningful technology terms
