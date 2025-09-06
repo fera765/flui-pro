@@ -137,9 +137,12 @@ class DynamicSolutionArchitect {
                 max_tokens: 2000
             });
             const toolCall = response.choices[0]?.message?.tool_calls?.[0];
+            console.log('🔧 Full response:', JSON.stringify(response, null, 2));
+            console.log('🔧 Tool call:', toolCall);
             if (toolCall && toolCall.function.name === 'generate_dynamic_tasks') {
                 console.log('🔧 Tool call arguments:', toolCall.function.arguments);
                 const args = JSON.parse(toolCall.function.arguments);
+                console.log('🔧 Parsed args:', args);
                 const tasks = args.tasks;
                 console.log('🔧 Parsed tasks:', tasks);
                 return tasks.map((task) => ({
