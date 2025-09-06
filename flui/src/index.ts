@@ -5,6 +5,10 @@ import express from 'express';
 
 // Import controllers to register them
 import './controllers/HealthController';
+import './autocode/api/AutoCodeController';
+
+// Import routes
+import autoCodeRoutes from './autocode/api/AutoCodeRoutes';
 
 const server = new InversifyExpressServer(container);
 
@@ -24,6 +28,9 @@ server.setConfig((app: express.Application) => {
       next();
     }
   });
+  
+  // AutoCode routes
+  app.use('/autocode', autoCodeRoutes);
 });
 
 const app = server.build();

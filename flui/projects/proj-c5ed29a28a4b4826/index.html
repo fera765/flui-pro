@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unknown Project</title>
+    <style>
+      :root {
+        --bg: #0f111a;
+        --fg: #e6e6e8;
+        --card: #161923;
+        --border: #232534;
+        --accent: #4f46e5;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+      .container { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+      .card { background: var(--card); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,.4); text-align: center; max-width: 640px; width: 100%; border: 1px solid var(--border); }
+      h1 { margin: 0 0 0.5rem; font-size: 2rem; letter-spacing: .3px; }
+      p { margin: 0 0 1rem; color: #cbd5e1; }
+      a { color: #93c5fd; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      @media (max-width: 600px) {
+        .card { padding: 1.5rem; }
+        h1 { font-size: 1.5rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="card" aria-label="Resumo do projeto">
+        <h1>Projeto Desconhecido</h1>
+        <p>Este é um esqueleto básico de index.html para um projeto sem framework definido.</p>
+        <p>Você pode começar adicionando recursos, dependências ou um build step conforme necessário.</p>
+        <p>Exemplos de próximos passos: adicionar CSS, JavaScript, ou integrar com seu build tool favorito.</p>
+        <p><a href="#" aria-label="Link de exemplo">Saiba mais</a></p>
+      </section>
+    </main>
+  </body>
+</html>

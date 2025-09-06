@@ -1,1 +1,255 @@
-[]
+[
+  {
+    "id": "mem_1757160544690_858kjhqur",
+    "emotionHash": "a381fec815f33dc6",
+    "emotionVector": {
+      "valence": 0.3,
+      "arousal": 0.2,
+      "dominance": 0.6,
+      "confidence": 0.85,
+      "regret": 0,
+      "satisfaction": 0.6
+    },
+    "policyDelta": {
+      "action": "nova_task_criada",
+      "context": "Task 1683e21f8f8130e5: frontend React TypeScript Tailwind counter com teste",
+      "intensity": 0.4,
+      "timestamp": 1757160544690
+    },
+    "outcomeFlag": true,
+    "context": "Task 1683e21f8f8130e5: frontend react typescript tailwind counter com teste",
+    "timestamp": 1757160544690,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160545810_ql83unpqd",
+    "emotionHash": "f8dc055e82ecdb82",
+    "emotionVector": {
+      "valence": 0.1,
+      "arousal": 0.15,
+      "dominance": 0.55,
+      "confidence": 0.65,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "criar_task",
+      "context": "Criação de uma task de teste denominada 'test task' com saída 'sucesso'.",
+      "intensity": 0.25,
+      "timestamp": 1757160545810
+    },
+    "outcomeFlag": true,
+    "context": "Task a4d627339e1b6123: test task",
+    "timestamp": 1757160545810,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160553651_pzc1kjx1s",
+    "emotionHash": "06dd802add8385e4",
+    "emotionVector": {
+      "valence": 0.2,
+      "arousal": 0.2,
+      "dominance": 0.55,
+      "confidence": 0.6,
+      "regret": 0,
+      "satisfaction": 0.1
+    },
+    "policyDelta": {
+      "action": "criar_nova_task_para_atualizacao",
+      "context": "Gerenciamento de tasks: nova task criada para atualização denominada 'test task for update'",
+      "intensity": 0.5,
+      "timestamp": 1757160553651
+    },
+    "outcomeFlag": true,
+    "context": "Task c5ed29a28a4b4826: test task for update",
+    "timestamp": 1757160553651,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160558500_cszinljya",
+    "emotionHash": "60aa42562b9f07de",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0,
+      "dominance": 0.5,
+      "confidence": 0.6,
+      "regret": 0,
+      "satisfaction": 0.5
+    },
+    "policyDelta": {
+      "action": "criação_de_task_para_teste_de_delecao",
+      "context": "Gestão de tarefas: teste de deleção, tarefa criada com título 'test task for deletion'",
+      "intensity": 0.25,
+      "timestamp": 1757160558500
+    },
+    "outcomeFlag": true,
+    "context": "Task 4c654a48bd7d324f: test task for deletion",
+    "timestamp": 1757160558500,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160599337_uimfl8h86",
+    "emotionHash": "0b3ce26e40110054",
+    "emotionVector": {
+      "valence": 0.9,
+      "arousal": 0.3,
+      "dominance": 0.6,
+      "confidence": 0.85,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criar_projeto_web",
+      "context": "Criação de projeto para tarefa de atualização (test task for update); resultado indicado como sucesso; descrição menciona web e tecnologia desconhecida (unknown).",
+      "intensity": 0.6,
+      "timestamp": 1757160599337
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task for update",
+    "timestamp": 1757160599337,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160623493_casfqrjfh",
+    "emotionHash": "a329052e758c8fc6",
+    "emotionVector": {
+      "valence": 0.75,
+      "arousal": 0.25,
+      "dominance": 0.62,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.85
+    },
+    "policyDelta": {
+      "action": "criar_projeto_react",
+      "context": "Criação de projeto para tarefa de teste usando React",
+      "intensity": 0.6,
+      "timestamp": 1757160623493
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task",
+    "timestamp": 1757160623493,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161403358_owbznfw0z",
+    "emotionHash": "ac1cf5a8df819d06",
+    "emotionVector": {
+      "valence": 0.9,
+      "arousal": 0.2,
+      "dominance": 0.7,
+      "confidence": 0.9,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criar_projeto_react",
+      "context": "Criação de projeto: tarefa de atualização de teste (test task for update) com React",
+      "intensity": 0.3,
+      "timestamp": 1757161403358
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task for update",
+    "timestamp": 1757161403358,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161401743_qtwhppnah",
+    "emotionHash": "06230bac253c7e31",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.1,
+      "dominance": 0.5,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "instalação_de_dependências",
+      "context": "Instalação de dependências para a tarefa a4d627339e1b6123 em um projeto frontend com React, Vite, TypeScript, ESLint, Prettier e pacotes de teste",
+      "intensity": 0.5,
+      "timestamp": 1757161401743
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task a4d627339e1b6123",
+    "timestamp": 1757161401743,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160644787_flpoe3atp",
+    "emotionHash": "1d85920c73f9eb25",
+    "emotionVector": {
+      "valence": 0.75,
+      "arousal": 0.25,
+      "dominance": 0.65,
+      "confidence": 0.85,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criação_de_projeto_web_com_react",
+      "context": "tarefa_teste_para_delecao",
+      "intensity": 0.3,
+      "timestamp": 1757160644787
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task for deletion",
+    "timestamp": 1757160644787,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161402854_jkjvr75my",
+    "emotionHash": "f50849b95c2d7dae",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.1,
+      "dominance": 0.5,
+      "confidence": 0.5,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "Instalação de dependências do frontend",
+      "context": "Instalação de dependências para task 1683e21f8f8130e5",
+      "intensity": 0.3,
+      "timestamp": 1757161402854
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task 1683e21f8f8130e5",
+    "timestamp": 1757161402854,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161400952_mgg9og9d2",
+    "emotionHash": "a6226ab5d2ff014c",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.05,
+      "dominance": 0.5,
+      "confidence": 0.5,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "Instalação de dependências de frontend para a task 4c654a48bd7d324f (React, tooling e testes)",
+      "context": "Instalação de 12 dependências para a task 4c654a48bd7d324f",
+      "intensity": 0.25,
+      "timestamp": 1757161400952
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task 4c654a48bd7d324f",
+    "timestamp": 1757161400952,
+    "accessCount": 0,
+    "lastAccessed": 0
+  }
+]

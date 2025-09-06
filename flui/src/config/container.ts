@@ -18,6 +18,15 @@ import { EpisodicMemoryStore } from '../memory/stores/EpisodicMemoryStore';
 import { TemporalDecayService } from '../memory/services/TemporalDecayService';
 import { MemoryClusteringService } from '../memory/services/MemoryClusteringService';
 import { LLMEmotionAnalysisService } from '../memory/services/LLMEmotionAnalysisService';
+import { ITaskManager, IFileSystem, IProjectBuilder, IAgent } from '../autocode/types/ITask';
+import { TaskManager } from '../autocode/core/TaskManager';
+import { FileSystemManager } from '../autocode/core/FileSystemManager';
+import { ProjectBuilder } from '../autocode/core/ProjectBuilder';
+import { MicroTaskExecutor } from '../autocode/core/MicroTaskExecutor';
+import { ScaffolderAgent } from '../autocode/agents/ScaffolderAgent';
+import { DepInstallerAgent } from '../autocode/agents/DepInstallerAgent';
+import { ComponentAgent } from '../autocode/agents/ComponentAgent';
+import { AutoCodeController } from '../autocode/api/AutoCodeController';
 
 // Create the main container
 export const container = new Container();
@@ -39,6 +48,27 @@ container.bind<EpisodicMemoryStore>('EpisodicMemoryStore').to(EpisodicMemoryStor
 container.bind<TemporalDecayService>('TemporalDecayService').to(TemporalDecayService).inSingletonScope();
 container.bind<MemoryClusteringService>('MemoryClusteringService').to(MemoryClusteringService).inSingletonScope();
 container.bind<LLMEmotionAnalysisService>('LLMEmotionAnalysisService').to(LLMEmotionAnalysisService).inSingletonScope();
+
+// Register AutoCode services
+container.bind<ITaskManager>('ITaskManager').to(TaskManager).inSingletonScope();
+container.bind<IFileSystem>('IFileSystem').to(FileSystemManager).inSingletonScope();
+container.bind<IProjectBuilder>('IProjectBuilder').to(ProjectBuilder).inSingletonScope();
+container.bind<MicroTaskExecutor>('MicroTaskExecutor').to(MicroTaskExecutor).inSingletonScope();
+
+// Register agents
+container.bind<IAgent>('ScaffolderAgent').to(ScaffolderAgent).inSingletonScope();
+container.bind<IAgent>('DepInstallerAgent').to(DepInstallerAgent).inSingletonScope();
+container.bind<IAgent>('ComponentAgent').to(ComponentAgent).inSingletonScope();
+
+// Register agents array
+container.bind<IAgent[]>('IAgent[]').toDynamicValue(() => [
+  container.get<IAgent>('ScaffolderAgent'),
+  container.get<IAgent>('DepInstallerAgent'),
+  container.get<IAgent>('ComponentAgent')
+]).inSingletonScope();
+
+// Register controllers
+container.bind<AutoCodeController>('AutoCodeController').to(AutoCodeController).inSingletonScope();
 
 // Export container for dependency injection
 export default container;
