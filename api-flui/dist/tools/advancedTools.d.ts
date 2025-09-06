@@ -11,6 +11,9 @@ export declare class AdvancedTools {
     createFileReadTool(): Tool;
     createFileWriteTool(): Tool;
     createDirectoryTool(): Tool;
+    createBuildTool(): Tool;
+    createStartTool(): Tool;
+    createTestTool(): Tool;
     createShellTool(): Tool;
     createTextSplitTool(): Tool;
     createTextSummarizeTool(): Tool;

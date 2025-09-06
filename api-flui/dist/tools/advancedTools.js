@@ -257,6 +257,158 @@ class AdvancedTools {
             }
         };
     }
+    createBuildTool() {
+        return {
+            name: 'build_project',
+            description: 'Build/compile a project using the appropriate build command (npm run build, yarn build, cargo build, go build, etc.)',
+            parameters: {
+                command: {
+                    type: 'string',
+                    description: 'Build command to execute (e.g., "npm run build", "yarn build", "cargo build", "go build", "python -m build")',
+                    required: true
+                },
+                workingDir: {
+                    type: 'string',
+                    description: 'Working directory to run the command in (relative to project root)',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const workDir = params.workingDir ? path.join(this.workingDirectory, params.workingDir) : this.workingDirectory;
+                    console.log(`🔨 Building project with command: ${params.command} in ${workDir}`);
+                    const { stdout, stderr } = await execAsync(params.command, { cwd: workDir });
+                    return {
+                        success: true,
+                        data: {
+                            command: params.command,
+                            stdout: stdout,
+                            stderr: stderr,
+                            workingDir: workDir
+                        },
+                        context: `Build completed successfully with command: ${params.command}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: `Build failed: ${error.message}`,
+                        data: { command: params.command, stderr: error.stderr }
+                    };
+                }
+            }
+        };
+    }
+    createStartTool() {
+        return {
+            name: 'start_project',
+            description: 'Start/run a project using the appropriate start command (npm start, yarn start, python app.py, go run, etc.)',
+            parameters: {
+                command: {
+                    type: 'string',
+                    description: 'Start command to execute (e.g., "npm start", "yarn start", "python app.py", "go run main.go")',
+                    required: true
+                },
+                workingDir: {
+                    type: 'string',
+                    description: 'Working directory to run the command in (relative to project root)',
+                    required: false
+                },
+                port: {
+                    type: 'number',
+                    description: 'Port number the application will run on (for testing purposes)',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const workDir = params.workingDir ? path.join(this.workingDirectory, params.workingDir) : this.workingDirectory;
+                    console.log(`🚀 Starting project with command: ${params.command} in ${workDir}`);
+                    const child = execAsync(params.command, { cwd: workDir });
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    return {
+                        success: true,
+                        data: {
+                            command: params.command,
+                            workingDir: workDir,
+                            port: params.port
+                        },
+                        context: `Project started successfully with command: ${params.command}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: `Start failed: ${error.message}`,
+                        data: { command: params.command }
+                    };
+                }
+            }
+        };
+    }
+    createTestTool() {
+        return {
+            name: 'test_endpoint',
+            description: 'Test an endpoint or application to verify it is working correctly',
+            parameters: {
+                url: {
+                    type: 'string',
+                    description: 'URL to test (e.g., "http://localhost:3000", "http://localhost:8080/api/health")',
+                    required: true
+                },
+                method: {
+                    type: 'string',
+                    description: 'HTTP method to use (GET, POST, PUT, DELETE)',
+                    required: false
+                },
+                headers: {
+                    type: 'object',
+                    description: 'HTTP headers to send with the request',
+                    required: false
+                },
+                body: {
+                    type: 'string',
+                    description: 'Request body (for POST/PUT requests)',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const method = params.method || 'GET';
+                    const headers = params.headers || {};
+                    console.log(`🧪 Testing endpoint: ${method} ${params.url}`);
+                    const response = await fetch(params.url, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...headers
+                        },
+                        body: params.body
+                    });
+                    const responseText = await response.text();
+                    return {
+                        success: response.ok,
+                        data: {
+                            url: params.url,
+                            method,
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: Object.fromEntries(response.headers.entries()),
+                            body: responseText
+                        },
+                        context: `Test ${response.ok ? 'passed' : 'failed'}: ${response.status} ${response.statusText}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: `Test failed: ${error.message}`,
+                        data: { url: params.url, method: params.method }
+                    };
+                }
+            }
+        };
+    }
     createShellTool() {
         return {
             name: 'shell',
@@ -400,6 +552,9 @@ Summary:`;
             this.createFileReadTool(),
             this.createFileWriteTool(),
             this.createDirectoryTool(),
+            this.createBuildTool(),
+            this.createStartTool(),
+            this.createTestTool(),
             this.createShellTool(),
             this.createTextSplitTool(),
             this.createTextSummarizeTool()
