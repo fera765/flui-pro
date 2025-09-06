@@ -41,7 +41,7 @@ export interface SolutionArchitecture {
     dependencies: string[];
     devDependencies: string[];
     scripts: Record<string, string>;
-    structure: ProjectStructure;
+    structure: ProjectStructure | string[];
     validations: ValidationStep[];
     estimatedTime: number;
 }

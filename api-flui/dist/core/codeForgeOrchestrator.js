@@ -107,6 +107,10 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
             const result = await this.dynamicIntelligence.processUserInput(input, this.workingDirectory);
             console.log(`🚀 CodeForgeOrchestrator: Processing result:`, result);
             context.pendingQuestions = result.questions;
+            if (context.conversationHistory.filter(msg => msg.role === 'user').length > 10) {
+                console.log(`🛑 Limiting questions to prevent infinite loop`);
+                result.questions = [];
+            }
             if (result.intent && !result.questions.length) {
                 console.log(`🚀 Creating persistent task for intent:`, result.intent);
                 const taskRequest = {
@@ -175,7 +179,8 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
             };
             this.tasks.set(task.id, task);
             this.emit('taskCreated', task);
-            const result = await this.codeForgeAgent.executeProjectCreation(intent, this.workingDirectory);
+            const projectDir = path.join(this.workingDirectory, 'flui-projects', (0, uuid_1.v4)());
+            const result = await this.codeForgeAgent.executeProjectCreation(intent, projectDir);
             if (result.success && result.project) {
                 this.projects.set(result.project.id, result.project);
                 task.status = 'completed';

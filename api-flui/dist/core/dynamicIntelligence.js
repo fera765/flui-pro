@@ -80,7 +80,8 @@ class DynamicIntelligence {
             intent.technology &&
             intent.language &&
             intent.purpose &&
-            intent.complexity);
+            intent.features &&
+            intent.features.length > 0);
     }
     async extractIntentWithLLM(input) {
         try {
@@ -122,7 +123,7 @@ REGRAS:
                 temperature: 0.1,
                 max_tokens: 500
             }, {
-                timeout: 10000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -147,12 +148,17 @@ REGRAS:
     async generateQuestionsWithLLM(intent, context) {
         try {
             console.log(`🤖 Using LLM to generate questions for intent:`, intent);
+            if (this.isIntentComplete(intent)) {
+                console.log(`✅ Intent is complete, no questions needed`);
+                return [];
+            }
             const prompt = `Com base no intent extraído, gere perguntas clarificadoras relevantes:
 
 INTENT: ${JSON.stringify(intent, null, 2)}
 CONTEXT: ${JSON.stringify(context, null, 2)}
 
-Gere até 5 perguntas clarificadoras que ajudem a entender melhor os requisitos do usuário.
+Gere até 3 perguntas clarificadoras que ajudem a entender melhor os requisitos do usuário.
+Se o intent já estiver suficientemente detalhado, retorne array vazio [].
 Retorne APENAS um JSON array com as perguntas:
 
 [
@@ -166,7 +172,7 @@ Retorne APENAS um JSON array com as perguntas:
     "id": "lang-2", 
     "text": "Qual linguagem de programação?",
     "type": "choice",
-    "options": ["JavaScript", "TypeScript", "Python", "Java"]
+    "options": ["Lista de opções relevantes baseada no intent"]
   }
 ]
 
@@ -190,7 +196,7 @@ REGRAS:
                 temperature: 0.3,
                 max_tokens: 800
             }, {
-                timeout: 10000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -276,7 +282,7 @@ class ContextAnalyzer {
 ARQUIVOS: ${files.join(', ')}
 
 Retorne APENAS um JSON array com as tecnologias detectadas:
-["nodejs", "react", "typescript", "docker"]
+["tecnologias detectadas baseadas nos arquivos"]
 
 REGRAS:
 - Seja específico e técnico
@@ -298,7 +304,7 @@ REGRAS:
                 temperature: 0.1,
                 max_tokens: 200
             }, {
-                timeout: 5000,
+                timeout: 30000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -393,7 +399,7 @@ REGRAS:
                 temperature: 0.2,
                 max_tokens: 1000
             }, {
-                timeout: 15000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -465,7 +471,7 @@ REGRAS:
                 temperature: 0.3,
                 max_tokens: 1500
             }, {
-                timeout: 15000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }

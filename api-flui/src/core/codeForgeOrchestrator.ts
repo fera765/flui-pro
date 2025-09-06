@@ -119,6 +119,12 @@ export class CodeForgeOrchestrator extends EventEmitter {
       // Update context with processing result
       context.pendingQuestions = result.questions;
       
+      // Limitar o número de perguntas para evitar loops infinitos
+      if (context.conversationHistory.filter(msg => msg.role === 'user').length > 10) {
+        console.log(`🛑 Limiting questions to prevent infinite loop`);
+        result.questions = [];
+      }
+      
       // If we have a clear intent, create a persistent task
       if (result.intent && !result.questions.length) {
         console.log(`🚀 Creating persistent task for intent:`, result.intent);
@@ -219,7 +225,9 @@ export class CodeForgeOrchestrator extends EventEmitter {
       this.emit('taskCreated', task);
       
       // Execute project creation
-      const result = await this.codeForgeAgent.executeProjectCreation(intent, this.workingDirectory);
+      // Create a specific directory for this project
+      const projectDir = path.join(this.workingDirectory, 'flui-projects', uuidv4());
+      const result = await this.codeForgeAgent.executeProjectCreation(intent, projectDir);
       
       if (result.success && result.project) {
         // Store project

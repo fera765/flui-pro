@@ -46,13 +46,9 @@ class DynamicSolutionArchitect {
                                     devDependencies: { type: 'array', items: { type: 'string' }, description: 'Array de dev dependencies' },
                                     scripts: { type: 'object', description: 'Objeto com scripts' },
                                     structure: {
-                                        type: 'object',
-                                        properties: {
-                                            directories: { type: 'array', items: { type: 'string' } },
-                                            files: { type: 'array', items: { type: 'string' } },
-                                            entryPoint: { type: 'string' },
-                                            configFiles: { type: 'array', items: { type: 'string' } }
-                                        }
+                                        type: 'array',
+                                        items: { type: 'string' },
+                                        description: 'Array da estrutura de pastas do projeto'
                                     },
                                     validations: { type: 'array', items: { type: 'string' }, description: 'Validações necessárias' },
                                     estimatedTime: { type: 'number', description: 'Tempo estimado em minutos' }
@@ -85,7 +81,7 @@ class DynamicSolutionArchitect {
                 dependencies: [],
                 devDependencies: [],
                 scripts: {},
-                structure: { directories: [], files: [], entryPoint: '', configFiles: [] },
+                structure: [],
                 validations: [],
                 estimatedTime: 30
             };
@@ -141,9 +137,14 @@ class DynamicSolutionArchitect {
                 max_tokens: 2000
             });
             const toolCall = response.choices[0]?.message?.tool_calls?.[0];
+            console.log('🔧 Full response:', JSON.stringify(response, null, 2));
+            console.log('🔧 Tool call:', toolCall);
             if (toolCall && toolCall.function.name === 'generate_dynamic_tasks') {
+                console.log('🔧 Tool call arguments:', toolCall.function.arguments);
                 const args = JSON.parse(toolCall.function.arguments);
+                console.log('🔧 Parsed args:', args);
                 const tasks = args.tasks;
+                console.log('🔧 Parsed tasks:', tasks);
                 return tasks.map((task) => ({
                     id: task.id || (0, uuid_1.v4)(),
                     description: task.description || 'Dynamic task',
