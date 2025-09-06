@@ -958,39 +958,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      // Use OpenAI SDK for authentication instead of fetch
-      const { PollinationsTool } = await import('../tools/pollinationsTool');
-      const pollinationsTool = new PollinationsTool();
-      
-      const authPrompt = `;
-        Authenticate;
-        user;
-        with (email)
-            : $;
-        {
-            email;
-        }
-        This;
-        is;
-        a;
-        mock;
-        authentication;
-        for (development; purposes. `;
-      const response = await pollinationsTool.generateText(authPrompt, {
-        model: 'openai',
-        temperature: 0.1,
-        maxTokens: 100
-      });
-      
-      if (response) {
-        // Mock successful authentication
-        const mockUser = { email, name: 'User', id: '1' };
-        const mockToken = 'mock-jwt-token-' + Date.now();
-        setUser(mockUser);
-        localStorage.setItem('token', mockToken);
-        return true;
-      }
-      return false;
+      // Mock authentication for development purposes
+      const mockUser = { email, name: 'User', id: '1' };
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      setUser(mockUser);
+      localStorage.setItem('token', mockToken);
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -1016,8 +989,7 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};`; )
-            ;
+};`;
     }
     generateDynamicHTMLContent(intent) {
         const title = intent.purpose ? `${intent.purpose} Website` : 'My Website';

@@ -271,7 +271,7 @@ class PluginLoader extends events_1.EventEmitter {
             if (fs.existsSync(pluginPath)) {
                 console.log(`🗑️ Deleting failed plugin: ${pluginName}`);
                 this.plugins.delete(pluginName);
-                for (const [funcName, func] of this.pluginFunctions.entries()) {
+                for (const [funcName, func] of Array.from(this.pluginFunctions.entries())) {
                     if (func.name.startsWith(pluginName)) {
                         this.pluginFunctions.delete(funcName);
                     }

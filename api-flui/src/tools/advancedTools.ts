@@ -50,8 +50,9 @@ export class AdvancedTools {
           const results = [];
           
           // Process DuckDuckGo results
-          if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-            for (const topic of data.RelatedTopics.slice(0, params.maxResults || 5)) {
+          const typedData = data as any;
+          if (typedData.RelatedTopics && typedData.RelatedTopics.length > 0) {
+            for (const topic of typedData.RelatedTopics.slice(0, params.maxResults || 5)) {
               if (topic.Text && topic.FirstURL) {
                 results.push({
                   title: topic.Text.substring(0, 100) + '...',
@@ -63,11 +64,11 @@ export class AdvancedTools {
           }
           
           // Add instant answer if available
-          if (data.Abstract && data.AbstractURL) {
+          if (typedData.Abstract && typedData.AbstractURL) {
             results.unshift({
-              title: data.Heading || 'Instant Answer',
-              url: data.AbstractURL,
-              snippet: data.Abstract
+              title: typedData.Heading || 'Instant Answer',
+              url: typedData.AbstractURL,
+              snippet: typedData.Abstract
             });
           }
 
@@ -109,8 +110,7 @@ export class AdvancedTools {
               'Accept-Language': 'en-US,en;q=0.5',
               'Accept-Encoding': 'gzip, deflate',
               'Connection': 'keep-alive'
-            },
-            timeout: 10000
+            }
           });
 
           if (!response.ok) {
