@@ -80,7 +80,8 @@ class DynamicIntelligence {
             intent.technology &&
             intent.language &&
             intent.purpose &&
-            intent.complexity);
+            intent.features &&
+            intent.features.length > 0);
     }
     async extractIntentWithLLM(input) {
         try {
@@ -147,12 +148,17 @@ REGRAS:
     async generateQuestionsWithLLM(intent, context) {
         try {
             console.log(`🤖 Using LLM to generate questions for intent:`, intent);
+            if (this.isIntentComplete(intent)) {
+                console.log(`✅ Intent is complete, no questions needed`);
+                return [];
+            }
             const prompt = `Com base no intent extraído, gere perguntas clarificadoras relevantes:
 
 INTENT: ${JSON.stringify(intent, null, 2)}
 CONTEXT: ${JSON.stringify(context, null, 2)}
 
-Gere até 5 perguntas clarificadoras que ajudem a entender melhor os requisitos do usuário.
+Gere até 3 perguntas clarificadoras que ajudem a entender melhor os requisitos do usuário.
+Se o intent já estiver suficientemente detalhado, retorne array vazio [].
 Retorne APENAS um JSON array com as perguntas:
 
 [
