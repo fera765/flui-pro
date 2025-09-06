@@ -1,0 +1,19 @@
+{
+  "id": "c5ed29a28a4b4826",
+  "prompt": "test task for update",
+  "status": "in_progress",
+  "createdAt": 1757160534945,
+  "projectPath": "/workspace/flui/projects/proj-c5ed29a28a4b4826",
+  "microTasks": [],
+  "logs": [
+    {
+      "timestamp": 1757160553654,
+      "level": "info",
+      "message": "Iniciando processamento da task c5ed29a28a4b4826"
+    }
+  ],
+  "checksums": {},
+  "buildStatus": "not_started",
+  "testStatus": "not_started",
+  "emotionMemoryId": "06dd802add8385e4"
+}

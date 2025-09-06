@@ -1,0 +1,19 @@
+{
+  "name": "web-unknown-project",
+  "version": "1.0.0",
+  "description": "Projeto web simples sem framework, sem TypeScript, sem ferramenta de build, com testes",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll",
+    "update": "npm update"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/?(*.)+(spec|test).js"
+    ]
+  }
+}

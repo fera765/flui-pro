@@ -1,0 +1,370 @@
+[
+  {
+    "id": "mem_1757162886316_ld6tqrlhb",
+    "emotionHash": "a381fec815f33dc6",
+    "emotionVector": {
+      "valence": 0.3,
+      "arousal": 0.2,
+      "dominance": 0.6,
+      "confidence": 0.85,
+      "regret": 0,
+      "satisfaction": 0.6
+    },
+    "policyDelta": {
+      "action": "criação_e_execução_de_task_frontend: counter_com_teste_em_react_typescript_tailwind",
+      "context": "Task 656c0cedae835354: frontend React + TypeScript + Tailwind; contador com teste",
+      "intensity": 0.65,
+      "timestamp": 1757162886316
+    },
+    "outcomeFlag": true,
+    "context": "Task 656c0cedae835354: frontend react typescript tailwind counter com teste",
+    "timestamp": 1757162886316,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162891342_epjjp5ugi",
+    "emotionHash": "f8dc055e82ecdb82",
+    "emotionVector": {
+      "valence": 0.1,
+      "arousal": 0.15,
+      "dominance": 0.55,
+      "confidence": 0.65,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "criar_tarefa",
+      "context": "Task 1d1852554b7a0c16: test task",
+      "intensity": 0.5,
+      "timestamp": 1757162891342
+    },
+    "outcomeFlag": true,
+    "context": "Task 1d1852554b7a0c16: test task",
+    "timestamp": 1757162891342,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162895767_3ttbdx7r4",
+    "emotionHash": "06dd802add8385e4",
+    "emotionVector": {
+      "valence": 0.2,
+      "arousal": 0.2,
+      "dominance": 0.55,
+      "confidence": 0.6,
+      "regret": 0,
+      "satisfaction": 0.1
+    },
+    "policyDelta": {
+      "action": "criar_nova_task_para_atualizacao",
+      "context": "Atualização de tarefa de teste identificada pela referência f6ae4e50ec376caf; resultado: sucesso; Texto: Nova task criada: test task for update",
+      "intensity": 0.2,
+      "timestamp": 1757162895767
+    },
+    "outcomeFlag": true,
+    "context": "Task f6ae4e50ec376caf: test task for update",
+    "timestamp": 1757162895767,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162903523_mk42rqlil",
+    "emotionHash": "60aa42562b9f07de",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0,
+      "dominance": 0.5,
+      "confidence": 0.6,
+      "regret": 0,
+      "satisfaction": 0.5
+    },
+    "policyDelta": {
+      "action": "criar_tarefa_para_delecao",
+      "context": "Task ed0710e8a36c4c9b: test task for deletion",
+      "intensity": 0.4,
+      "timestamp": 1757162903523
+    },
+    "outcomeFlag": true,
+    "context": "Task ed0710e8a36c4c9b: test task for deletion",
+    "timestamp": 1757162903523,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162834742_cu9by6g5y",
+    "emotionHash": "0b3ce26e40110054",
+    "emotionVector": {
+      "valence": 0.9,
+      "arousal": 0.3,
+      "dominance": 0.6,
+      "confidence": 0.85,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criar_projeto_web",
+      "context": "Criação de projeto para tarefa de atualização (test task for update); resultado indicado como sucesso; descrição menciona web e tecnologia desconhecida (unknown).",
+      "intensity": 0.6,
+      "timestamp": 1757162834742
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task for update",
+    "timestamp": 1757162834742,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757160623493_casfqrjfh",
+    "emotionHash": "a329052e758c8fc6",
+    "emotionVector": {
+      "valence": 0.75,
+      "arousal": 0.25,
+      "dominance": 0.62,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.85
+    },
+    "policyDelta": {
+      "action": "criar_projeto_react",
+      "context": "Criação de projeto para tarefa de teste usando React",
+      "intensity": 0.6,
+      "timestamp": 1757160623493
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task",
+    "timestamp": 1757160623493,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162865269_6uuy9neh1",
+    "emotionHash": "ac1cf5a8df819d06",
+    "emotionVector": {
+      "valence": 0.9,
+      "arousal": 0.2,
+      "dominance": 0.7,
+      "confidence": 0.9,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criação de projeto frontend em React com TypeScript, Tailwind e testes",
+      "context": "Criação de projeto frontend com React, TypeScript, Tailwind, contador e testes",
+      "intensity": 0.4,
+      "timestamp": 1757162865269
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: frontend react typescript tailwind counter com teste",
+    "timestamp": 1757162865269,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161401743_qtwhppnah",
+    "emotionHash": "06230bac253c7e31",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.1,
+      "dominance": 0.5,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "instalação_de_dependências",
+      "context": "Instalação de dependências para a tarefa a4d627339e1b6123 em um projeto frontend com React, Vite, TypeScript, ESLint, Prettier e pacotes de teste",
+      "intensity": 0.5,
+      "timestamp": 1757161401743
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task a4d627339e1b6123",
+    "timestamp": 1757161401743,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162742784_0rux873o0",
+    "emotionHash": "1d85920c73f9eb25",
+    "emotionVector": {
+      "valence": 0.75,
+      "arousal": 0.25,
+      "dominance": 0.65,
+      "confidence": 0.85,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criação_de_projeto_web_com_react",
+      "context": "tarefa_teste_para_delecao",
+      "intensity": 0.3,
+      "timestamp": 1757162742784
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task for deletion",
+    "timestamp": 1757162742784,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161402854_jkjvr75my",
+    "emotionHash": "f50849b95c2d7dae",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.1,
+      "dominance": 0.5,
+      "confidence": 0.5,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "Instalação de dependências do frontend",
+      "context": "Instalação de dependências para task 1683e21f8f8130e5",
+      "intensity": 0.3,
+      "timestamp": 1757161402854
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task 1683e21f8f8130e5",
+    "timestamp": 1757161402854,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757161400952_mgg9og9d2",
+    "emotionHash": "a6226ab5d2ff014c",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.05,
+      "dominance": 0.5,
+      "confidence": 0.5,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "Instalação de dependências de frontend para a task 4c654a48bd7d324f (React, tooling e testes)",
+      "context": "Instalação de 12 dependências para a task 4c654a48bd7d324f",
+      "intensity": 0.25,
+      "timestamp": 1757161400952
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task 4c654a48bd7d324f",
+    "timestamp": 1757161400952,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162208391_p536bn7qm",
+    "emotionHash": "a589af468fab988a",
+    "emotionVector": {
+      "valence": 1,
+      "arousal": 0.2,
+      "dominance": 0.7,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.8
+    },
+    "policyDelta": {
+      "action": "criar_projeto_frontend_react_typescript_tailwind_counter_com_tests",
+      "context": "Criação de projeto frontend usando React, TypeScript e Tailwind; componente contador com testes; resultado indicado como sucesso",
+      "intensity": 0.6,
+      "timestamp": 1757162208391
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: frontend react typescript tailwind counter com teste",
+    "timestamp": 1757162208391,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162213246_3ujl870kz",
+    "emotionHash": "897665a83d4ad4cd",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.15,
+      "dominance": 0.5,
+      "confidence": 0.6,
+      "regret": 0,
+      "satisfaction": 0.4
+    },
+    "policyDelta": {
+      "action": "Instalação de dependências do frontend (React, ReactDOM, @types/react, @types/react-dom, @vitejs/plugin-react, typescript, vite)",
+      "context": "Task 58f36edd6ec29b2d: instalação de dependências para um projeto frontend com React e TypeScript usando Vite",
+      "intensity": 0.5,
+      "timestamp": 1757162213246
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task 58f36edd6ec29b2d",
+    "timestamp": 1757162213246,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162222071_dbg40dmwu",
+    "emotionHash": "28e155db2e064840",
+    "emotionVector": {
+      "valence": 0,
+      "arousal": 0.1,
+      "dominance": 0.5,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.3
+    },
+    "policyDelta": {
+      "action": "Instalação de dependências para a task 97234d78c4b84ba6",
+      "context": "Instalação de dependências para front-end (React, React DOM, @types/react, @types/react-dom, @vitejs/plugin-react, TypeScript, Vite) para a task 97234d78c4b84ba6",
+      "intensity": 0.5,
+      "timestamp": 1757162222071
+    },
+    "outcomeFlag": true,
+    "context": "Instalação de dependências para task 97234d78c4b84ba6",
+    "timestamp": 1757162222071,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162822547_47x0qu4s2",
+    "emotionHash": "7e94585acb8ef570",
+    "emotionVector": {
+      "valence": 0.9,
+      "arousal": 0.15,
+      "dominance": 0.7,
+      "confidence": 0.92,
+      "regret": 0,
+      "satisfaction": 0.85
+    },
+    "policyDelta": {
+      "action": "documentar_padroes_de_aprendizado_para_projetos_frontend_react_ts_tailwind_com_foco_em_componentes_e_teste",
+      "context": "Criação de projeto: frontend react typescript tailwind counter com teste",
+      "intensity": 0.65,
+      "timestamp": 1757162822547
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: frontend react typescript tailwind counter com teste",
+    "timestamp": 1757162822547,
+    "accessCount": 0,
+    "lastAccessed": 0
+  },
+  {
+    "id": "mem_1757162673490_j21xmiy61",
+    "emotionHash": "e7002c4686300006",
+    "emotionVector": {
+      "valence": 1,
+      "arousal": 0.3,
+      "dominance": 0.7,
+      "confidence": 0.8,
+      "regret": 0,
+      "satisfaction": 0.9
+    },
+    "policyDelta": {
+      "action": "criar_projeto_web_vanilla_js_para_tarefa_de_delecao",
+      "context": "ambiente_de_teste_para_delecao_em_projeto_web",
+      "intensity": 0.6,
+      "timestamp": 1757162673490
+    },
+    "outcomeFlag": true,
+    "context": "Criação de projeto: test task for deletion",
+    "timestamp": 1757162673490,
+    "accessCount": 0,
+    "lastAccessed": 0
+  }
+]
