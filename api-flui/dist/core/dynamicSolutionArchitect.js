@@ -138,8 +138,10 @@ class DynamicSolutionArchitect {
             });
             const toolCall = response.choices[0]?.message?.tool_calls?.[0];
             if (toolCall && toolCall.function.name === 'generate_dynamic_tasks') {
+                console.log('🔧 Tool call arguments:', toolCall.function.arguments);
                 const args = JSON.parse(toolCall.function.arguments);
                 const tasks = args.tasks;
+                console.log('🔧 Parsed tasks:', tasks);
                 return tasks.map((task) => ({
                     id: task.id || (0, uuid_1.v4)(),
                     description: task.description || 'Dynamic task',
