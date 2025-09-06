@@ -15,6 +15,9 @@ import { EmotionHashGenerator } from '../memory/services/EmotionHashGenerator';
 import { IContextProcessor } from '../memory/interfaces/IEmotionMemory';
 import { ContextProcessor } from '../memory/services/ContextProcessor';
 import { EpisodicMemoryStore } from '../memory/stores/EpisodicMemoryStore';
+import { TemporalDecayService } from '../memory/services/TemporalDecayService';
+import { MemoryClusteringService } from '../memory/services/MemoryClusteringService';
+import { LLMEmotionAnalysisService } from '../memory/services/LLMEmotionAnalysisService';
 
 // Create the main container
 export const container = new Container();
@@ -33,6 +36,9 @@ container.bind<IEmotionMemory>('IEmotionMemory').to(EmotionMemoryService).inSing
 container.bind<IEmotionHashGenerator>('IEmotionHashGenerator').to(EmotionHashGenerator).inSingletonScope();
 container.bind<IContextProcessor>('IContextProcessor').to(ContextProcessor).inSingletonScope();
 container.bind<EpisodicMemoryStore>('EpisodicMemoryStore').to(EpisodicMemoryStore).inSingletonScope();
+container.bind<TemporalDecayService>('TemporalDecayService').to(TemporalDecayService).inSingletonScope();
+container.bind<MemoryClusteringService>('MemoryClusteringService').to(MemoryClusteringService).inSingletonScope();
+container.bind<LLMEmotionAnalysisService>('LLMEmotionAnalysisService').to(LLMEmotionAnalysisService).inSingletonScope();
 
 // Export container for dependency injection
 export default container;

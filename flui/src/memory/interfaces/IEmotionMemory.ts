@@ -50,6 +50,41 @@ export interface IEmotionMemory {
   }>;
   clearAllMemories(): Promise<void>;
   getAllMemories(): Promise<EpisodicMemory[]>;
+  applyTemporalDecay(config?: any): Promise<{
+    activeMemories: EpisodicMemory[];
+    removedMemories: EpisodicMemory[];
+    decayStats: any;
+  }>;
+  clusterMemories(config?: any): Promise<{
+    clusters: any[];
+    unclustered: EpisodicMemory[];
+    clusteringStats: any;
+  }>;
+  findSimilarMemories(targetMemory: EpisodicMemory, threshold?: number): Promise<{
+    similar: EpisodicMemory[];
+    similarities: Array<{ memory: EpisodicMemory; similarity: number }>;
+  }>;
+  analyzeEmotionalContextWithLLM(text: string): Promise<any>;
+  createPolicyDeltaWithLLM(text: string, context: string, outcome: boolean): Promise<any>;
+  storeMemoryWithLLMAnalysis(text: string, context: string, outcome: boolean): Promise<{
+    emotionHash: string;
+    emotionAnalysis: any;
+    policyAnalysis: any;
+  }>;
+  getComprehensiveStats(): Promise<{
+    basic: any;
+    decay: any;
+    clustering: any;
+  }>;
+  optimizeMemorySystem(decayConfig?: any, clusteringConfig?: any): Promise<{
+    decayResult: any;
+    clusteringResult: any;
+    optimizationStats: {
+      beforeOptimization: number;
+      afterOptimization: number;
+      memoryReduction: number;
+    };
+  }>;
 }
 
 export interface IEmotionHashGenerator {

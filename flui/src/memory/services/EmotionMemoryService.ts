@@ -5,21 +5,33 @@ import { IContextProcessor } from '../interfaces/IEmotionMemory';
 import { EpisodicMemoryStore } from '../stores/EpisodicMemoryStore';
 import { EmotionHashGenerator } from './EmotionHashGenerator';
 import { ContextProcessor } from './ContextProcessor';
+import { TemporalDecayService, DecayConfiguration } from './TemporalDecayService';
+import { MemoryClusteringService, MemoryCluster, ClusteringConfiguration } from './MemoryClusteringService';
+import { LLMEmotionAnalysisService, EmotionAnalysisResult, PolicyAnalysisResult } from './LLMEmotionAnalysisService';
 
 @injectable()
 export class EmotionMemoryService implements IEmotionMemory {
   private readonly emotionHashGenerator: IEmotionHashGenerator;
   private readonly contextProcessor: IContextProcessor;
   private readonly memoryStore: EpisodicMemoryStore;
+  private readonly temporalDecayService: TemporalDecayService;
+  private readonly clusteringService: MemoryClusteringService;
+  private readonly llmAnalysisService: LLMEmotionAnalysisService;
 
   constructor(
     @inject('IEmotionHashGenerator') emotionHashGenerator: IEmotionHashGenerator,
     @inject('IContextProcessor') contextProcessor: IContextProcessor,
-    @inject('EpisodicMemoryStore') memoryStore: EpisodicMemoryStore
+    @inject('EpisodicMemoryStore') memoryStore: EpisodicMemoryStore,
+    @inject('TemporalDecayService') temporalDecayService: TemporalDecayService,
+    @inject('MemoryClusteringService') clusteringService: MemoryClusteringService,
+    @inject('LLMEmotionAnalysisService') llmAnalysisService: LLMEmotionAnalysisService
   ) {
     this.emotionHashGenerator = emotionHashGenerator;
     this.contextProcessor = contextProcessor;
     this.memoryStore = memoryStore;
+    this.temporalDecayService = temporalDecayService;
+    this.clusteringService = clusteringService;
+    this.llmAnalysisService = llmAnalysisService;
   }
 
   async storeMemory(
@@ -163,5 +175,163 @@ export class EmotionMemoryService implements IEmotionMemory {
    */
   async getAllMemories(): Promise<EpisodicMemory[]> {
     return await this.memoryStore.getAllMemories();
+  }
+
+  /**
+   * Apply temporal decay to all memories
+   */
+  async applyTemporalDecay(config?: DecayConfiguration): Promise<{
+    activeMemories: EpisodicMemory[];
+    removedMemories: EpisodicMemory[];
+    decayStats: any;
+  }> {
+    const allMemories = await this.memoryStore.getAllMemories();
+    const decayResult = this.temporalDecayService.applyBulkDecay(allMemories, config);
+    
+    // Update store with active memories
+    await this.memoryStore.clearMemories();
+    for (const memory of decayResult.activeMemories) {
+      await this.memoryStore.storeMemory(
+        memory.emotionHash,
+        memory.emotionVector,
+        memory.policyDelta,
+        memory.context,
+        memory.outcomeFlag
+      );
+    }
+    
+    return decayResult;
+  }
+
+  /**
+   * Cluster memories by emotional similarity
+   */
+  async clusterMemories(config?: ClusteringConfiguration): Promise<{
+    clusters: MemoryCluster[];
+    unclustered: EpisodicMemory[];
+    clusteringStats: any;
+  }> {
+    const allMemories = await this.memoryStore.getAllMemories();
+    return this.clusteringService.clusterMemories(allMemories, config);
+  }
+
+  /**
+   * Find similar memories to a given memory
+   */
+  async findSimilarMemories(
+    targetMemory: EpisodicMemory,
+    threshold: number = 0.7
+  ): Promise<{
+    similar: EpisodicMemory[];
+    similarities: Array<{ memory: EpisodicMemory; similarity: number }>;
+  }> {
+    const allMemories = await this.memoryStore.getAllMemories();
+    return this.clusteringService.findSimilarMemories(targetMemory, allMemories, threshold);
+  }
+
+  /**
+   * Analyze emotional context using LLM
+   */
+  async analyzeEmotionalContextWithLLM(text: string): Promise<EmotionAnalysisResult> {
+    return await this.llmAnalysisService.analyzeEmotionalContext(text);
+  }
+
+  /**
+   * Create policy delta using LLM analysis
+   */
+  async createPolicyDeltaWithLLM(
+    text: string,
+    context: string,
+    outcome: boolean
+  ): Promise<PolicyAnalysisResult> {
+    return await this.llmAnalysisService.analyzeAndCreatePolicyDelta(text, context, outcome);
+  }
+
+  /**
+   * Store memory with LLM-based analysis
+   */
+  async storeMemoryWithLLMAnalysis(
+    text: string,
+    context: string,
+    outcome: boolean
+  ): Promise<{
+    emotionHash: string;
+    emotionAnalysis: EmotionAnalysisResult;
+    policyAnalysis: PolicyAnalysisResult;
+  }> {
+    // Analyze with LLM
+    const emotionAnalysis = await this.llmAnalysisService.analyzeEmotionalContext(text);
+    const policyAnalysis = await this.llmAnalysisService.analyzeAndCreatePolicyDelta(text, context, outcome);
+    
+    // Store memory
+    const emotionHash = await this.storeMemory(
+      emotionAnalysis.emotionVector,
+      policyAnalysis.policyDelta,
+      context,
+      outcome
+    );
+    
+    return {
+      emotionHash,
+      emotionAnalysis,
+      policyAnalysis
+    };
+  }
+
+  /**
+   * Get comprehensive memory statistics
+   */
+  async getComprehensiveStats(): Promise<{
+    basic: any;
+    decay: any;
+    clustering: any;
+  }> {
+    const basicStats = await this.memoryStore.getMemoryStats();
+    const allMemories = await this.memoryStore.getAllMemories();
+    
+    const decayStats = this.temporalDecayService.calculateDecayStatistics(allMemories);
+    const clusteringResult = await this.clusteringService.clusterMemories(allMemories);
+    
+    return {
+      basic: basicStats,
+      decay: decayStats,
+      clustering: clusteringResult.clusteringStats
+    };
+  }
+
+  /**
+   * Optimize memory system (decay + clustering)
+   */
+  async optimizeMemorySystem(
+    decayConfig?: DecayConfiguration,
+    clusteringConfig?: ClusteringConfiguration
+  ): Promise<{
+    decayResult: any;
+    clusteringResult: any;
+    optimizationStats: {
+      beforeOptimization: number;
+      afterOptimization: number;
+      memoryReduction: number;
+    };
+  }> {
+    const beforeCount = (await this.memoryStore.getAllMemories()).length;
+    
+    // Apply temporal decay
+    const decayResult = await this.applyTemporalDecay(decayConfig);
+    
+    // Apply clustering
+    const clusteringResult = await this.clusterMemories(clusteringConfig);
+    
+    const afterCount = (await this.memoryStore.getAllMemories()).length;
+    
+    return {
+      decayResult,
+      clusteringResult,
+      optimizationStats: {
+        beforeOptimization: beforeCount,
+        afterOptimization: afterCount,
+        memoryReduction: beforeCount > 0 ? ((beforeCount - afterCount) / beforeCount) * 100 : 0
+      }
+    };
   }
 }
