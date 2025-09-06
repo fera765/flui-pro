@@ -10,6 +10,7 @@ export interface TextGenerationOptions {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  tools?: any[];
 }
 
 export interface AudioGenerationOptions {
@@ -44,32 +45,6 @@ export class PollinationsTool {
 
       throw new Error('No image data received');
     } catch (error: any) {
-      // Try alternative route if the first one fails
-      try {
-        const altResponse = await fetch(`${this.openai.baseURL}/v1/images/generations`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.openai.apiKey}`
-          },
-          body: JSON.stringify({
-            prompt,
-            size: options.size || '1024x1024',
-            model: options.model || 'flux',
-            n: 1
-          })
-        });
-
-        if (altResponse.ok) {
-          const data = await altResponse.json() as any;
-          if (data.data && data.data[0]?.url) {
-            return data.data[0].url;
-          }
-        }
-      } catch (altError) {
-        // Ignore alternative route errors
-      }
-
       throw new Error(`Image generation failed: ${error.message}`);
     }
   }
@@ -86,7 +61,8 @@ export class PollinationsTool {
         ],
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 500,
-        stream: false
+        stream: false,
+        tools: options.tools || undefined
       });
 
       if (response.choices && response.choices[0]?.message?.content) {
@@ -95,38 +71,37 @@ export class PollinationsTool {
 
       throw new Error('No text response received');
     } catch (error: any) {
-      // Try alternative route if the first one fails
-      try {
-        const altResponse = await fetch(`${this.openai.baseURL}/v1/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.openai.apiKey}`
-          },
-          body: JSON.stringify({
-            model: options.model || 'openai',
-            messages: [
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 500
-          })
-        });
+      throw new Error(`Text generation failed: ${error.message}`);
+    }
+  }
 
-        if (altResponse.ok) {
-          const data = await altResponse.json() as any;
-          if (data.choices && data.choices[0]?.message?.content) {
-            return data.choices[0].message.content;
+  async generateTextWithTools(prompt: string, tools: any[], options: TextGenerationOptions = {}): Promise<any> {
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: options.model || 'openai',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
           }
-        }
-      } catch (altError) {
-        // Ignore alternative route errors
+        ],
+        temperature: options.temperature || 0.7,
+        max_tokens: options.maxTokens || 500,
+        stream: false,
+        tools: tools
+      });
+
+      if (response.choices && response.choices[0]) {
+        return {
+          content: response.choices[0].message?.content,
+          toolCalls: response.choices[0].message?.tool_calls,
+          finishReason: response.choices[0].finish_reason
+        };
       }
 
-      throw new Error(`Text generation failed: ${error.message}`);
+      throw new Error('No response received');
+    } catch (error: any) {
+      throw new Error(`Text generation with tools failed: ${error.message}`);
     }
   }
 
