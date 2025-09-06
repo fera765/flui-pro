@@ -122,7 +122,7 @@ REGRAS:
                 temperature: 0.1,
                 max_tokens: 500
             }, {
-                timeout: 10000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -166,7 +166,7 @@ Retorne APENAS um JSON array com as perguntas:
     "id": "lang-2", 
     "text": "Qual linguagem de programação?",
     "type": "choice",
-    "options": ["JavaScript", "TypeScript", "Python", "Java"]
+    "options": ["Lista de opções relevantes baseada no intent"]
   }
 ]
 
@@ -190,7 +190,7 @@ REGRAS:
                 temperature: 0.3,
                 max_tokens: 800
             }, {
-                timeout: 10000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -276,7 +276,7 @@ class ContextAnalyzer {
 ARQUIVOS: ${files.join(', ')}
 
 Retorne APENAS um JSON array com as tecnologias detectadas:
-["nodejs", "react", "typescript", "docker"]
+["tecnologias detectadas baseadas nos arquivos"]
 
 REGRAS:
 - Seja específico e técnico
@@ -298,7 +298,7 @@ REGRAS:
                 temperature: 0.1,
                 max_tokens: 200
             }, {
-                timeout: 5000,
+                timeout: 30000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -393,7 +393,7 @@ REGRAS:
                 temperature: 0.2,
                 max_tokens: 1000
             }, {
-                timeout: 15000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -465,7 +465,7 @@ REGRAS:
                 temperature: 0.3,
                 max_tokens: 1500
             }, {
-                timeout: 15000,
+                timeout: 60000,
                 headers: {
                     'Content-Type': 'application/json'
                 }

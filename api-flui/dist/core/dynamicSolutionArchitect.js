@@ -46,13 +46,9 @@ class DynamicSolutionArchitect {
                                     devDependencies: { type: 'array', items: { type: 'string' }, description: 'Array de dev dependencies' },
                                     scripts: { type: 'object', description: 'Objeto com scripts' },
                                     structure: {
-                                        type: 'object',
-                                        properties: {
-                                            directories: { type: 'array', items: { type: 'string' } },
-                                            files: { type: 'array', items: { type: 'string' } },
-                                            entryPoint: { type: 'string' },
-                                            configFiles: { type: 'array', items: { type: 'string' } }
-                                        }
+                                        type: 'array',
+                                        items: { type: 'string' },
+                                        description: 'Array da estrutura de pastas do projeto'
                                     },
                                     validations: { type: 'array', items: { type: 'string' }, description: 'Validações necessárias' },
                                     estimatedTime: { type: 'number', description: 'Tempo estimado em minutos' }
@@ -85,7 +81,7 @@ class DynamicSolutionArchitect {
                 dependencies: [],
                 devDependencies: [],
                 scripts: {},
-                structure: { directories: [], files: [], entryPoint: '', configFiles: [] },
+                structure: [],
                 validations: [],
                 estimatedTime: 30
             };
