@@ -94,7 +94,15 @@ export class Worker {
 
   private async handleTask(task: Task): Promise<TaskResult> {
     const metadata = task.metadata;
-    const classification = metadata.classification;
+    const classification = metadata?.classification;
+    
+    if (!classification) {
+      return {
+        success: false,
+        error: 'Task classification not found',
+        metadata: { type: 'task' }
+      };
+    }
 
     try {
       // Get available tools for intelligent execution
@@ -187,11 +195,18 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
     
     for (const toolCall of toolCalls) {
       try {
+        if (!toolCall || !toolCall.function) {
+          console.error('Invalid toolCall:', toolCall);
+          results.push({ success: false, error: 'Invalid tool call structure' });
+          continue;
+        }
+        
         const { name, arguments: args } = toolCall.function;
         const parsedArgs = JSON.parse(args);
         
         switch (name) {
           case 'execute_task':
+            console.log('Executing task action with args:', parsedArgs);
             results.push(await this.executeTaskAction(parsedArgs, task));
             break;
           case 'web_search':
@@ -237,6 +252,10 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
   }
 
   private async executeTaskAction(action: any, task: Task): Promise<any> {
+    if (!action) {
+      throw new Error('Action is undefined');
+    }
+    
     const { action: actionType, parameters, reasoning } = action;
     
     switch (actionType) {
@@ -295,7 +314,7 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
 
   private async handleImageGeneration(task: Task): Promise<TaskResult> {
     const metadata = task.metadata;
-    const params = metadata.classification.parameters;
+    const params = metadata?.classification?.parameters || {};
 
     try {
       const imageData = await this.pollinationsTool.generateImage(
@@ -328,7 +347,7 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
 
   private async handleTextGeneration(task: Task): Promise<TaskResult> {
     const metadata = task.metadata;
-    const params = metadata.classification.parameters;
+    const params = metadata?.classification?.parameters || {};
 
     try {
       // Get relevant knowledge for this text generation task
@@ -370,7 +389,7 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
 
   private async handleAudioTask(task: Task): Promise<TaskResult> {
     const metadata = task.metadata;
-    const params = metadata.classification.parameters;
+    const params = metadata?.classification?.parameters || {};
 
     try {
       if (params.action === 'text_to_speech') {

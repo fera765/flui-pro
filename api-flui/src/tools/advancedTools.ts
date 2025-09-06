@@ -19,6 +19,10 @@ export class AdvancedTools {
     this.pluginTools = new PluginTools(this.pluginLoader);
   }
 
+  setWorkingDirectory(workingDirectory: string): void {
+    this.workingDirectory = workingDirectory;
+  }
+
   // Web Search Tool (Real Implementation)
   createWebSearchTool(): Tool {
     return {
@@ -50,8 +54,9 @@ export class AdvancedTools {
           const results = [];
           
           // Process DuckDuckGo results
-          if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-            for (const topic of data.RelatedTopics.slice(0, params.maxResults || 5)) {
+          const typedData = data as any;
+          if (typedData.RelatedTopics && typedData.RelatedTopics.length > 0) {
+            for (const topic of typedData.RelatedTopics.slice(0, params.maxResults || 5)) {
               if (topic.Text && topic.FirstURL) {
                 results.push({
                   title: topic.Text.substring(0, 100) + '...',
@@ -63,11 +68,11 @@ export class AdvancedTools {
           }
           
           // Add instant answer if available
-          if (data.Abstract && data.AbstractURL) {
+          if (typedData.Abstract && typedData.AbstractURL) {
             results.unshift({
-              title: data.Heading || 'Instant Answer',
-              url: data.AbstractURL,
-              snippet: data.Abstract
+              title: typedData.Heading || 'Instant Answer',
+              url: typedData.AbstractURL,
+              snippet: typedData.Abstract
             });
           }
 
@@ -109,8 +114,7 @@ export class AdvancedTools {
               'Accept-Language': 'en-US,en;q=0.5',
               'Accept-Encoding': 'gzip, deflate',
               'Connection': 'keep-alive'
-            },
-            timeout: 10000
+            }
           });
 
           if (!response.ok) {
@@ -196,17 +200,218 @@ export class AdvancedTools {
       execute: async (params: { filePath: string; content: string }): Promise<ToolResponse> => {
         try {
           const fullPath = path.join(this.workingDirectory, params.filePath);
-          await fs.writeFile(fullPath, params.content, 'utf-8');
+          // Process escape sequences like \n, \t, etc.
+          const processedContent = params.content
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\r/g, '\r')
+            .replace(/\\\\/g, '\\');
+          
+          await fs.writeFile(fullPath, processedContent, 'utf-8');
           
           return {
             success: true,
-            data: { filePath: params.filePath, size: params.content.length },
+            data: { filePath: params.filePath, size: processedContent.length },
             context: `Written ${params.filePath} successfully`
           };
         } catch (error: any) {
           return {
             success: false,
             error: error.message
+          };
+        }
+      }
+    };
+  }
+
+  createDirectoryTool(): Tool {
+    return {
+      name: 'create_directory',
+      description: 'Create a directory',
+      parameters: {
+        path: {
+          type: 'string',
+          description: 'Path to the directory to create (relative to working directory)',
+          required: true
+        }
+      },
+      execute: async (params: { path: string }): Promise<ToolResponse> => {
+        try {
+          const fullPath = path.join(this.workingDirectory, params.path);
+          await fs.mkdir(fullPath, { recursive: true });
+          
+          return {
+            success: true,
+            data: { path: params.path },
+            context: `Created directory ${params.path} successfully`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    };
+  }
+
+  createBuildTool(): Tool {
+    return {
+      name: 'build_project',
+      description: 'Build/compile a project using the appropriate build command (npm run build, yarn build, cargo build, go build, etc.)',
+      parameters: {
+        command: {
+          type: 'string',
+          description: 'Build command to execute (e.g., "npm run build", "yarn build", "cargo build", "go build", "python -m build")',
+          required: true
+        },
+        workingDir: {
+          type: 'string',
+          description: 'Working directory to run the command in (relative to project root)',
+          required: false
+        }
+      },
+      execute: async (params: { command: string; workingDir?: string }): Promise<ToolResponse> => {
+        try {
+          const workDir = params.workingDir ? path.join(this.workingDirectory, params.workingDir) : this.workingDirectory;
+          console.log(`🔨 Building project with command: ${params.command} in ${workDir}`);
+          
+          const { stdout, stderr } = await execAsync(params.command, { cwd: workDir });
+          
+          return {
+            success: true,
+            data: { 
+              command: params.command,
+              stdout: stdout,
+              stderr: stderr,
+              workingDir: workDir
+            },
+            context: `Build completed successfully with command: ${params.command}`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: `Build failed: ${error.message}`,
+            data: { command: params.command, stderr: error.stderr }
+          };
+        }
+      }
+    };
+  }
+
+  createStartTool(): Tool {
+    return {
+      name: 'start_project',
+      description: 'Start/run a project using the appropriate start command (npm start, yarn start, python app.py, go run, etc.)',
+      parameters: {
+        command: {
+          type: 'string',
+          description: 'Start command to execute (e.g., "npm start", "yarn start", "python app.py", "go run main.go")',
+          required: true
+        },
+        workingDir: {
+          type: 'string',
+          description: 'Working directory to run the command in (relative to project root)',
+          required: false
+        },
+        port: {
+          type: 'number',
+          description: 'Port number the application will run on (for testing purposes)',
+          required: false
+        }
+      },
+      execute: async (params: { command: string; workingDir?: string; port?: number }): Promise<ToolResponse> => {
+        try {
+          const workDir = params.workingDir ? path.join(this.workingDirectory, params.workingDir) : this.workingDirectory;
+          console.log(`🚀 Starting project with command: ${params.command} in ${workDir}`);
+          
+          // Start the process in background
+          const child = execAsync(params.command, { cwd: workDir });
+          
+          // Wait a bit for the app to start
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          return {
+            success: true,
+            data: { 
+              command: params.command,
+              workingDir: workDir,
+              port: params.port
+            },
+            context: `Project started successfully with command: ${params.command}`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: `Start failed: ${error.message}`,
+            data: { command: params.command }
+          };
+        }
+      }
+    };
+  }
+
+  createTestTool(): Tool {
+    return {
+      name: 'test_endpoint',
+      description: 'Test an endpoint or application to verify it is working correctly',
+      parameters: {
+        url: {
+          type: 'string',
+          description: 'URL to test (e.g., "http://localhost:3000", "http://localhost:8080/api/health")',
+          required: true
+        },
+        method: {
+          type: 'string',
+          description: 'HTTP method to use (GET, POST, PUT, DELETE)',
+          required: false
+        },
+        headers: {
+          type: 'object',
+          description: 'HTTP headers to send with the request',
+          required: false
+        },
+        body: {
+          type: 'string',
+          description: 'Request body (for POST/PUT requests)',
+          required: false
+        }
+      },
+      execute: async (params: { url: string; method?: string; headers?: any; body?: string }): Promise<ToolResponse> => {
+        try {
+          const method = params.method || 'GET';
+          const headers = params.headers || {};
+          
+          console.log(`🧪 Testing endpoint: ${method} ${params.url}`);
+          
+          const response = await fetch(params.url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...headers
+            },
+            body: params.body
+          });
+          
+          const responseText = await response.text();
+          
+          return {
+            success: response.ok,
+            data: { 
+              url: params.url,
+              method,
+              status: response.status,
+              statusText: response.statusText,
+              headers: Object.fromEntries(response.headers.entries()),
+              body: responseText
+            },
+            context: `Test ${response.ok ? 'passed' : 'failed'}: ${response.status} ${response.statusText}`
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: `Test failed: ${error.message}`,
+            data: { url: params.url, method: params.method }
           };
         }
       }
@@ -369,6 +574,10 @@ Summary:`;
       this.createFetchTool(),
       this.createFileReadTool(),
       this.createFileWriteTool(),
+      this.createDirectoryTool(),
+      this.createBuildTool(),
+      this.createStartTool(),
+      this.createTestTool(),
       this.createShellTool(),
       this.createTextSplitTool(),
       this.createTextSummarizeTool()

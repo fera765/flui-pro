@@ -48,30 +48,63 @@ export class FluiContextManager {
   }
 
   updateTodoStatus(todoId: string, status: TodoItem['status'], result?: any, error?: string): void {
+    console.log(`📝 Updating todo ${todoId} status from ${this.context.todos.find(t => t.id === todoId)?.status} to ${status}`);
     const todo = this.context.todos.find(t => t.id === todoId);
     if (todo) {
+      const oldStatus = todo.status;
       todo.status = status;
       if (result) todo.result = result;
       if (error) todo.error = error;
       if (status === 'completed' || status === 'failed') {
         todo.completedAt = new Date();
         this.context.completedTasks.push(todo);
+        console.log(`✅ Todo ${todoId} marked as ${status} and added to completedTasks`);
       }
+      console.log(`📝 Todo ${todoId} status updated: ${oldStatus} -> ${status}`);
+    } else {
+      console.log(`❌ Todo ${todoId} not found in context`);
     }
   }
 
   getNextExecutableTodos(): TodoItem[] {
-    return this.context.todos.filter(todo => 
-      todo.status === 'pending' && 
-      todo.dependencies.every(depId => 
-        this.context.todos.find(t => t.id === depId)?.status === 'completed'
-      )
-    );
+    const executable = this.context.todos.filter(todo => {
+      if (todo.status !== 'pending') return false;
+      
+      const allDepsCompleted = todo.dependencies.every(depId => {
+        const depTodo = this.context.todos.find(t => t.id === depId);
+        const isCompleted = depTodo?.status === 'completed';
+        if (!isCompleted) {
+          console.log(`❌ Todo ${todo.id} blocked by dependency ${depId} (status: ${depTodo?.status || 'not found'})`);
+        }
+        return isCompleted;
+      });
+      
+      if (allDepsCompleted) {
+        console.log(`✅ Todo ${todo.id} is executable`);
+      }
+      
+      return allDepsCompleted;
+    });
+    
+    console.log(`📋 Found ${executable.length} executable todos out of ${this.context.todos.length} total`);
+    return executable;
   }
 
   isTaskComplete(): boolean {
-    // Task is complete when all todos are completed (not failed)
-    return this.context.todos.every(todo => todo.status === 'completed');
+    // Task is complete when all todos are either completed or failed
+    // (no pending todos remaining)
+    const allComplete = this.context.todos.every(todo => 
+      todo.status === 'completed' || todo.status === 'failed'
+    );
+    
+    console.log(`🔍 Checking if task is complete:`);
+    console.log(`  Total todos: ${this.context.todos.length}`);
+    this.context.todos.forEach(todo => {
+      console.log(`  - ${todo.id}: ${todo.status}`);
+    });
+    console.log(`  All complete: ${allComplete}`);
+    
+    return allComplete;
   }
 
   addGeneratedFile(filePath: string): void {

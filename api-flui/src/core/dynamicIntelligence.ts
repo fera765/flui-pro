@@ -13,13 +13,11 @@ import {
 
 export class DynamicIntelligence {
   private contextAnalyzer: ContextAnalyzer;
-  private intentExtractor: IntentExtractor;
   private questionGenerator: QuestionGenerator;
   private solutionArchitect: SolutionArchitect;
 
   constructor() {
     this.contextAnalyzer = new ContextAnalyzer();
-    this.intentExtractor = new IntentExtractor();
     this.questionGenerator = new QuestionGenerator();
     this.solutionArchitect = new SolutionArchitect();
   }
@@ -102,7 +100,7 @@ REGRAS:
 - Para requirements, extraia requisitos técnicos específicos
 - Retorne APENAS o JSON, sem explicações`;
 
-      const response = await axios.post('http://localhost:3000/v1/chat/completions', {
+      const response = await axios.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
         model: 'gpt-4',
         messages: [
           {
@@ -178,7 +176,7 @@ REGRAS:
 - Use tipos: "choice", "text", "number", "boolean"
 - Seja específico e útil`;
 
-      const response = await axios.post('http://localhost:3000/v1/chat/completions', {
+      const response = await axios.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
         model: 'gpt-4',
         messages: [
           {
@@ -240,7 +238,7 @@ class ContextAnalyzer {
   async analyze(workingDir: string): Promise<ContextAnalysis> {
     try {
       const existingFiles = await this.scanDirectory(workingDir);
-      const detectedTechnologies = this.detectTechnologies(existingFiles);
+      const detectedTechnologies = await this.detectTechnologies(existingFiles);
       
       return {
         workingDirectory: workingDir,
@@ -277,20 +275,54 @@ class ContextAnalyzer {
     }
   }
 
-  private detectTechnologies(files: string[]): string[] {
-    const technologies: string[] = [];
+  private async detectTechnologies(files: string[]): Promise<string[]> {
+    // 100% LLM-driven technology detection
+    if (files.length === 0) return [];
     
-    if (files.includes('package.json')) technologies.push('nodejs');
-    if (files.includes('requirements.txt') || files.includes('pyproject.toml')) technologies.push('python');
-    if (files.includes('Cargo.toml')) technologies.push('rust');
-    if (files.includes('pom.xml')) technologies.push('java');
-    if (files.includes('go.mod')) technologies.push('go');
-    if (files.includes('composer.json')) technologies.push('php');
-    if (files.includes('Gemfile')) technologies.push('ruby');
-    if (files.includes('Dockerfile')) technologies.push('docker');
-    if (files.includes('docker-compose.yml')) technologies.push('docker-compose');
-    
-    return technologies;
+    try {
+      const prompt = `Analise os seguintes arquivos de um projeto e identifique as tecnologias utilizadas:
+
+ARQUIVOS: ${files.join(', ')}
+
+Retorne APENAS um JSON array com as tecnologias detectadas:
+["nodejs", "react", "typescript", "docker"]
+
+REGRAS:
+- Seja específico e técnico
+- Identifique frameworks, linguagens, ferramentas
+- Retorne array vazio [] se não conseguir identificar
+- Use nomes técnicos padrão`;
+
+      const response = await axios.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é um especialista em análise de projetos de software. Identifique tecnologias baseado nos arquivos presentes.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 200
+      }, {
+        timeout: 5000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const content = response.data.choices[0].message.content.trim();
+      const technologies = JSON.parse(content);
+      
+      return Array.isArray(technologies) ? technologies : [];
+      
+    } catch (error) {
+      console.error('❌ LLM Technology detection failed:', error);
+      return []; // Return empty array on error
+    }
   }
 
   private detectProjectType(files: string[]): string | undefined {
@@ -313,213 +345,8 @@ class ContextAnalyzer {
   }
 }
 
-class IntentExtractor {
-  async extract(input: string, context: ContextAnalysis): Promise<Intent> {
-    const lowerInput = input.toLowerCase();
-    const intent: Intent = { domain: 'unknown' };
-    
-    // Extract domain
-    intent.domain = this.extractDomain(lowerInput);
-    
-    // Extract technology
-    const technology = this.extractTechnology(lowerInput);
-    if (technology) intent.technology = technology;
-    
-    // Extract language
-    const language = this.extractLanguage(lowerInput);
-    if (language) intent.language = language;
-    
-    // Extract framework
-    const framework = this.extractFramework(lowerInput);
-    if (framework) intent.framework = framework;
-    
-    // Extract purpose
-    const purpose = this.extractPurpose(lowerInput);
-    if (purpose) intent.purpose = purpose;
-    
-    // Extract complexity
-    const complexity = this.extractComplexity(lowerInput);
-    if (complexity) intent.complexity = complexity;
-    
-    // Extract features
-    intent.features = this.extractFeatures(lowerInput);
-    
-    // Extract requirements
-    intent.requirements = this.extractRequirements(lowerInput);
-    
-    return intent;
-  }
-
-  private extractDomain(input: string): string {
-    if (input.includes('frontend') || input.includes('react') || input.includes('vue') || input.includes('angular') || input.includes('html') || input.includes('site') || input.includes('website') || input.includes('landing page') || input.includes('página') || input.includes('página de vendas')) {
-      return 'frontend';
-    } else if (input.includes('backend') || input.includes('api') || input.includes('server')) {
-      return 'backend';
-    } else if (input.includes('mobile') || input.includes('app') || input.includes('ios') || input.includes('android')) {
-      return 'mobile';
-    } else if (input.includes('desktop') || input.includes('electron') || input.includes('tauri')) {
-      return 'desktop';
-    } else if (input.includes('ai') || input.includes('machine learning') || input.includes('ml') || input.includes('tensorflow') || input.includes('pytorch')) {
-      return 'ai';
-    } else if (input.includes('blockchain') || input.includes('smart contract') || input.includes('solidity')) {
-      return 'blockchain';
-    } else if (input.includes('script') || input.includes('automation') || input.includes('tool')) {
-      return 'script';
-    } else if (input.includes('content') || input.includes('roteiro') || input.includes('youtube') || input.includes('video') || input.includes('marketing')) {
-      return 'content';
-    }
-    return 'unknown';
-  }
-
-  private extractTechnology(input: string): string | undefined {
-    const technologies = [
-      'react', 'vue', 'angular', 'svelte', 'nextjs', 'nuxt', 'html',
-      'nodejs', 'express', 'fastapi', 'django', 'spring', 'rails',
-      'flutter', 'react native', 'swift', 'kotlin',
-      'electron', 'tauri', 'qt',
-      'tensorflow', 'pytorch', 'scikit-learn',
-      'solidity', 'web3', 'anchor',
-      'content creation', 'script', 'youtube', 'marketing'
-    ];
-    
-    for (const tech of technologies) {
-      if (input.includes(tech)) {
-        return tech;
-      }
-    }
-    return undefined;
-  }
-
-  private extractLanguage(input: string): string | undefined {
-    const languages = [
-      'javascript', 'typescript', 'python', 'java', 'c#', 'c++', 'rust', 'go', 'php', 'ruby', 'swift', 'kotlin', 'dart'
-    ];
-    
-    for (const lang of languages) {
-      if (input.includes(lang)) {
-        return lang;
-      }
-    }
-    return undefined;
-  }
-
-  private extractFramework(input: string): string | undefined {
-    const frameworks = [
-      'express', 'fastapi', 'django', 'spring', 'rails', 'gin', 'actix', 'axum',
-      'tailwind', 'bootstrap', 'material-ui', 'chakra-ui'
-    ];
-    
-    for (const framework of frameworks) {
-      if (input.includes(framework)) {
-        return framework;
-      }
-    }
-    return undefined;
-  }
-
-  private extractPurpose(input: string): string | undefined {
-    const purposes = [
-      'ecommerce', 'blog', 'portfolio', 'dashboard', 'api', 'website', 'app', 'game', 'tool', 'automation'
-    ];
-    
-    for (const purpose of purposes) {
-      if (input.includes(purpose)) {
-        return purpose;
-      }
-    }
-    return undefined;
-  }
-
-  private extractComplexity(input: string): 'simple' | 'medium' | 'advanced' | undefined {
-    if (input.includes('simples') || input.includes('básico') || input.includes('básico')) {
-      return 'simple';
-    } else if (input.includes('médio') || input.includes('intermediário')) {
-      return 'medium';
-    } else if (input.includes('avançado') || input.includes('complexo')) {
-      return 'advanced';
-    }
-    return undefined;
-  }
-
-  private extractFeatures(input: string): string[] {
-    const features: string[] = [];
-    
-    if (input.includes('autenticação') || input.includes('login') || input.includes('jwt')) {
-      features.push('authentication');
-    }
-    if (input.includes('banco') || input.includes('database') || input.includes('mongodb') || input.includes('postgresql')) {
-      features.push('database');
-    }
-    if (input.includes('api') || input.includes('rest') || input.includes('graphql')) {
-      features.push('api');
-    }
-    if (input.includes('teste') || input.includes('test')) {
-      features.push('testing');
-    }
-    if (input.includes('deploy') || input.includes('docker')) {
-      features.push('deployment');
-    }
-    if (input.includes('landing page') || input.includes('página de vendas') || input.includes('vendas')) {
-      features.push('landing page');
-    }
-    if (input.includes('saúde') || input.includes('health') || input.includes('plano')) {
-      features.push('healthcare');
-    }
-    if (input.includes('forms') || input.includes('formulário') || input.includes('formularios')) {
-      features.push('forms');
-    }
-    if (input.includes('interactivity') || input.includes('interativo') || input.includes('javascript')) {
-      features.push('interactivity');
-    }
-    if (input.includes('styling') || input.includes('css') || input.includes('design')) {
-      features.push('styling');
-    }
-    if (input.includes('responsive') || input.includes('mobile') || input.includes('responsive design')) {
-      features.push('responsive');
-    }
-    if (input.includes('script') || input.includes('roteiro') || input.includes('guion')) {
-      features.push('script');
-    }
-    if (input.includes('timing') || input.includes('tempo') || input.includes('duração')) {
-      features.push('timing');
-    }
-    if (input.includes('hooks') || input.includes('gancho') || input.includes('atenção')) {
-      features.push('hooks');
-    }
-    if (input.includes('call-to-action') || input.includes('cta') || input.includes('ação')) {
-      features.push('call-to-action');
-    }
-    if (input.includes('copywrite') || input.includes('copy') || input.includes('texto de vendas')) {
-      features.push('copywrite');
-    }
-    if (input.includes('sales') || input.includes('vendas') || input.includes('página de vendas')) {
-      features.push('sales');
-    }
-    
-    return features;
-  }
-
-  private extractRequirements(input: string): string[] {
-    // Extract specific requirements mentioned in the input
-    const requirements: string[] = [];
-    
-    // This is a simplified extraction - in a real implementation,
-    // you might use NLP to extract more complex requirements
-    const words = input.split(' ');
-    for (let i = 0; i < words.length; i++) {
-      if (words[i] === 'com' || words[i] === 'usando' || words[i] === 'para') {
-        if (i + 1 < words.length) {
-          const nextWord = words[i + 1];
-          if (nextWord) {
-            requirements.push(nextWord);
-          }
-        }
-      }
-    }
-    
-    return requirements;
-  }
-}
+// IntentExtractor class completely removed - now 100% LLM-driven
+// All intent extraction is handled by extractIntentWithLLM() method
 
 class QuestionGenerator {
   async generate(intent: Intent): Promise<Question[]> {
@@ -571,7 +398,7 @@ REGRAS:
 - Defina scripts apropriados
 - Estruture o projeto de forma profissional`;
 
-      const response = await axios.post('http://localhost:3000/v1/chat/completions', {
+      const response = await axios.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
         model: 'gpt-4',
         messages: [
           {
@@ -655,7 +482,7 @@ REGRAS:
 - Seja específico nos parâmetros
 - Ordene as tasks por dependências`;
 
-      const response = await axios.post('http://localhost:3000/v1/chat/completions', {
+      const response = await axios.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
         model: 'gpt-4',
         messages: [
           {

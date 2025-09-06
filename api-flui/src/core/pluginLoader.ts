@@ -319,7 +319,7 @@ export class PluginLoader extends EventEmitter {
         this.plugins.delete(pluginName);
         
         // Remove plugin functions
-        for (const [funcName, func] of this.pluginFunctions.entries()) {
+        for (const [funcName, func] of Array.from(this.pluginFunctions.entries())) {
           if (func.name.startsWith(pluginName)) {
             this.pluginFunctions.delete(funcName);
           }
