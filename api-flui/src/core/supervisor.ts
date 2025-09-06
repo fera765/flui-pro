@@ -1,4 +1,5 @@
 import { Task, TaskResult } from '../types';
+import { PollinationsTool } from '../tools/pollinationsTool';
 
 export interface ReviewResult {
   approved: boolean;
@@ -8,31 +9,152 @@ export interface ReviewResult {
 }
 
 export class Supervisor {
-  private readonly riskKeywords = [
-    'delete', 'remove', 'destroy', 'harm', 'dangerous', 'illegal',
-    'private', 'secret', 'confidential', 'password', 'token'
-  ];
+  private pollinationsTool: PollinationsTool;
 
-  private readonly contentFilters = [
-    'inappropriate', 'offensive', 'harmful', 'violent', 'explicit'
-  ];
+  constructor() {
+    this.pollinationsTool = new PollinationsTool();
+  }
 
   async reviewTask(task: Task): Promise<ReviewResult> {
-    const riskLevel = this.assessRisk(task);
-    const contentCheck = this.checkContent(task);
-    const complexityCheck = this.checkComplexity(task);
+    try {
+      // Create review tools for the LLM
+      const reviewTools = [
+        {
+          type: "function",
+          function: {
+            name: "review_task",
+            description: "Review a task for safety, appropriateness, and feasibility",
+            parameters: {
+              type: "object",
+              properties: {
+                approved: {
+                  type: "boolean",
+                  description: "Whether the task is approved for execution"
+                },
+                riskLevel: {
+                  type: "string",
+                  enum: ["low", "medium", "high"],
+                  description: "Risk level of the task"
+                },
+                feedback: {
+                  type: "string",
+                  description: "Detailed feedback about the task review"
+                },
+                suggestions: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Suggestions for improving the task"
+                },
+                issues: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "List of identified issues or concerns"
+                }
+              },
+              required: ["approved", "riskLevel", "feedback", "suggestions", "issues"]
+            }
+          }
+        }
+      ];
 
-    const approved = riskLevel === 'low' && contentCheck.approved && complexityCheck.approved;
-    
-    const feedback = this.generateFeedback(task, riskLevel, contentCheck, complexityCheck);
-    const suggestions = this.generateSuggestions(task, riskLevel, contentCheck, complexityCheck);
+      const reviewPrompt = `
+Analise a seguinte tarefa para segurança, apropriação e viabilidade usando a função de revisão.
+
+Tarefa: "${task.prompt}"
+Tipo: ${task.type}
+Subtipo: ${task.metadata?.classification?.subtype || 'N/A'}
+Profundidade: ${task.depth}
+Tentativas: ${task.retries}/${task.maxRetries}
+
+Avalie:
+1. **Segurança**: A tarefa pode causar danos, violar privacidade ou ser perigosa?
+2. **Apropriação**: O conteúdo é apropriado e não ofensivo?
+3. **Viabilidade**: A tarefa é tecnicamente viável e bem definida?
+4. **Complexidade**: A tarefa não é excessivamente complexa?
+5. **Recursos**: A tarefa não consome recursos excessivos?
+
+Considere:
+- Tarefas que envolvem operações do sistema (delete, remove, destroy)
+- Tarefas que podem acessar informações privadas ou confidenciais
+- Tarefas que podem gerar conteúdo inapropriado ou ofensivo
+- Tarefas muito complexas ou com muitas dependências
+- Tarefas que podem consumir muitos recursos
+
+IMPORTANTE: Use a função review_task para estruturar sua resposta.
+`;
+
+      const response = await this.pollinationsTool.generateTextWithTools(reviewPrompt, reviewTools, {
+        temperature: 0.1,
+        maxTokens: 500
+      });
+
+      // Check if the LLM used the review tool
+      if (response.toolCalls && response.toolCalls.length > 0) {
+        const toolCall = response.toolCalls[0];
+        if (toolCall.function.name === 'review_task') {
+          const review = JSON.parse(toolCall.function.arguments);
+          
+          // Validate the review structure
+          if (this.isValidReview(review)) {
+            return {
+              approved: review.approved,
+              riskLevel: review.riskLevel,
+              feedback: review.feedback,
+              suggestions: review.suggestions
+            };
+          }
+        }
+      }
+
+      // Fallback to basic review if LLM response is invalid
+      return this.createBasicReview(task);
+      
+    } catch (error) {
+      console.error('Error in LLM review:', error);
+      return this.createBasicReview(task);
+    }
+  }
+
+  private createBasicReview(task: Task): ReviewResult {
+    // Basic fallback review
+    const prompt = task.prompt.toLowerCase();
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+    let approved = true;
+    const issues: string[] = [];
+
+    // Basic risk assessment
+    if (prompt.includes('delete') || prompt.includes('remove') || prompt.includes('destroy')) {
+      riskLevel = 'high';
+      approved = false;
+      issues.push('Task involves destructive operations');
+    } else if (prompt.includes('system') || prompt.includes('admin')) {
+      riskLevel = 'medium';
+      issues.push('Task involves system operations');
+    }
+
+    // Basic complexity check
+    if (task.depth > 3) {
+      approved = false;
+      issues.push('Task depth exceeds limit');
+    }
 
     return {
       approved,
-      feedback,
-      suggestions,
-      riskLevel
+      riskLevel,
+      feedback: issues.length > 0 ? issues.join('. ') : 'Task approved for execution',
+      suggestions: issues.length > 0 ? ['Review task parameters', 'Simplify task complexity'] : []
     };
+  }
+
+  private isValidReview(review: any): boolean {
+    return (
+      review &&
+      typeof review === 'object' &&
+      typeof review.approved === 'boolean' &&
+      ['low', 'medium', 'high'].includes(review.riskLevel) &&
+      typeof review.feedback === 'string' &&
+      Array.isArray(review.suggestions)
+    );
   }
 
   async approveTask(task: Task): Promise<TaskResult> {
@@ -61,150 +183,5 @@ export class Supervisor {
       data: { message: 'Task rejected', taskId: task.id, reason: review.feedback },
       metadata: { review }
     };
-  }
-
-  private assessRisk(task: Task): 'low' | 'medium' | 'high' {
-    const prompt = task.prompt.toLowerCase();
-    let riskScore = 0;
-
-    // Check for risk keywords
-    for (const keyword of this.riskKeywords) {
-      if (prompt.includes(keyword)) {
-        riskScore += 2;
-      }
-    }
-
-    // Check for system-level operations
-    if (prompt.includes('system') || prompt.includes('admin') || prompt.includes('root')) {
-      riskScore += 3;
-    }
-
-    // Check for file operations
-    if (prompt.includes('file') || prompt.includes('directory') || prompt.includes('folder')) {
-      riskScore += 1;
-    }
-
-    // Check for network operations
-    if (prompt.includes('network') || prompt.includes('http') || prompt.includes('api')) {
-      riskScore += 1;
-    }
-
-    // Determine risk level
-    if (riskScore >= 5) return 'high';
-    if (riskScore >= 2) return 'medium';
-    return 'low';
-  }
-
-  private checkContent(task: Task): { approved: boolean; issues: string[] } {
-    const prompt = task.prompt.toLowerCase();
-    const issues: string[] = [];
-
-    // Check for inappropriate content
-    for (const filter of this.contentFilters) {
-      if (prompt.includes(filter)) {
-        issues.push(`Content may contain ${filter} material`);
-      }
-    }
-
-    // Check for personal information
-    const personalInfoPatterns = [
-      /\b\d{3}-\d{2}-\d{4}\b/, // SSN
-      /\b\d{3}-\d{3}-\d{4}\b/, // Phone
-      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/ // Email
-    ];
-
-    for (const pattern of personalInfoPatterns) {
-      if (pattern.test(task.prompt)) {
-        issues.push('Content may contain personal information');
-      }
-    }
-
-    return {
-      approved: issues.length === 0,
-      issues
-    };
-  }
-
-  private checkComplexity(task: Task): { approved: boolean; issues: string[] } {
-    const issues: string[] = [];
-
-    // Check task depth
-    if (task.depth > 3) {
-      issues.push('Task depth exceeds recommended limit');
-    }
-
-    // Check for circular dependencies
-    if (task.childTasks.length > 10) {
-      issues.push('Task has too many subtasks');
-    }
-
-    // Check prompt length
-    if (task.prompt.length > 1000) {
-      issues.push('Task prompt is too long');
-    }
-
-    return {
-      approved: issues.length === 0,
-      issues
-    };
-  }
-
-  private generateFeedback(
-    task: Task,
-    riskLevel: 'low' | 'medium' | 'high',
-    contentCheck: { approved: boolean; issues: string[] },
-    complexityCheck: { approved: boolean; issues: string[] }
-  ): string {
-    const feedback: string[] = [];
-
-    if (riskLevel === 'high') {
-      feedback.push('High risk task detected');
-    } else if (riskLevel === 'medium') {
-      feedback.push('Medium risk task, proceed with caution');
-    }
-
-    if (!contentCheck.approved) {
-      feedback.push(`Content issues: ${contentCheck.issues.join(', ')}`);
-    }
-
-    if (!complexityCheck.approved) {
-      feedback.push(`Complexity issues: ${complexityCheck.issues.join(', ')}`);
-    }
-
-    if (feedback.length === 0) {
-      return 'Task approved for execution';
-    }
-
-    return feedback.join('. ');
-  }
-
-  private generateSuggestions(
-    task: Task,
-    riskLevel: 'low' | 'medium' | 'high',
-    contentCheck: { approved: boolean; issues: string[] },
-    complexityCheck: { approved: boolean; issues: string[] }
-  ): string[] {
-    const suggestions: string[] = [];
-
-    if (riskLevel === 'high') {
-      suggestions.push('Consider breaking down into smaller, safer subtasks');
-      suggestions.push('Review task parameters for potential security issues');
-    }
-
-    if (!contentCheck.approved) {
-      suggestions.push('Review and sanitize input content');
-      suggestions.push('Add content filtering rules');
-    }
-
-    if (!complexityCheck.approved) {
-      suggestions.push('Break down complex tasks into simpler subtasks');
-      suggestions.push('Limit task depth and number of subtasks');
-    }
-
-    if (task.prompt.length > 500) {
-      suggestions.push('Consider simplifying the task prompt');
-    }
-
-    return suggestions;
   }
 }

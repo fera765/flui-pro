@@ -19,7 +19,7 @@ export class AdvancedTools {
     this.pluginTools = new PluginTools(this.pluginLoader);
   }
 
-  // Web Search Tool (Mocked)
+  // Web Search Tool (Real Implementation)
   createWebSearchTool(): Tool {
     return {
       name: 'web_search',
@@ -38,28 +38,38 @@ export class AdvancedTools {
       },
       execute: async (params: { query: string; maxResults?: number }): Promise<ToolResponse> => {
         try {
-          // Mock implementation - in real scenario would use actual web search API
-          const mockResults = [
-            {
-              title: `How to ${params.query} - Complete Guide`,
-              url: `https://example.com/guide-${params.query.replace(/\s+/g, '-').toLowerCase()}`,
-              snippet: `Comprehensive guide on ${params.query} with step-by-step instructions.`
-            },
-            {
-              title: `${params.query} Best Practices`,
-              url: `https://example.com/best-practices-${params.query.replace(/\s+/g, '-').toLowerCase()}`,
-              snippet: `Learn the best practices for ${params.query} from industry experts.`
-            },
-            {
-              title: `${params.query} Tutorial for Beginners`,
-              url: `https://example.com/tutorial-${params.query.replace(/\s+/g, '-').toLowerCase()}`,
-              snippet: `Beginner-friendly tutorial covering all aspects of ${params.query}.`
+          // Real web search implementation using DuckDuckGo API
+          const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(params.query)}&format=json&no_html=1&skip_disambig=1`;
+          
+          const response = await fetch(searchUrl);
+          if (!response.ok) {
+            throw new Error(`Search API error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          const results = [];
+          
+          // Process DuckDuckGo results
+          if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+            for (const topic of data.RelatedTopics.slice(0, params.maxResults || 5)) {
+              if (topic.Text && topic.FirstURL) {
+                results.push({
+                  title: topic.Text.substring(0, 100) + '...',
+                  url: topic.FirstURL,
+                  snippet: topic.Text
+                });
+              }
             }
-          ];
-
-          const results = params.maxResults ? 
-            mockResults.slice(0, params.maxResults) : 
-            mockResults;
+          }
+          
+          // Add instant answer if available
+          if (data.Abstract && data.AbstractURL) {
+            results.unshift({
+              title: data.Heading || 'Instant Answer',
+              url: data.AbstractURL,
+              snippet: data.Abstract
+            });
+          }
 
           return {
             success: true,
@@ -76,7 +86,7 @@ export class AdvancedTools {
     };
   }
 
-  // Fetch Tool (Mocked)
+  // Fetch Tool (Real Implementation)
   createFetchTool(): Tool {
     return {
       name: 'fetch',
@@ -90,32 +100,39 @@ export class AdvancedTools {
       },
       execute: async (params: { url: string }): Promise<ToolResponse> => {
         try {
-          // Mock implementation - in real scenario would use actual HTTP fetch
-          const mockContent = `
-# ${params.url.split('/').pop() || 'Page Title'}
+          // Real HTTP fetch implementation
+          const response = await fetch(params.url, {
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; FluiBot/1.0)',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+              'Accept-Encoding': 'gzip, deflate',
+              'Connection': 'keep-alive'
+            },
+            timeout: 10000
+          });
 
-This is mock content fetched from ${params.url}.
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
 
-## Key Information
-- This is a simulated web page content
-- Contains relevant information about the requested topic
-- Structured in a readable format with headings and sections
+          const contentType = response.headers.get('content-type') || '';
+          let content: string;
 
-## Main Content
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-
-## Additional Details
-- Point 1: Important information
-- Point 2: More details
-- Point 3: Additional context
-
-This content would normally be fetched from the actual URL in a real implementation.
-          `;
+          if (contentType.includes('application/json')) {
+            const jsonData = await response.json();
+            content = JSON.stringify(jsonData, null, 2);
+          } else if (contentType.includes('text/')) {
+            content = await response.text();
+          } else {
+            content = `Binary content (${contentType}) - ${response.headers.get('content-length') || 'unknown'} bytes`;
+          }
 
           return {
             success: true,
-            data: mockContent,
-            context: `Fetched content from ${params.url}`
+            data: content,
+            context: `Fetched ${contentType} content from ${params.url} (${content.length} characters)`
           };
         } catch (error: any) {
           return {
@@ -294,11 +311,11 @@ This content would normally be fetched from the actual URL in a real implementat
     };
   }
 
-  // Text Summarize Tool
+  // Text Summarize Tool (Real LLM Implementation)
   createTextSummarizeTool(): Tool {
     return {
       name: 'text_summarize',
-      description: 'Summarize text content concisely',
+      description: 'Summarize text content concisely using AI',
       parameters: {
         text: {
           type: 'string',
@@ -313,15 +330,27 @@ This content would normally be fetched from the actual URL in a real implementat
       },
       execute: async (params: { text: string; maxLength?: number }): Promise<ToolResponse> => {
         try {
-          // Mock implementation - in real scenario would use AI summarization
+          // Real AI summarization using OpenAI
+          const { PollinationsTool } = await import('./pollinationsTool');
+          const pollinationsTool = new PollinationsTool();
+          
           const maxLen = params.maxLength || 500;
-          const words = params.text.split(' ');
-          const summary = words.slice(0, Math.floor(maxLen / 5)).join(' ') + '...';
+          const prompt = `Summarize the following text in approximately ${maxLen} characters or less. Focus on the key points and main ideas:
+
+${params.text}
+
+Summary:`;
+
+          const summary = await pollinationsTool.generateText(prompt, {
+            model: 'openai',
+            temperature: 0.3,
+            maxTokens: Math.floor(maxLen / 2)
+          });
           
           return {
             success: true,
-            data: summary,
-            context: `Summarized text from ${params.text.length} to ${summary.length} characters`
+            data: summary.trim(),
+            context: `AI summarized text from ${params.text.length} to ${summary.length} characters`
           };
         } catch (error: any) {
           return {
