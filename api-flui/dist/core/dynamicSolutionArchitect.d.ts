@@ -2,6 +2,7 @@ import { Intent, SolutionArchitecture, ContextAnalysis, DynamicTask } from '../t
 import { DynamicIntelligence } from './dynamicIntelligence';
 export declare class DynamicSolutionArchitect {
     private dynamicIntelligence;
+    private openai;
     constructor(dynamicIntelligence: DynamicIntelligence);
     designSolution(intent: Intent, context: ContextAnalysis): Promise<SolutionArchitecture>;
     generateDynamicTasks(intent: Intent, context: ContextAnalysis): Promise<DynamicTask[]>;
