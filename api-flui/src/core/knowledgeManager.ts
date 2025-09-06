@@ -15,27 +15,9 @@ export class KnowledgeManager {
   }
 
   private loadDefaultKnowledge(): void {
-    // Add some default knowledge sources
-    const defaultSources: CreateKnowledgeSourceRequest[] = [
-      {
-        title: "Flui System Guidelines",
-        content: "The Flui system is an autonomous AI orchestrator that can handle text generation, image generation, audio processing, and complex multi-step tasks. It uses intelligent classification to determine the best approach for each task.",
-        category: "system",
-        tags: ["flui", "system", "guidelines"],
-        priority: 10
-      },
-      {
-        title: "Task Classification Rules",
-        content: "Tasks should be classified as: conversation (simple questions/greetings), text_generation (articles, summaries, content creation), image_generation (visual content creation), audio (speech/audio processing), or composite (multi-step tasks).",
-        category: "classification",
-        tags: ["classification", "tasks", "rules"],
-        priority: 9
-      }
-    ];
-
-    defaultSources.forEach(source => {
-      this.createKnowledgeSource(source);
-    });
+    // 100% Dynamic Knowledge Loading - No static data
+    // Knowledge is now loaded dynamically via LLM or external APIs
+    console.log('🧠 Knowledge Manager: 100% Dynamic - No static knowledge loaded');
   }
 
   createKnowledgeSource(request: CreateKnowledgeSourceRequest): KnowledgeSource {

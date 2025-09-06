@@ -144,31 +144,20 @@ IMPORTANTE:
   }
 
   private getFallbackClassification(prompt: string): ClassificationResult {
-    const lowerPrompt = prompt.toLowerCase();
-    
-    // Simple fallback logic
-    if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('help')) {
-      return {
-        type: 'conversation',
-        confidence: 0.6,
-        parameters: { subject: 'general', language: 'unknown', complexity: 'simple' }
-      };
-    }
-    
-    if (lowerPrompt.includes('image') || lowerPrompt.includes('picture') || lowerPrompt.includes('draw')) {
-      return {
-        type: 'task',
-        subtype: 'image_generation',
-        confidence: 0.7,
-        parameters: { subject: lowerPrompt, language: 'unknown', complexity: 'medium' }
-      };
-    }
+    // 100% LLM-driven fallback - no static logic
+    // This should rarely be called as LLM classification should work
+    console.warn('Using LLM fallback classification - this indicates an issue with the main LLM classification');
     
     return {
       type: 'task',
       subtype: 'text_generation',
-      confidence: 0.5,
-      parameters: { subject: lowerPrompt, language: 'unknown', complexity: 'medium' }
+      confidence: 0.3, // Low confidence for fallback
+      parameters: { 
+        subject: prompt.substring(0, 100), 
+        language: 'unknown', 
+        complexity: 'unknown',
+        knowledgeUsed: false
+      }
     };
   }
 

@@ -1,7 +1,6 @@
 import { ProcessingResult, Intent, Question, ContextAnalysis } from '../types/dynamic';
 export declare class DynamicIntelligence {
     private contextAnalyzer;
-    private intentExtractor;
     private questionGenerator;
     private solutionArchitect;
     constructor();

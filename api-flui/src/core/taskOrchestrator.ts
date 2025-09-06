@@ -183,7 +183,7 @@ export class TaskOrchestrator extends EventEmitter {
     try {
       const prompt = this.buildCallbackPrompt(eventType, data);
       
-      const response = await axios.post('http://localhost:3000/v1/chat/completions', {
+      const response = await axios.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
         model: 'gpt-3.5-turbo',
         messages: [
           {

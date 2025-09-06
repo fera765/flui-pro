@@ -119,27 +119,17 @@ IMPORTANTE:
             typeof classification.parameters === 'object');
     }
     getFallbackClassification(prompt) {
-        const lowerPrompt = prompt.toLowerCase();
-        if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('help')) {
-            return {
-                type: 'conversation',
-                confidence: 0.6,
-                parameters: { subject: 'general', language: 'unknown', complexity: 'simple' }
-            };
-        }
-        if (lowerPrompt.includes('image') || lowerPrompt.includes('picture') || lowerPrompt.includes('draw')) {
-            return {
-                type: 'task',
-                subtype: 'image_generation',
-                confidence: 0.7,
-                parameters: { subject: lowerPrompt, language: 'unknown', complexity: 'medium' }
-            };
-        }
+        console.warn('Using LLM fallback classification - this indicates an issue with the main LLM classification');
         return {
             type: 'task',
             subtype: 'text_generation',
-            confidence: 0.5,
-            parameters: { subject: lowerPrompt, language: 'unknown', complexity: 'medium' }
+            confidence: 0.3,
+            parameters: {
+                subject: prompt.substring(0, 100),
+                language: 'unknown',
+                complexity: 'unknown',
+                knowledgeUsed: false
+            }
         };
     }
 }
