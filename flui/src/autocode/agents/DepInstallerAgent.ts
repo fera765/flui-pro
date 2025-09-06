@@ -18,8 +18,11 @@ export class DepInstallerAgent implements IAgent {
   }
 
   canHandle(task: Task, projectState: ProjectState): boolean {
-    // DepInstallerAgent pode lidar quando package.json existe mas node_modules não
-    return !!projectState.files['package.json'] && !projectState.files['node_modules'];
+    // DepInstallerAgent pode lidar quando package.json existe mas dependências não estão instaladas
+    const hasPackageJson = !!projectState.files['package.json'];
+    const hasDependencies = Object.keys(projectState.dependencies).length > 0;
+    
+    return hasPackageJson && !hasDependencies;
   }
 
   getPriority(): number {

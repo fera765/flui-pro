@@ -19,12 +19,14 @@ export class ComponentAgent implements IAgent {
 
   canHandle(task: Task, projectState: ProjectState): boolean {
     // ComponentAgent pode lidar quando dependências estão instaladas mas componentes não existem
-    return !!projectState.files['package.json'] && 
-           !!projectState.files['node_modules'] && 
-           !projectState.files['src/App.tsx'] && 
-           !projectState.files['src/App.ts'] &&
-           !projectState.files['src/App.jsx'] &&
-           !projectState.files['src/App.js'];
+    const hasPackageJson = !!projectState.files['package.json'];
+    const hasDependencies = Object.keys(projectState.dependencies).length > 0;
+    const hasAppComponent = !!projectState.files['src/App.tsx'] || 
+                           !!projectState.files['src/App.ts'] ||
+                           !!projectState.files['src/App.jsx'] ||
+                           !!projectState.files['src/App.js'];
+    
+    return hasPackageJson && hasDependencies && !hasAppComponent;
   }
 
   getPriority(): number {
