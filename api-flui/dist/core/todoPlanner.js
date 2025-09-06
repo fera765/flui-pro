@@ -29,7 +29,9 @@ class TodoPlanner {
                     },
                     {
                         role: 'user',
-                        content: `Analise a seguinte tarefa e gere TODOs dinâmicos para executá-la: "${prompt}"`
+                        content: `Analise a seguinte tarefa e gere TODOs dinâmicos para executá-la: "${prompt}"
+
+IMPORTANTE: Gere TODOs que criem arquivos físicos específicos. Use ferramentas como file_write para criar arquivos reais como package.json, index.html, App.js, etc.`
                     }
                 ],
                 tools: [
@@ -48,7 +50,7 @@ class TodoPlanner {
                                             properties: {
                                                 id: { type: 'string', description: 'UUID único para o TODO' },
                                                 description: { type: 'string', description: 'Descrição clara do que fazer' },
-                                                type: { type: 'string', enum: ['tool', 'agent'], description: 'Tipo do TODO' },
+                                                type: { type: 'string', enum: ['tool'], description: 'Tipo do TODO (apenas tool)' },
                                                 toolName: { type: 'string', description: 'Nome da ferramenta (se type=tool)' },
                                                 parameters: { type: 'object', description: 'Parâmetros necessários' },
                                                 dependencies: { type: 'array', items: { type: 'string' }, description: 'IDs de TODOs que devem ser completados antes' }
@@ -75,8 +77,9 @@ class TodoPlanner {
                 const validatedTodos = todos.map((todo) => ({
                     id: todo.id || (0, uuid_1.v4)(),
                     description: todo.description || 'Dynamic task',
-                    type: todo.type || 'tool',
+                    type: 'tool',
                     toolName: todo.toolName || 'file_write',
+                    agentId: undefined,
                     parameters: todo.parameters || {},
                     status: 'pending',
                     dependencies: todo.dependencies || [],
@@ -97,6 +100,7 @@ class TodoPlanner {
                     description: `Execute task: ${prompt}`,
                     type: 'tool',
                     toolName: 'file_write',
+                    agentId: undefined,
                     parameters: {
                         filePath: 'task_output.txt',
                         content: `Task executed: ${prompt}\nGenerated at: ${new Date().toISOString()}`
