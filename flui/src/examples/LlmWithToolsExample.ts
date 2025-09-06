@@ -19,7 +19,7 @@ export class LlmWithToolsExample {
    * Exemplo de uso básico com tools
    */
   async generateResponseWithTools(prompt: string): Promise<string> {
-    const tools = this.toolRegistry.getToolsForOpenAI();
+    const tools = this.toolRegistry.getAllTools();
     
     return await this.llmService.generateResponseWithTools(prompt, tools);
   }
@@ -35,7 +35,7 @@ export class LlmWithToolsExample {
    * Exemplo de listagem de tools disponíveis
    */
   getAvailableTools(): string[] {
-    return this.toolRegistry.getRegisteredToolNames();
+    return this.toolRegistry.getAllTools().map(tool => tool.name);
   }
 
   /**

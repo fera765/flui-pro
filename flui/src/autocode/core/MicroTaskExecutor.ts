@@ -82,32 +82,85 @@ export class MicroTaskExecutor {
    */
   private async executeByType(microTask: MicroTask, projectPath: string): Promise<any> {
     switch (microTask.type) {
+      // File operations
       case 'file_create':
         return await this.executeFileCreate(microTask, projectPath);
-      
       case 'file_replace':
         return await this.executeFileReplace(microTask, projectPath);
-      
       case 'file_delete':
         return await this.executeFileDelete(microTask, projectPath);
+      case 'file_move':
+        return await this.executeFileMove(microTask, projectPath);
+      case 'file_copy':
+        return await this.executeFileCopy(microTask, projectPath);
       
+      // Directory operations
+      case 'directory_create':
+        return await this.executeDirectoryCreate(microTask, projectPath);
+      case 'directory_delete':
+        return await this.executeDirectoryDelete(microTask, projectPath);
+      
+      // Package operations
       case 'package_install':
         return await this.executePackageInstall(microTask, projectPath);
+      case 'package_uninstall':
+        return await this.executePackageUninstall(microTask, projectPath);
+      case 'package_update':
+        return await this.executePackageUpdate(microTask, projectPath);
       
+      // Build operations
       case 'build_run':
         return await this.executeBuildRun(microTask, projectPath);
+      case 'build_clean':
+        return await this.executeBuildClean(microTask, projectPath);
+      case 'build_optimize':
+        return await this.executeBuildOptimize(microTask, projectPath);
       
+      // Test operations
       case 'test_run':
         return await this.executeTestRun(microTask, projectPath);
+      case 'test_generate':
+        return await this.executeTestGenerate(microTask, projectPath);
+      case 'test_coverage':
+        return await this.executeTestCoverage(microTask, projectPath);
       
+      // Log operations
       case 'log_parse':
         return await this.executeLogParse(microTask, projectPath);
+      case 'log_analyze':
+        return await this.executeLogAnalyze(microTask, projectPath);
       
+      // Merge operations
       case 'merge_resolve':
         return await this.executeMergeResolve(microTask, projectPath);
+      case 'merge_validate':
+        return await this.executeMergeValidate(microTask, projectPath);
       
+      // Project operations
       case 'project_finish':
         return await this.executeProjectFinish(microTask, projectPath);
+      case 'project_validate':
+        return await this.executeProjectValidate(microTask, projectPath);
+      case 'project_optimize':
+        return await this.executeProjectOptimize(microTask, projectPath);
+      
+      // Config operations
+      case 'config_update':
+        return await this.executeConfigUpdate(microTask, projectPath);
+      case 'config_validate':
+        return await this.executeConfigValidate(microTask, projectPath);
+      
+      // Advanced operations
+      case 'dependency_resolve':
+        return await this.executeDependencyResolve(microTask, projectPath);
+      case 'security_scan':
+        return await this.executeSecurityScan(microTask, projectPath);
+      case 'performance_analyze':
+        return await this.executePerformanceAnalyze(microTask, projectPath);
+      case 'accessibility_check':
+        return await this.executeAccessibilityCheck(microTask, projectPath);
+      case 'seo_optimize':
+        return await this.executeSeoOptimize(microTask, projectPath);
       
       default:
         throw new Error(`Tipo de micro-task não suportado: ${microTask.type}`);
@@ -358,6 +411,494 @@ Retorne apenas o conteúdo final do arquivo resolvido, sem explicações.`;
       completedAt: Date.now(),
       status: 'completed'
     };
+  }
+
+  /**
+   * Executa movimentação de arquivo
+   */
+  private async executeFileMove(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path || !microTask.newSnippet) {
+      throw new Error('Path e newSnippet são obrigatórios para file_move');
+    }
+    
+    const sourcePath = path.join(projectPath, microTask.path);
+    const targetPath = path.join(projectPath, microTask.newSnippet);
+    
+    // Verificar se arquivo origem existe
+    if (!await this.fileSystem.fileExists(sourcePath)) {
+      throw new Error(`Arquivo origem não encontrado: ${sourcePath}`);
+    }
+    
+    // Ler conteúdo do arquivo origem
+    const content = await this.fileSystem.readFile(sourcePath);
+    
+    // Criar diretório de destino se não existir
+    const targetDir = path.dirname(targetPath);
+    await this.fileSystem.createDirectory(targetDir);
+    
+    // Escrever arquivo no destino
+    await this.fileSystem.writeFile(targetPath, content);
+    
+    // Deletar arquivo origem
+    await this.fileSystem.deleteFile(sourcePath);
+    
+    return {
+      sourcePath,
+      targetPath,
+      moved: true
+    };
+  }
+
+  /**
+   * Executa cópia de arquivo
+   */
+  private async executeFileCopy(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path || !microTask.newSnippet) {
+      throw new Error('Path e newSnippet são obrigatórios para file_copy');
+    }
+    
+    const sourcePath = path.join(projectPath, microTask.path);
+    const targetPath = path.join(projectPath, microTask.newSnippet);
+    
+    // Verificar se arquivo origem existe
+    if (!await this.fileSystem.fileExists(sourcePath)) {
+      throw new Error(`Arquivo origem não encontrado: ${sourcePath}`);
+    }
+    
+    // Ler conteúdo do arquivo origem
+    const content = await this.fileSystem.readFile(sourcePath);
+    
+    // Criar diretório de destino se não existir
+    const targetDir = path.dirname(targetPath);
+    await this.fileSystem.createDirectory(targetDir);
+    
+    // Escrever arquivo no destino
+    await this.fileSystem.writeFile(targetPath, content);
+    
+    return {
+      sourcePath,
+      targetPath,
+      copied: true
+    };
+  }
+
+  /**
+   * Executa criação de diretório
+   */
+  private async executeDirectoryCreate(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path) {
+      throw new Error('Path é obrigatório para directory_create');
+    }
+    
+    const dirPath = path.join(projectPath, microTask.path);
+    
+    await this.fileSystem.createDirectory(dirPath);
+    
+    return {
+      dirPath,
+      created: true
+    };
+  }
+
+  /**
+   * Executa exclusão de diretório
+   */
+  private async executeDirectoryDelete(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path) {
+      throw new Error('Path é obrigatório para directory_delete');
+    }
+    
+    const dirPath = path.join(projectPath, microTask.path);
+    
+    // Verificar se diretório existe
+    if (!await this.fileSystem.fileExists(dirPath)) {
+      throw new Error(`Diretório não encontrado: ${dirPath}`);
+    }
+    
+    // Remover diretório recursivamente
+    const fs = await import('fs');
+    await fs.promises.rm(dirPath, { recursive: true, force: true });
+    
+    return {
+      dirPath,
+      deleted: true
+    };
+  }
+
+  /**
+   * Executa desinstalação de pacotes
+   */
+  private async executePackageUninstall(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.newSnippet) {
+      throw new Error('newSnippet deve conter lista de pacotes para package_uninstall');
+    }
+    
+    const packages = microTask.newSnippet.split(',').map(pkg => pkg.trim());
+    
+    // Desinstalar pacotes
+    await this.projectBuilder.uninstallDependencies(projectPath, packages);
+    
+    return {
+      packages,
+      count: packages.length,
+      action: 'uninstalled'
+    };
+  }
+
+  /**
+   * Executa atualização de pacotes
+   */
+  private async executePackageUpdate(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.newSnippet) {
+      throw new Error('newSnippet deve conter lista de pacotes para package_update');
+    }
+    
+    const packages = microTask.newSnippet.split(',').map(pkg => pkg.trim());
+    
+    // Atualizar pacotes
+    await this.projectBuilder.updateDependencies(projectPath, packages);
+    
+    return {
+      packages,
+      count: packages.length,
+      action: 'updated'
+    };
+  }
+
+  /**
+   * Executa limpeza de build
+   */
+  private async executeBuildClean(microTask: MicroTask, projectPath: string): Promise<any> {
+    const cleanResult = await this.projectBuilder.clean(projectPath);
+    
+    return {
+      success: cleanResult.success,
+      output: cleanResult.output,
+      cleanedFiles: cleanResult.cleanedFiles || [],
+      duration: cleanResult.duration
+    };
+  }
+
+  /**
+   * Executa otimização de build
+   */
+  private async executeBuildOptimize(microTask: MicroTask, projectPath: string): Promise<any> {
+    const optimizeResult = await this.projectBuilder.optimize(projectPath);
+    
+    return {
+      success: optimizeResult.success,
+      output: optimizeResult.output,
+      optimizations: optimizeResult.optimizations || [],
+      duration: optimizeResult.duration
+    };
+  }
+
+  /**
+   * Executa geração de testes
+   */
+  private async executeTestGenerate(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.newSnippet) {
+      throw new Error('newSnippet deve conter configuração para test_generate');
+    }
+    
+    const testResult = await this.projectBuilder.generateTests(projectPath, microTask.newSnippet);
+    
+    return {
+      success: testResult.success,
+      generatedTests: testResult.generatedTests || [],
+      output: testResult.output,
+      duration: testResult.duration
+    };
+  }
+
+  /**
+   * Executa cobertura de testes
+   */
+  private async executeTestCoverage(microTask: MicroTask, projectPath: string): Promise<any> {
+    const coverageResult = await this.projectBuilder.testCoverage(projectPath);
+    
+    return {
+      success: coverageResult.success,
+      coverage: coverageResult.coverage || {},
+      output: coverageResult.output,
+      duration: coverageResult.duration
+    };
+  }
+
+  /**
+   * Executa análise de logs
+   */
+  private async executeLogAnalyze(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.newSnippet) {
+      throw new Error('newSnippet deve conter logs para log_analyze');
+    }
+    
+    // Verificar se LLM está disponível
+    if (!(await this.llmService.isConnected())) {
+      return {
+        logs: microTask.newSnippet,
+        analysis: 'LLM não disponível para análise',
+        timestamp: Date.now()
+      };
+    }
+    
+    // Usar LLM para análise avançada de logs
+    const analysisPrompt = `Analise profundamente os seguintes logs e identifique padrões, tendências e insights:
+
+${microTask.newSnippet}
+
+Forneça uma análise detalhada incluindo:
+1. Padrões de erro recorrentes
+2. Tendências de performance
+3. Insights de uso
+4. Recomendações de melhoria
+5. Alertas de segurança
+6. Otimizações sugeridas
+
+Retorne um JSON estruturado com a análise completa.`;
+
+    const analysis = await this.llmService.generateResponse(analysisPrompt);
+    
+    return {
+      logs: microTask.newSnippet,
+      analysis,
+      timestamp: Date.now(),
+      type: 'advanced_analysis'
+    };
+  }
+
+  /**
+   * Executa validação de merge
+   */
+  private async executeMergeValidate(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path) {
+      throw new Error('Path é obrigatório para merge_validate');
+    }
+    
+    const filePath = path.join(projectPath, microTask.path);
+    
+    // Verificar se arquivo existe
+    if (!await this.fileSystem.fileExists(filePath)) {
+      throw new Error(`Arquivo não encontrado: ${filePath}`);
+    }
+    
+    // Ler conteúdo do arquivo
+    const content = await this.fileSystem.readFile(filePath);
+    
+    // Validar se não há marcadores de conflito
+    const hasConflicts = content.includes('<<<<<<<') || 
+                        content.includes('=======') || 
+                        content.includes('>>>>>>>');
+    
+    // Verificar sintaxe se for arquivo de código
+    const isValidSyntax = await this.validateSyntax(content, filePath);
+    
+    return {
+      filePath,
+      hasConflicts,
+      isValidSyntax,
+      validated: !hasConflicts && isValidSyntax
+    };
+  }
+
+  /**
+   * Executa validação de projeto
+   */
+  private async executeProjectValidate(microTask: MicroTask, projectPath: string): Promise<any> {
+    const validationResult = await this.projectBuilder.validate(projectPath);
+    
+    return {
+      success: validationResult.success,
+      issues: validationResult.issues || [],
+      warnings: validationResult.warnings || [],
+      recommendations: validationResult.recommendations || [],
+      duration: validationResult.duration
+    };
+  }
+
+  /**
+   * Executa otimização de projeto
+   */
+  private async executeProjectOptimize(microTask: MicroTask, projectPath: string): Promise<any> {
+    const optimizationResult = await this.projectBuilder.optimizeProject(projectPath);
+    
+    return {
+      success: optimizationResult.success,
+      optimizations: optimizationResult.optimizations || [],
+      improvements: optimizationResult.improvements || [],
+      duration: optimizationResult.duration
+    };
+  }
+
+  /**
+   * Executa atualização de configuração
+   */
+  private async executeConfigUpdate(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path || !microTask.newSnippet) {
+      throw new Error('Path e newSnippet são obrigatórios para config_update');
+    }
+    
+    const configPath = path.join(projectPath, microTask.path);
+    
+    // Verificar se arquivo de configuração existe
+    if (!await this.fileSystem.fileExists(configPath)) {
+      throw new Error(`Arquivo de configuração não encontrado: ${configPath}`);
+    }
+    
+    // Ler configuração atual
+    const currentConfig = await this.fileSystem.readFile(configPath);
+    
+    // Atualizar configuração
+    await this.fileSystem.writeFile(configPath, microTask.newSnippet);
+    
+    return {
+      configPath,
+      updated: true,
+      previousConfig: currentConfig
+    };
+  }
+
+  /**
+   * Executa validação de configuração
+   */
+  private async executeConfigValidate(microTask: MicroTask, projectPath: string): Promise<any> {
+    if (!microTask.path) {
+      throw new Error('Path é obrigatório para config_validate');
+    }
+    
+    const configPath = path.join(projectPath, microTask.path);
+    
+    // Verificar se arquivo de configuração existe
+    if (!await this.fileSystem.fileExists(configPath)) {
+      throw new Error(`Arquivo de configuração não encontrado: ${configPath}`);
+    }
+    
+    // Ler configuração
+    const configContent = await this.fileSystem.readFile(configPath);
+    
+    // Validar configuração baseada no tipo
+    const isValid = await this.validateConfig(configContent, configPath);
+    
+    return {
+      configPath,
+      isValid,
+      issues: isValid ? [] : ['Configuração inválida']
+    };
+  }
+
+  /**
+   * Executa resolução de dependências
+   */
+  private async executeDependencyResolve(microTask: MicroTask, projectPath: string): Promise<any> {
+    const resolveResult = await this.projectBuilder.resolveDependencies(projectPath);
+    
+    return {
+      success: resolveResult.success,
+      resolved: resolveResult.resolved || [],
+      conflicts: resolveResult.conflicts || [],
+      output: resolveResult.output
+    };
+  }
+
+  /**
+   * Executa scan de segurança
+   */
+  private async executeSecurityScan(microTask: MicroTask, projectPath: string): Promise<any> {
+    const securityResult = await this.projectBuilder.securityScan(projectPath);
+    
+    return {
+      success: securityResult.success,
+      vulnerabilities: securityResult.vulnerabilities || [],
+      recommendations: securityResult.recommendations || [],
+      severity: securityResult.severity || 'low'
+    };
+  }
+
+  /**
+   * Executa análise de performance
+   */
+  private async executePerformanceAnalyze(microTask: MicroTask, projectPath: string): Promise<any> {
+    const performanceResult = await this.projectBuilder.analyzePerformance(projectPath);
+    
+    return {
+      success: performanceResult.success,
+      metrics: performanceResult.metrics || {},
+      bottlenecks: performanceResult.bottlenecks || [],
+      recommendations: performanceResult.recommendations || []
+    };
+  }
+
+  /**
+   * Executa verificação de acessibilidade
+   */
+  private async executeAccessibilityCheck(microTask: MicroTask, projectPath: string): Promise<any> {
+    const accessibilityResult = await this.projectBuilder.checkAccessibility(projectPath);
+    
+    return {
+      success: accessibilityResult.success,
+      issues: accessibilityResult.issues || [],
+      score: accessibilityResult.score || 0,
+      recommendations: accessibilityResult.recommendations || []
+    };
+  }
+
+  /**
+   * Executa otimização de SEO
+   */
+  private async executeSeoOptimize(microTask: MicroTask, projectPath: string): Promise<any> {
+    const seoResult = await this.projectBuilder.optimizeSEO(projectPath);
+    
+    return {
+      success: seoResult.success,
+      optimizations: seoResult.optimizations || [],
+      score: seoResult.score || 0,
+      recommendations: seoResult.recommendations || []
+    };
+  }
+
+  /**
+   * Valida sintaxe de arquivo
+   */
+  private async validateSyntax(content: string, filePath: string): Promise<boolean> {
+    try {
+      // Validação básica baseada na extensão do arquivo
+      if (filePath.endsWith('.json')) {
+        JSON.parse(content);
+        return true;
+      } else if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
+        // Para TypeScript, assumir válido se não há erros de sintaxe básica
+        return !content.includes('SyntaxError') && !content.includes('ParseError');
+      } else if (filePath.endsWith('.js') || filePath.endsWith('.jsx')) {
+        // Para JavaScript, validação básica
+        return !content.includes('SyntaxError') && !content.includes('ParseError');
+      }
+      
+      return true; // Para outros tipos de arquivo, assumir válido
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Valida configuração
+   */
+  private async validateConfig(configContent: string, configPath: string): Promise<boolean> {
+    try {
+      if (configPath.includes('package.json')) {
+        JSON.parse(configContent);
+        return true;
+      } else if (configPath.includes('tsconfig')) {
+        JSON.parse(configContent);
+        return true;
+      } else if (configPath.includes('webpack') || configPath.includes('vite')) {
+        // Para configurações de build, validação básica
+        return !configContent.includes('SyntaxError');
+      }
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /**

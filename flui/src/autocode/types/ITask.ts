@@ -58,12 +58,33 @@ export type TaskType =
   | 'file_create'
   | 'file_replace'
   | 'file_delete'
+  | 'file_move'
+  | 'file_copy'
+  | 'directory_create'
+  | 'directory_delete'
   | 'package_install'
+  | 'package_uninstall'
+  | 'package_update'
   | 'build_run'
+  | 'build_clean'
+  | 'build_optimize'
   | 'test_run'
+  | 'test_generate'
+  | 'test_coverage'
   | 'log_parse'
+  | 'log_analyze'
   | 'merge_resolve'
-  | 'project_finish';
+  | 'merge_validate'
+  | 'project_finish'
+  | 'project_validate'
+  | 'project_optimize'
+  | 'config_update'
+  | 'config_validate'
+  | 'dependency_resolve'
+  | 'security_scan'
+  | 'performance_analyze'
+  | 'accessibility_check'
+  | 'seo_optimize';
 
 export type TaskStatus = 
   | 'pending'
@@ -109,6 +130,7 @@ export interface ITaskManager {
   getTask(taskId: string): Promise<Task | null>;
   updateTask(taskId: string, updates: Partial<Task>): Promise<void>;
   deleteTask(taskId: string): Promise<void>;
+  listTasks(filters?: { status?: string; limit?: number; offset?: number }): Promise<Task[]>;
   iterateTask(taskId: string, message: string): Promise<void>;
   getTaskStream(taskId: string): AsyncIterable<TaskLog>;
 }
@@ -130,6 +152,20 @@ export interface IProjectBuilder {
   build(projectPath: string): Promise<BuildResult>;
   test(projectPath: string): Promise<TestResult>;
   installDependencies(projectPath: string, dependencies: string[]): Promise<void>;
+  uninstallDependencies(projectPath: string, packages: string[]): Promise<{ success: boolean; output: string; error?: string }>;
+  updateDependencies(projectPath: string, packages: string[]): Promise<{ success: boolean; output: string; error?: string }>;
+  clean(projectPath: string): Promise<{ success: boolean; output: string; cleanedFiles: string[]; duration: number }>;
+  optimize(projectPath: string): Promise<{ success: boolean; output: string; optimizations: string[]; duration: number }>;
+  generateTests(projectPath: string, config: string): Promise<{ success: boolean; output: string; generatedTests: string[]; duration: number }>;
+  testCoverage(projectPath: string): Promise<{ success: boolean; output: string; coverage: any; duration: number }>;
+  validate(projectPath: string): Promise<{ success: boolean; issues: string[]; warnings: string[]; recommendations: string[]; duration: number }>;
+  optimizeProject(projectPath: string): Promise<{ success: boolean; optimizations: string[]; improvements: string[]; duration: number }>;
+  resolveDependencies(projectPath: string): Promise<{ success: boolean; output: string; resolved: string[]; conflicts: string[] }>;
+  securityScan(projectPath: string): Promise<{ success: boolean; vulnerabilities: string[]; recommendations: string[]; severity: string }>;
+  analyzePerformance(projectPath: string): Promise<{ success: boolean; metrics: any; bottlenecks: string[]; recommendations: string[] }>;
+  checkAccessibility(projectPath: string): Promise<{ success: boolean; issues: string[]; score: number; recommendations: string[] }>;
+  optimizeSEO(projectPath: string): Promise<{ success: boolean; optimizations: string[]; score: number; recommendations: string[] }>;
+  runCommand(command: string, cwd: string): Promise<{ success: boolean; output: string; error?: string; processId: number }>;
 }
 
 export interface BuildResult {

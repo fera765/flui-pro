@@ -4,6 +4,9 @@ import { IFileSystem } from '../types/ITask';
 import { ILlmService } from '../../interfaces/ILlmService';
 import { IEmotionMemory } from '../../memory/interfaces/IEmotionMemory';
 import { MicroTaskExecutor } from './MicroTaskExecutor';
+import { OODALoop, OODAState } from './OODALoop';
+import { TaskEmotionMemory, TaskEmotionContext } from './TaskEmotionMemory';
+import { SecurityManager } from '../security/SecurityManager';
 import { IAgent } from '../types/ITask';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -14,21 +17,31 @@ export class TaskManager implements ITaskManager {
   private readonly llmService: ILlmService;
   private readonly emotionMemory: IEmotionMemory;
   private readonly microTaskExecutor: MicroTaskExecutor;
+  private readonly oodaLoop: OODALoop;
+  private readonly taskEmotionMemory: TaskEmotionMemory;
+  private readonly securityManager: SecurityManager;
   private readonly agents: IAgent[];
   private readonly tasks: Map<string, Task> = new Map();
   private readonly taskStreams: Map<string, AsyncIterable<TaskLog>> = new Map();
+  private readonly oodaStates: Map<string, OODAState> = new Map();
 
   constructor(
     @inject('IFileSystem') fileSystem: IFileSystem,
     @inject('ILlmService') llmService: ILlmService,
     @inject('IEmotionMemory') emotionMemory: IEmotionMemory,
     @inject('MicroTaskExecutor') microTaskExecutor: MicroTaskExecutor,
+    @inject('OODALoop') oodaLoop: OODALoop,
+    @inject('TaskEmotionMemory') taskEmotionMemory: TaskEmotionMemory,
+    @inject('SecurityManager') securityManager: SecurityManager,
     @inject('IAgent[]') agents: IAgent[]
   ) {
     this.fileSystem = fileSystem;
     this.llmService = llmService;
     this.emotionMemory = emotionMemory;
     this.microTaskExecutor = microTaskExecutor;
+    this.oodaLoop = oodaLoop;
+    this.taskEmotionMemory = taskEmotionMemory;
+    this.securityManager = securityManager;
     this.agents = agents;
   }
 
@@ -100,6 +113,24 @@ export class TaskManager implements ITaskManager {
     }
   }
 
+  async listTasks(filters: { status?: string; limit?: number; offset?: number } = {}): Promise<Task[]> {
+    let tasks = Array.from(this.tasks.values());
+    
+    // Filtrar por status se especificado
+    if (filters.status) {
+      tasks = tasks.filter(task => task.status === filters.status);
+    }
+    
+    // Ordenar por data de criação (mais recentes primeiro)
+    tasks.sort((a, b) => b.createdAt - a.createdAt);
+    
+    // Aplicar paginação
+    const offset = filters.offset || 0;
+    const limit = filters.limit || 10;
+    
+    return tasks.slice(offset, offset + limit);
+  }
+
   async iterateTask(taskId: string, message: string): Promise<void> {
     const task = this.tasks.get(taskId);
     if (!task) {
@@ -127,94 +158,126 @@ export class TaskManager implements ITaskManager {
   }
 
   /**
-   * Processa uma task
+   * Processa uma task usando o loop OODA
    */
   private async processTask(task: Task): Promise<void> {
     try {
       task.status = 'in_progress';
-      this.addTaskLog(task, 'info', `Iniciando processamento da task ${task.id}`);
+      this.addTaskLog(task, 'info', `Iniciando processamento da task ${task.id} com loop OODA`);
       
-      // Loop OODA: Observe → Orient → Decide → Act
-      while (task.status === 'in_progress') {
-        // Observe: Analisar estado atual do projeto
-        const projectState = await this.observeProjectState(task);
+      // Inicializar estado OODA
+      const oodaState: OODAState = {
+        phase: 'observe',
+        iteration: 0,
+        maxIterations: 50, // Limite de segurança
+        lastObservation: null,
+        lastDecision: null,
+        lastAction: null,
+        context: {},
+        memory: {}
+      };
+      
+      this.oodaStates.set(task.id, oodaState);
+      
+      // Loop OODA principal
+      while (task.status === 'in_progress' && oodaState.iteration < oodaState.maxIterations) {
+        oodaState.iteration++;
         
-        // Orient: Determinar próximo agente
-        const nextAgent = this.orientNextAgent(task, projectState);
+        this.addTaskLog(task, 'info', `OODA Iteração ${oodaState.iteration}: Fase ${oodaState.phase.toUpperCase()}`);
         
-        if (!nextAgent) {
-          // Nenhum agente pode lidar, task concluída
-          task.status = 'completed';
-          task.completedAt = Date.now();
-          this.addTaskLog(task, 'success', `Task ${task.id} concluída com sucesso`);
+        // Executar iteração do loop OODA
+        const result = await this.oodaLoop.executeIteration(task, this.agents, oodaState);
+        
+        // Registrar contexto emocional
+        await this.recordEmotionContext(task, oodaState.phase, result);
+        
+        // Processar resultado
+        if (!result.success) {
+          task.status = 'failed';
+          this.addTaskLog(task, 'error', `Falha no loop OODA: ${result.insights.join(', ')}`);
           break;
         }
         
-        // Decide: Executar agente
-        task.currentAgent = nextAgent.name;
-        this.addTaskLog(task, 'info', `Executando agente: ${nextAgent.name}`);
+        // Adicionar insights aos logs
+        for (const insight of result.insights) {
+          this.addTaskLog(task, 'info', `OODA Insight: ${insight}`);
+        }
         
-        const context = {
-          task,
-          projectState,
-          emotionMemory: this.emotionMemory,
-          llmService: this.llmService,
-          fileSystem: this.fileSystem
-        };
+        // Verificar segurança das micro-tasks antes de executar
+        const securityAudit = await this.securityManager.auditTask(task.id, task.projectPath, result.microTasks);
         
-        const newMicroTasks = await nextAgent.execute(context);
+        if (securityAudit.overallRisk === 'critical') {
+          task.status = 'failed';
+          this.addTaskLog(task, 'error', `Risco crítico de segurança detectado: ${securityAudit.recommendations.join(', ')}`);
+          break;
+        }
         
-        // Act: Executar micro-tasks
-        for (const microTask of newMicroTasks) {
+        // Executar micro-tasks geradas
+        for (const microTask of result.microTasks) {
           await this.executeMicroTask(microTask, task);
+        }
+        
+        // Atualizar fase
+        oodaState.phase = result.nextPhase as any;
+        
+        // Verificar se deve continuar
+        if (!result.shouldContinue || result.nextPhase === 'complete') {
+          task.status = 'completed';
+          task.completedAt = Date.now();
+          this.addTaskLog(task, 'success', `Task ${task.id} concluída com sucesso após ${oodaState.iteration} iterações OODA`);
+          break;
         }
         
         // Verificar se há micro-tasks pendentes
         const pendingMicroTasks = task.microTasks.filter(mt => mt.status === 'pending');
-        if (pendingMicroTasks.length === 0) {
-          // Nenhuma micro-task pendente, continuar com próximo agente
-          continue;
+        if (pendingMicroTasks.length > 0) {
+          this.addTaskLog(task, 'info', `Executando ${pendingMicroTasks.length} micro-tasks pendentes`);
+          // Continuar para próxima iteração
         }
+      }
+      
+      // Verificar se excedeu limite de iterações
+      if (oodaState.iteration >= oodaState.maxIterations) {
+        task.status = 'failed';
+        this.addTaskLog(task, 'error', `Task ${task.id} falhou: excedeu limite de ${oodaState.maxIterations} iterações OODA`);
       }
       
     } catch (error) {
       task.status = 'failed';
-      this.addTaskLog(task, 'error', `Erro no processamento: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.addTaskLog(task, 'error', `Erro no processamento OODA: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      // Limpar estado OODA
+      this.oodaStates.delete(task.id);
     }
   }
 
   /**
-   * Observa estado atual do projeto
+   * Registra contexto emocional da task
    */
-  private async observeProjectState(task: Task): Promise<any> {
-    const files = await this.fileSystem.getProjectFiles(task.projectPath);
-    
-    return {
-      files,
-      dependencies: this.extractDependencies(files),
-      buildOutput: '',
-      testResults: null,
-      errors: [],
-      warnings: []
-    };
+  private async recordEmotionContext(task: Task, phase: string, result: any): Promise<void> {
+    try {
+      const context: TaskEmotionContext = {
+        taskId: task.id,
+        prompt: task.prompt,
+        currentPhase: phase,
+        agentName: task.currentAgent,
+        microTaskType: result.microTasks?.[0]?.type,
+        success: result.success,
+        timestamp: Date.now(),
+        metadata: {
+          iteration: result.iteration,
+          confidence: result.confidence,
+          insights: result.insights
+        }
+      };
+      
+      await this.taskEmotionMemory.recordTaskContext(context);
+      
+    } catch (error) {
+      console.warn('Erro ao registrar contexto emocional:', error);
+    }
   }
 
-  /**
-   * Orienta próximo agente
-   */
-  private orientNextAgent(task: Task, projectState: any): IAgent | null {
-    // Ordenar agentes por prioridade
-    const sortedAgents = this.agents.sort((a, b) => a.getPriority() - b.getPriority());
-    
-    // Encontrar primeiro agente que pode lidar com o estado atual
-    for (const agent of sortedAgents) {
-      if (agent.canHandle(task, projectState)) {
-        return agent;
-      }
-    }
-    
-    return null;
-  }
 
   /**
    * Executa micro-task
@@ -265,11 +328,20 @@ export class TaskManager implements ITaskManager {
         return [];
       }
 
+      // Obter estado atual do projeto
+      const files = await this.fileSystem.getProjectFiles(task.projectPath);
+      const projectState = {
+        files,
+        dependencies: this.extractDependencies(files),
+        buildStatus: task.buildStatus,
+        testStatus: task.testStatus
+      };
+
       const analysisPrompt = `Analise a seguinte mensagem do usuário e gere micro-tasks apropriadas:
 
 Mensagem: "${message}"
 Task atual: "${task.prompt}"
-Estado do projeto: ${JSON.stringify(await this.observeProjectState(task), null, 2)}
+Estado do projeto: ${JSON.stringify(projectState, null, 2)}
 
 Retorne um JSON com micro-tasks:
 {

@@ -1,0 +1,13 @@
+{
+  "id": "f949cc33b6f4827e",
+  "prompt": "test task for update",
+  "status": "in_progress",
+  "createdAt": 1757164382628,
+  "projectPath": "/workspace/flui/projects/proj-f949cc33b6f4827e",
+  "microTasks": [],
+  "logs": [],
+  "checksums": {},
+  "buildStatus": "not_started",
+  "testStatus": "not_started",
+  "emotionMemoryId": "test-memory-f949cc33b6f4827e"
+}

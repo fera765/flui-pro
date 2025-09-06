@@ -9,6 +9,7 @@ import './autocode/api/AutoCodeController';
 
 // Import routes
 import autoCodeRoutes from './autocode/api/AutoCodeRoutes';
+import streamingRoutes from './autocode/streaming/StreamingRoutes';
 
 const server = new InversifyExpressServer(container);
 
@@ -31,6 +32,9 @@ server.setConfig((app: express.Application) => {
   
   // AutoCode routes
   app.use('/autocode', autoCodeRoutes);
+  
+  // Streaming routes
+  app.use('/autocode', streamingRoutes);
 });
 
 const app = server.build();

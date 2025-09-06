@@ -23,9 +23,20 @@ import { TaskManager } from '../autocode/core/TaskManager';
 import { FileSystemManager } from '../autocode/core/FileSystemManager';
 import { ProjectBuilder } from '../autocode/core/ProjectBuilder';
 import { MicroTaskExecutor } from '../autocode/core/MicroTaskExecutor';
+import { OODALoop } from '../autocode/core/OODALoop';
+import { TaskEmotionMemory } from '../autocode/core/TaskEmotionMemory';
+import { SecurityManager } from '../autocode/security/SecurityManager';
 import { ScaffolderAgent } from '../autocode/agents/ScaffolderAgent';
 import { DepInstallerAgent } from '../autocode/agents/DepInstallerAgent';
 import { ComponentAgent } from '../autocode/agents/ComponentAgent';
+import { StyleAgent } from '../autocode/agents/StyleAgent';
+import { BuildAgent } from '../autocode/agents/BuildAgent';
+import { TestAgent } from '../autocode/agents/TestAgent';
+import { LogParserAgent } from '../autocode/agents/LogParserAgent';
+import { MergeAgent } from '../autocode/agents/MergeAgent';
+import { FinishAgent } from '../autocode/agents/FinishAgent';
+import { CallbackStreamer } from '../autocode/streaming/CallbackStreamer';
+import { StreamingController } from '../autocode/streaming/StreamingController';
 import { AutoCodeController } from '../autocode/api/AutoCodeController';
 
 // Create the main container
@@ -54,17 +65,36 @@ container.bind<ITaskManager>('ITaskManager').to(TaskManager).inSingletonScope();
 container.bind<IFileSystem>('IFileSystem').to(FileSystemManager).inSingletonScope();
 container.bind<IProjectBuilder>('IProjectBuilder').to(ProjectBuilder).inSingletonScope();
 container.bind<MicroTaskExecutor>('MicroTaskExecutor').to(MicroTaskExecutor).inSingletonScope();
+container.bind<OODALoop>('OODALoop').to(OODALoop).inSingletonScope();
+container.bind<TaskEmotionMemory>('TaskEmotionMemory').to(TaskEmotionMemory).inSingletonScope();
+container.bind<SecurityManager>('SecurityManager').to(SecurityManager).inSingletonScope();
+
+// Register streaming services
+container.bind<CallbackStreamer>('CallbackStreamer').to(CallbackStreamer).inSingletonScope();
+container.bind<StreamingController>('StreamingController').to(StreamingController).inSingletonScope();
 
 // Register agents
 container.bind<IAgent>('ScaffolderAgent').to(ScaffolderAgent).inSingletonScope();
 container.bind<IAgent>('DepInstallerAgent').to(DepInstallerAgent).inSingletonScope();
 container.bind<IAgent>('ComponentAgent').to(ComponentAgent).inSingletonScope();
+container.bind<IAgent>('StyleAgent').to(StyleAgent).inSingletonScope();
+container.bind<IAgent>('BuildAgent').to(BuildAgent).inSingletonScope();
+container.bind<IAgent>('TestAgent').to(TestAgent).inSingletonScope();
+container.bind<IAgent>('LogParserAgent').to(LogParserAgent).inSingletonScope();
+container.bind<IAgent>('MergeAgent').to(MergeAgent).inSingletonScope();
+container.bind<IAgent>('FinishAgent').to(FinishAgent).inSingletonScope();
 
 // Register agents array
 container.bind<IAgent[]>('IAgent[]').toDynamicValue(() => [
   container.get<IAgent>('ScaffolderAgent'),
   container.get<IAgent>('DepInstallerAgent'),
-  container.get<IAgent>('ComponentAgent')
+  container.get<IAgent>('ComponentAgent'),
+  container.get<IAgent>('StyleAgent'),
+  container.get<IAgent>('BuildAgent'),
+  container.get<IAgent>('TestAgent'),
+  container.get<IAgent>('LogParserAgent'),
+  container.get<IAgent>('MergeAgent'),
+  container.get<IAgent>('FinishAgent')
 ]).inSingletonScope();
 
 // Register controllers
