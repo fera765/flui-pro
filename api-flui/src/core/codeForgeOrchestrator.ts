@@ -225,7 +225,9 @@ export class CodeForgeOrchestrator extends EventEmitter {
       this.emit('taskCreated', task);
       
       // Execute project creation
-      const result = await this.codeForgeAgent.executeProjectCreation(intent, this.workingDirectory);
+      // Create a specific directory for this project
+      const projectDir = path.join(this.workingDirectory, 'flui-projects', uuidv4());
+      const result = await this.codeForgeAgent.executeProjectCreation(intent, projectDir);
       
       if (result.success && result.project) {
         // Store project

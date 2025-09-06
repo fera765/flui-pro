@@ -179,7 +179,8 @@ class CodeForgeOrchestrator extends events_1.EventEmitter {
             };
             this.tasks.set(task.id, task);
             this.emit('taskCreated', task);
-            const result = await this.codeForgeAgent.executeProjectCreation(intent, this.workingDirectory);
+            const projectDir = path.join(this.workingDirectory, 'flui-projects', (0, uuid_1.v4)());
+            const result = await this.codeForgeAgent.executeProjectCreation(intent, projectDir);
             if (result.success && result.project) {
                 this.projects.set(result.project.id, result.project);
                 task.status = 'completed';
