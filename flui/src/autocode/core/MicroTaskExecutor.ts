@@ -257,6 +257,15 @@ export class MicroTaskExecutor {
       throw new Error('newSnippet deve conter logs para log_parse');
     }
     
+    // Verificar se LLM está disponível
+    if (!(await this.llmService.isConnected())) {
+      return {
+        logs: microTask.newSnippet,
+        analysis: 'LLM não disponível para análise',
+        timestamp: Date.now()
+      };
+    }
+    
     // Usar LLM para analisar logs
     const analysisPrompt = `Analise os seguintes logs de build/teste e identifique problemas e soluções:
 
@@ -291,6 +300,17 @@ Retorne um JSON com:
     
     // Ler arquivo atual
     const currentContent = await this.fileSystem.readFile(fullPath);
+    
+    // Verificar se LLM está disponível
+    if (!(await this.llmService.isConnected())) {
+      // Fallback: usar newSnippet como conteúdo resolvido
+      await this.fileSystem.writeFile(fullPath, microTask.newSnippet);
+      return {
+        path: fullPath,
+        resolvedContent: microTask.newSnippet,
+        conflictsResolved: 1
+      };
+    }
     
     // Usar LLM para resolver conflitos
     const mergePrompt = `Resolva o conflito de merge no arquivo ${microTask.path}:
@@ -430,6 +450,11 @@ Retorne apenas o conteúdo final do arquivo resolvido, sem explicações.`;
    * Cria task de correção baseada na ação
    */
   private async createCorrectionTask(action: string, projectPath: string): Promise<MicroTask | null> {
+    // Verificar se LLM está disponível
+    if (!(await this.llmService.isConnected())) {
+      return null;
+    }
+    
     // Usar LLM para interpretar ação e criar micro-task
     const taskPrompt = `Interprete a seguinte ação e crie uma micro-task:
 

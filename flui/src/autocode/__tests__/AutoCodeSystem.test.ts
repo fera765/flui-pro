@@ -309,7 +309,7 @@ describe('AutoCode System', () => {
       const microTask = {
         id: 'test-create',
         type: 'file_create' as const,
-        path: '/tmp/test-create.txt',
+        path: 'test-create.txt',
         newSnippet: 'Hello, World!',
         status: 'pending' as const,
         createdAt: Date.now(),
@@ -334,7 +334,7 @@ describe('AutoCode System', () => {
       const microTask = {
         id: 'test-replace',
         type: 'file_replace' as const,
-        path: '/tmp/test-replace.txt',
+        path: 'test-replace.txt',
         oldSnippet: 'Hello, World!',
         newSnippet: 'Hello, Universe!',
         status: 'pending' as const,
@@ -359,7 +359,7 @@ describe('AutoCode System', () => {
       const microTask = {
         id: 'test-delete',
         type: 'file_delete' as const,
-        path: '/tmp/test-delete.txt',
+        path: 'test-delete.txt',
         status: 'pending' as const,
         createdAt: Date.now(),
         retryCount: 0,

@@ -60,13 +60,10 @@ export class FileSystemManager implements IFileSystem {
       const result: string[] = [];
       
       for (const file of files) {
-        const fullPath = path.join(directory, file.name);
-        
         if (file.isDirectory()) {
-          const subFiles = await this.listFiles(fullPath);
-          result.push(...subFiles.map(subFile => path.relative(directory, subFile)));
+          result.push(file.name);
         } else {
-          result.push(path.relative(directory, fullPath));
+          result.push(file.name);
         }
       }
       
