@@ -342,16 +342,8 @@ export class CodeForgeAgent {
       this.eventEmitter.emit('taskStart', task);
       
       // Execute task based on type
-      if (task.type === 'file_write' || task.type === 'shell' || task.type === 'package_manager') {
-        // Map task type to tool name
-        let toolName = '';
-        if (task.type === 'file_write') {
-          toolName = 'file_write';
-        } else if (task.type === 'shell') {
-          toolName = 'shell';
-        } else if (task.type === 'package_manager') {
-          toolName = 'package_manager';
-        }
+      if (task.type === 'tool' && task.toolName) {
+        const toolName = task.toolName;
         
         console.log(`🔧 Looking for tool: ${toolName}`);
         console.log(`🔧 Available tools: ${Array.from(this.tools.keys()).join(', ')}`);
@@ -372,22 +364,6 @@ export class CodeForgeAgent {
           };
         } else {
           throw new Error(`Tool not found: ${toolName}`);
-        }
-      } else if (task.type === 'tool' && task.toolName) {
-        const tool = this.tools.get(task.toolName);
-        if (tool) {
-          const result = await tool.execute(task.parameters || {});
-          task.status = 'completed';
-          task.result = result;
-          
-          this.eventEmitter.emit('taskComplete', task);
-          
-          return {
-            success: true,
-            data: result
-          };
-        } else {
-          throw new Error(`Tool not found: ${task.toolName}`);
         }
       } else if (task.type === 'agent' && task.agentId) {
         // Execute agent-based task
