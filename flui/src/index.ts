@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { InversifyExpressServer } from 'inversify-express-utils';
-import { container } from './config/container';
+import { container, initializeTools } from './config/container';
 import express from 'express';
 
 // Import controllers to register them
@@ -40,9 +40,13 @@ server.setConfig((app: express.Application) => {
 const app = server.build();
 const PORT = process.env.PORT || 3000;
 
+// Initialize tools after server is built
+initializeTools();
+
 app.listen(PORT, () => {
   console.log(`🚀 Flui Agent is running on port ${PORT}`);
   console.log(`📊 Health check available at http://localhost:${PORT}/health`);
+  console.log(`🎯 AutoCode-Forge ready for React + TypeScript + TailwindCSS projects!`);
 });
 
 export default app;

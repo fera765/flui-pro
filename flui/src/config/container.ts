@@ -103,12 +103,20 @@ container.bind<AutoCodeController>('AutoCodeController').to(AutoCodeController).
 // Export container for dependency injection
 export default container;
 
-// Initialize tools after container is created
-const toolRegistry = container.get<IToolRegistry>('IToolRegistry');
-const textReader = new TextReaderTool();
-const textEditor = new TextEditorTool();
-const shellTool = new ShellTool();
+// Lazy initialization function
+export function initializeTools(): void {
+  try {
+    const toolRegistry = container.get<IToolRegistry>('IToolRegistry');
+    const textReader = new TextReaderTool();
+    const textEditor = new TextEditorTool();
+    const shellTool = new ShellTool();
 
-toolRegistry.registerTool(textReader, textReader);
-toolRegistry.registerTool(textEditor, textEditor);
-toolRegistry.registerTool(shellTool, shellTool);
+    toolRegistry.registerTool(textReader, textReader);
+    toolRegistry.registerTool(textEditor, textEditor);
+    toolRegistry.registerTool(shellTool, shellTool);
+    
+    console.log('✅ Tools initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing tools:', error);
+  }
+}
