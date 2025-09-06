@@ -1,4 +1,4 @@
-import { injectable, inject } from 'inversify';
+import { injectable, inject, LazyServiceIdentifer } from 'inversify';
 import { Request, Response } from 'express';
 import { ITaskManager } from '../types/ITask';
 import { IEmotionMemory } from '../../memory/interfaces/IEmotionMemory';

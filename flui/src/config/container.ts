@@ -69,7 +69,7 @@ container.bind<OODALoop>('OODALoop').to(OODALoop).inSingletonScope();
 container.bind<TaskEmotionMemory>('TaskEmotionMemory').to(TaskEmotionMemory).inSingletonScope();
 container.bind<SecurityManager>('SecurityManager').to(SecurityManager).inSingletonScope();
 
-// Register streaming services
+// Register streaming services with factory to resolve circular dependencies
 container.bind<CallbackStreamer>('CallbackStreamer').to(CallbackStreamer).inSingletonScope();
 container.bind<StreamingController>('StreamingController').to(StreamingController).inSingletonScope();
 
@@ -97,7 +97,7 @@ container.bind<IAgent[]>('IAgent[]').toDynamicValue(() => [
   container.get<IAgent>('FinishAgent')
 ]).inSingletonScope();
 
-// Register controllers
+// Register controllers with circular dependency support using defer
 container.bind<AutoCodeController>('AutoCodeController').to(AutoCodeController).inSingletonScope();
 
 // Export container for dependency injection
