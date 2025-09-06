@@ -211,10 +211,15 @@ class AdvancedTools {
             execute: async (params) => {
                 try {
                     const fullPath = path.join(this.workingDirectory, params.filePath);
-                    await fs.writeFile(fullPath, params.content, 'utf-8');
+                    const processedContent = params.content
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\t/g, '\t')
+                        .replace(/\\r/g, '\r')
+                        .replace(/\\\\/g, '\\');
+                    await fs.writeFile(fullPath, processedContent, 'utf-8');
                     return {
                         success: true,
-                        data: { filePath: params.filePath, size: params.content.length },
+                        data: { filePath: params.filePath, size: processedContent.length },
                         context: `Written ${params.filePath} successfully`
                     };
                 }
