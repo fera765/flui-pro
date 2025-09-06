@@ -11,41 +11,15 @@ class TodoPlanner {
         return await this.generateDynamicTodos(prompt);
     }
     async generateDynamicTodos(prompt) {
+        console.log('🚀 Generating dynamic TODOs for:', prompt);
         try {
-            const llmPrompt = `Analise a seguinte tarefa e gere uma lista de TODOs dinâmicos para executá-la:
+            const llmPrompt = `Tarefa: "${prompt}"
 
-TAREFA: "${prompt}"
+Gere 3 TODOs em JSON. Formato:
+[{"id":"1","description":"Setup projeto","type":"tool","toolName":"file_write","parameters":{"filePath":"package.json","content":"{}"},"status":"pending","dependencies":[],"createdAt":"2025-01-01T00:00:00.000Z"},{"id":"2","description":"Criar arquivo principal","type":"tool","toolName":"file_write","parameters":{"filePath":"index.js","content":"console.log('Hello')"},"status":"pending","dependencies":["1"],"createdAt":"2025-01-01T00:00:00.000Z"},{"id":"3","description":"Testar aplicação","type":"tool","toolName":"shell","parameters":{"command":"node index.js"},"status":"pending","dependencies":["2"],"createdAt":"2025-01-01T00:00:00.000Z"}]
 
-Gere uma lista de TODOs em formato JSON que cubra todos os aspectos necessários para completar esta tarefa. Cada TODO deve ter:
-- id: UUID único
-- description: Descrição clara do que fazer
-- type: "tool" ou "agent" 
-- toolName: nome da ferramenta (se type="tool")
-- parameters: parâmetros necessários
-- status: "pending"
-- dependencies: array de IDs de TODOs que devem ser completados antes
-- createdAt: timestamp atual
-
-IMPORTANTE:
-- Seja específico e técnico
-- Considere todas as tecnologias mencionadas
-- Crie dependências lógicas entre os TODOs
-- Use ferramentas reais como file_write, shell, web_search, etc.
-- Retorne APENAS um JSON array válido
-
-Exemplo de formato:
-[
-  {
-    "id": "uuid-1",
-    "description": "Criar estrutura do projeto",
-    "type": "tool",
-    "toolName": "file_write",
-    "parameters": {"filePath": "package.json", "content": "..."},
-    "status": "pending",
-    "dependencies": [],
-    "createdAt": "2025-01-01T00:00:00.000Z"
-  }
-]`;
+Retorne APENAS JSON válido.`;
+            console.log('📡 Calling LLM for TODO generation...');
             const response = await axios_1.default.post(`${process.env.OPENAI_BASE_URL || 'http://localhost:4000'}/v1/chat/completions`, {
                 model: 'gpt-3.5-turbo',
                 messages: [
@@ -66,9 +40,12 @@ Exemplo de formato:
                     'Content-Type': 'application/json'
                 }
             });
+            console.log('✅ LLM response received');
             const content = response.data.choices[0].message.content.trim();
+            console.log('📝 LLM content:', content);
             const todos = JSON.parse(content);
-            return todos.map((todo) => ({
+            console.log('📋 Parsed TODOs:', todos.length, 'items');
+            const validatedTodos = todos.map((todo) => ({
                 id: todo.id || (0, uuid_1.v4)(),
                 description: todo.description || 'Dynamic task',
                 type: todo.type || 'tool',
@@ -78,9 +55,12 @@ Exemplo de formato:
                 dependencies: todo.dependencies || [],
                 createdAt: new Date()
             }));
+            console.log('✅ Generated', validatedTodos.length, 'dynamic TODOs');
+            return validatedTodos;
         }
         catch (error) {
             console.error('❌ LLM Todo generation failed:', error);
+            console.error('❌ Error details:', error.response?.data || error.message);
             return [{
                     id: (0, uuid_1.v4)(),
                     description: `Execute task: ${prompt}`,
