@@ -61,17 +61,35 @@ export class FluiContextManager {
   }
 
   getNextExecutableTodos(): TodoItem[] {
-    return this.context.todos.filter(todo => 
-      todo.status === 'pending' && 
-      todo.dependencies.every(depId => 
-        this.context.todos.find(t => t.id === depId)?.status === 'completed'
-      )
-    );
+    const executable = this.context.todos.filter(todo => {
+      if (todo.status !== 'pending') return false;
+      
+      const allDepsCompleted = todo.dependencies.every(depId => {
+        const depTodo = this.context.todos.find(t => t.id === depId);
+        const isCompleted = depTodo?.status === 'completed';
+        if (!isCompleted) {
+          console.log(`❌ Todo ${todo.id} blocked by dependency ${depId} (status: ${depTodo?.status || 'not found'})`);
+        }
+        return isCompleted;
+      });
+      
+      if (allDepsCompleted) {
+        console.log(`✅ Todo ${todo.id} is executable`);
+      }
+      
+      return allDepsCompleted;
+    });
+    
+    console.log(`📋 Found ${executable.length} executable todos out of ${this.context.todos.length} total`);
+    return executable;
   }
 
   isTaskComplete(): boolean {
-    // Task is complete when all todos are completed (not failed)
-    return this.context.todos.every(todo => todo.status === 'completed');
+    // Task is complete when all todos are either completed or failed
+    // (no pending todos remaining)
+    return this.context.todos.every(todo => 
+      todo.status === 'completed' || todo.status === 'failed'
+    );
   }
 
   addGeneratedFile(filePath: string): void {

@@ -5,6 +5,7 @@ export declare class TodoPlanner {
     private createVideoCreationTodos;
     private createResearchTodos;
     private createContentCreationTodos;
+    private createTechTodos;
     private createGenericTodos;
     updateTodoStatus(todoId: string, status: TodoItem['status'], result?: any, error?: string): void;
     getNextExecutableTodos(todos: TodoItem[]): TodoItem[];
