@@ -47,6 +47,9 @@ class AdvancedTools {
         this.pluginLoader = pluginLoader || new pluginLoader_1.PluginLoader();
         this.pluginTools = new pluginTools_1.PluginTools(this.pluginLoader);
     }
+    setWorkingDirectory(workingDirectory) {
+        this.workingDirectory = workingDirectory;
+    }
     createWebSearchTool() {
         return {
             name: 'web_search',

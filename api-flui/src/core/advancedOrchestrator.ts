@@ -249,6 +249,9 @@ export class AdvancedOrchestrator {
     this.contextManager = new FluiContextManager(prompt, this.contextManager.getWorkingDirectory());
     await this.contextManager.ensureWorkingDirectory();
     
+    // Update working directory in tools
+    this.tools.setWorkingDirectory(this.contextManager.getWorkingDirectory());
+    
     // Create project structure
     const projectPath = await this.fileGenerator.createProjectStructure(this.contextManager.getContext());
     

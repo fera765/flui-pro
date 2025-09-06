@@ -5,6 +5,7 @@ export declare class AdvancedTools {
     private pluginTools;
     private pluginLoader;
     constructor(workingDirectory: string, pluginLoader?: PluginLoader);
+    setWorkingDirectory(workingDirectory: string): void;
     createWebSearchTool(): Tool;
     createFetchTool(): Tool;
     createFileReadTool(): Tool;

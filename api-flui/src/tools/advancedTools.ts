@@ -19,6 +19,10 @@ export class AdvancedTools {
     this.pluginTools = new PluginTools(this.pluginLoader);
   }
 
+  setWorkingDirectory(workingDirectory: string): void {
+    this.workingDirectory = workingDirectory;
+  }
+
   // Web Search Tool (Real Implementation)
   createWebSearchTool(): Tool {
     return {

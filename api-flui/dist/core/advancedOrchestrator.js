@@ -207,6 +207,7 @@ class AdvancedOrchestrator {
     async createComplexTask(prompt, classification) {
         this.contextManager = new fluiContext_1.FluiContextManager(prompt, this.contextManager.getWorkingDirectory());
         await this.contextManager.ensureWorkingDirectory();
+        this.tools.setWorkingDirectory(this.contextManager.getWorkingDirectory());
         const projectPath = await this.fileGenerator.createProjectStructure(this.contextManager.getContext());
         const todos = await this.todoPlanner.analyzeTaskComplexity(prompt);
         this.contextManager.addTodos(todos);

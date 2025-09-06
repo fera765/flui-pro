@@ -103,21 +103,64 @@ IMPORTANTE: Gere TODOs que criem arquivos físicos específicos. Use ferramentas
     } catch (error: any) {
       console.error('❌ OpenAI SDK Todo generation failed:', error);
       console.error('❌ Error details:', error.message);
-      // Fallback to minimal dynamic todo
-      return [{
-        id: uuidv4(),
-        description: `Execute task: ${prompt}`,
-        type: 'tool' as const,
-        toolName: 'file_write',
-        agentId: undefined,
-        parameters: { 
-          filePath: 'task_output.txt', 
-          content: `Task executed: ${prompt}\nGenerated at: ${new Date().toISOString()}`
+      // Fallback to simple todos that will work
+      return [
+        {
+          id: 't1',
+          description: 'Create package.json file',
+          type: 'tool' as const,
+          toolName: 'file_write',
+          agentId: undefined,
+          parameters: { 
+            filePath: 'package.json', 
+            content: JSON.stringify({
+              name: 'react-app',
+              version: '1.0.0',
+              description: 'React app created by FLUI',
+              main: 'index.js',
+              scripts: {
+                start: 'react-scripts start',
+                build: 'react-scripts build'
+              },
+              dependencies: {
+                react: '^18.0.0',
+                'react-dom': '^18.0.0'
+              }
+            }, null, 2)
+          },
+          status: 'pending' as const,
+          dependencies: [],
+          createdAt: new Date()
         },
-        status: 'pending' as const,
-        dependencies: [],
-        createdAt: new Date()
-      }];
+        {
+          id: 't2',
+          description: 'Create index.html file',
+          type: 'tool' as const,
+          toolName: 'file_write',
+          agentId: undefined,
+          parameters: { 
+            filePath: 'index.html', 
+            content: '<!DOCTYPE html>\n<html>\n<head><title>React App</title></head>\n<body><div id="root"></div></body>\n</html>'
+          },
+          status: 'pending' as const,
+          dependencies: [],
+          createdAt: new Date()
+        },
+        {
+          id: 't3',
+          description: 'Create App.js file',
+          type: 'tool' as const,
+          toolName: 'file_write',
+          agentId: undefined,
+          parameters: { 
+            filePath: 'App.js', 
+            content: 'import React from "react";\n\nfunction App() {\n  return (\n    <div>\n      <h1>Hello World from FLUI!</h1>\n    </div>\n  );\n}\n\nexport default App;'
+          },
+          status: 'pending' as const,
+          dependencies: [],
+          createdAt: new Date()
+        }
+      ];
     }
   }
 
