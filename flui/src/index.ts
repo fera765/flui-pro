@@ -5,6 +5,7 @@ import express from 'express';
 
 // Import controllers to register them
 import './controllers/HealthController';
+import './controllers/LlmController';
 
 const server = new InversifyExpressServer(container);
 
