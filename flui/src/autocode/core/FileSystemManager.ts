@@ -137,8 +137,13 @@ export class FileSystemManager implements IFileSystem {
         }
         
         const fullPath = path.join(projectPath, file);
-        const content = await this.readFile(fullPath);
-        files[file] = content;
+        
+        // Verificar se é um arquivo antes de tentar ler
+        const stats = await fs.promises.stat(fullPath);
+        if (stats.isFile()) {
+          const content = await this.readFile(fullPath);
+          files[file] = content;
+        }
       }
     } catch (error) {
       console.warn(`Erro ao listar arquivos do projeto: ${error instanceof Error ? error.message : 'Unknown error'}`);
