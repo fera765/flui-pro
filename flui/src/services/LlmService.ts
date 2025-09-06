@@ -7,7 +7,7 @@ dotenv.config();
 
 @injectable()
 export class LlmService implements ILlmService {
-  private readonly openai: OpenAI;
+  public readonly openai: OpenAI;
   private readonly configuration: LlmConfiguration;
 
   constructor() {
@@ -81,6 +81,18 @@ export class LlmService implements ILlmService {
 
   getConfiguration(): LlmConfiguration {
     return { ...this.configuration };
+  }
+
+  getOpenAIClient(): OpenAI {
+    return this.openai;
+  }
+
+  getBaseUrl(): string {
+    return this.configuration.baseUrl;
+  }
+
+  getModel(): string {
+    return this.configuration.model;
   }
 
   private validatePrompt(prompt: string): void {

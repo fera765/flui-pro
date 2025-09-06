@@ -90,5 +90,40 @@ describe('LlmService', () => {
       // This test ensures the service is using the custom base URL
       // by successfully connecting to our free LLM endpoint
     });
+
+    it('should provide access to OpenAI client instance', () => {
+      const openaiClient = llmService.getOpenAIClient();
+      
+      expect(openaiClient).toBeDefined();
+      expect(openaiClient).toHaveProperty('chat');
+      expect(openaiClient).toHaveProperty('completions');
+    });
+
+    it('should return correct base URL', () => {
+      const baseUrl = llmService.getBaseUrl();
+      
+      expect(baseUrl).toBeDefined();
+      expect(typeof baseUrl).toBe('string');
+      expect(baseUrl).toContain('127.0.0.1:4000');
+    });
+
+    it('should return correct model', () => {
+      const model = llmService.getModel();
+      
+      expect(model).toBeDefined();
+      expect(typeof model).toBe('string');
+      expect(model).toBe('gpt-3.5-turbo');
+    });
+
+    it('should return complete configuration', () => {
+      const config = llmService.getConfiguration();
+      
+      expect(config).toBeDefined();
+      expect(config).toHaveProperty('baseUrl');
+      expect(config).toHaveProperty('model');
+      expect(config).toHaveProperty('maxTokens');
+      expect(config).toHaveProperty('temperature');
+      expect(config).toHaveProperty('apiKey');
+    });
   });
 });

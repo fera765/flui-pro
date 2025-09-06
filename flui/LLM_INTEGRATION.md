@@ -4,17 +4,18 @@
 
 O Flui Agent agora possui integração completa com LLM (Large Language Model) usando o SDK da OpenAI, configurado para trabalhar com LLMs gratuitas através de uma base URL customizada.
 
+**O LlmService é uma instância configurada do SDK da OpenAI que pode ser injetada em qualquer lugar da aplicação.**
+
 ## 🚀 Funcionalidades Implementadas
 
-### ✅ **LlmService**
+### ✅ **LlmService** (Instância Configurada)
 - **generateResponse(prompt)**: Gera resposta para um prompt simples
 - **generateResponseWithTools(prompt, tools)**: Gera resposta com ferramentas
 - **isConnected()**: Verifica se a LLM está conectada
 - **getConfiguration()**: Retorna configuração atual
-
-### ✅ **LlmController**
-- **POST /llm/generate**: Endpoint para gerar respostas
-- **GET /llm/status**: Endpoint para verificar status da LLM
+- **getOpenAIClient()**: Retorna instância configurada do SDK OpenAI
+- **getBaseUrl()**: Retorna URL base configurada
+- **getModel()**: Retorna modelo configurado
 
 ## 🔧 Configuração
 
@@ -32,58 +33,67 @@ NODE_ENV=development
 PORT=3000
 ```
 
-## 📡 Endpoints da API
+## 💻 Como Usar o LlmService
 
-### 1. **POST /llm/generate**
-Gera resposta da LLM para um prompt.
+### 1. **Injeção de Dependência**
+```typescript
+import { inject } from 'inversify';
+import { ILlmService } from '../interfaces/ILlmService';
 
-**Request:**
-```json
-{
-  "prompt": "Hello, how are you?",
-  "tools": [
-    {
-      "type": "function",
-      "function": {
-        "name": "calculator",
-        "description": "Perform calculations"
-      }
+export class MeuService {
+  constructor(
+    @inject('ILlmService') private llmService: ILlmService
+  ) {}
+}
+```
+
+### 2. **Uso Básico**
+```typescript
+// Gerar resposta simples
+const response = await this.llmService.generateResponse('Hello, how are you?');
+
+// Gerar resposta com ferramentas
+const tools = [
+  {
+    type: 'function',
+    function: {
+      name: 'calculator',
+      description: 'Perform calculations'
     }
   ]
-}
+];
+const responseWithTools = await this.llmService.generateResponseWithTools('Calculate 2+2', tools);
 ```
 
-**Response:**
-```json
-{
-  "response": "Hello! I'm doing well, thank you for asking.",
-  "prompt": "Hello, how are you?",
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
+### 3. **Acesso Direto ao Cliente OpenAI**
+```typescript
+// Obter instância configurada do SDK OpenAI
+const openaiClient = this.llmService.getOpenAIClient();
+
+// Usar diretamente com configuração customizada
+const completion = await openaiClient.chat.completions.create({
+  model: this.llmService.getModel(),
+  messages: [{ role: 'user', content: 'Hello!' }],
+  max_tokens: 1000,
+  temperature: 0.7
+});
 ```
 
-### 2. **GET /llm/status**
-Verifica status da conexão com a LLM.
+### 4. **Verificação de Status e Configuração**
+```typescript
+// Verificar conexão
+const isConnected = await this.llmService.isConnected();
 
-**Response:**
-```json
-{
-  "connected": true,
-  "configuration": {
-    "baseUrl": "http://127.0.0.1:4000/v1",
-    "model": "gpt-3.5-turbo",
-    "maxTokens": 1000,
-    "temperature": 0.7
-  },
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
+// Obter configuração
+const config = this.llmService.getConfiguration();
+const baseUrl = this.llmService.getBaseUrl();
+const model = this.llmService.getModel();
 ```
 
 ## 🧪 Testes
 
 ### Cobertura de Testes
-- ✅ **LlmService**: 7 testes (falham quando LLM não está rodando - comportamento esperado)
-- ✅ **LlmController**: 5 testes (todos passando)
+- ✅ **LlmService**: 11 testes (7 falham quando LLM não está rodando - comportamento esperado, 4 passam - configuração)
 - ✅ **HealthController**: 2 testes (todos passando)
 
 ### Executar Testes
@@ -93,7 +103,6 @@ npm test
 
 # Apenas testes da LLM
 npm test -- --testPathPatterns=LlmService.test.ts
-npm test -- --testPathPatterns=LlmController.test.ts
 ```
 
 ## 🏗️ Arquitetura
@@ -104,13 +113,11 @@ src/
 ├── interfaces/
 │   └── ILlmService.ts          # Interface do serviço LLM
 ├── services/
-│   ├── LlmService.ts           # Implementação do serviço
+│   ├── LlmService.ts           # Implementação do serviço (instância configurada)
 │   └── __tests__/
 │       └── LlmService.test.ts  # Testes do serviço
-├── controllers/
-│   ├── LlmController.ts        # Controller da API
-│   └── __tests__/
-│       └── LlmController.test.ts # Testes do controller
+├── examples/
+│   └── LlmUsageExample.ts      # Exemplo de uso do LlmService
 └── config/
     └── container.ts            # Container de DI
 ```
@@ -147,16 +154,26 @@ constructor(
 npm run dev
 ```
 
-### 2. Testar Conexão
-```bash
-curl http://localhost:3000/llm/status
+### 2. Usar em Qualquer Service
+```typescript
+import { inject } from 'inversify';
+import { ILlmService } from '../interfaces/ILlmService';
+
+export class MeuService {
+  constructor(
+    @inject('ILlmService') private llmService: ILlmService
+  ) {}
+
+  async processarPrompt(prompt: string): Promise<string> {
+    return await this.llmService.generateResponse(prompt);
+  }
+}
 ```
 
-### 3. Gerar Resposta
-```bash
-curl -X POST http://localhost:3000/llm/generate \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Hello, how are you?"}'
+### 3. Verificar Status
+```typescript
+const isConnected = await this.llmService.isConnected();
+console.log('LLM conectada:', isConnected);
 ```
 
 ## 🔮 Próximos Passos
@@ -170,11 +187,11 @@ curl -X POST http://localhost:3000/llm/generate \
 ## 📊 Status Atual
 
 - ✅ **Interface**: Definida e implementada
-- ✅ **Service**: Implementado com clean code
-- ✅ **Controller**: API REST funcional
-- ✅ **Testes**: Cobertura completa
+- ✅ **Service**: Instância configurada do SDK OpenAI
+- ✅ **Testes**: Cobertura completa (11 testes)
 - ✅ **DI**: Injeção de dependências configurada
 - ✅ **Configuração**: Variáveis de ambiente
+- ✅ **Exemplo de Uso**: Documentado e implementado
 - ⚠️ **Conexão**: Requer LLM rodando em http://127.0.0.1:4000/v1
 
-**O sistema está pronto para uso quando uma LLM estiver disponível na URL configurada!** 🎉
+**O LlmService está pronto para ser injetado em qualquer lugar da aplicação!** 🎉

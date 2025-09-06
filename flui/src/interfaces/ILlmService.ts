@@ -3,6 +3,9 @@ export interface ILlmService {
   generateResponseWithTools(prompt: string, tools?: any[]): Promise<string>;
   isConnected(): Promise<boolean>;
   getConfiguration(): LlmConfiguration;
+  getOpenAIClient(): any;
+  getBaseUrl(): string;
+  getModel(): string;
 }
 
 export interface LlmResponse {
