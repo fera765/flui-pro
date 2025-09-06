@@ -468,24 +468,43 @@ export class AdvancedOrchestrator {
   }
 
   private async executeTodo(todo: TodoItem, context: FluiContext): Promise<void> {
+    console.log(`\n🎯 EXECUTING TODO: ${todo.id}`);
+    console.log(`Description: ${todo.description}`);
+    console.log(`Type: ${todo.type}`);
+    console.log(`Status: ${todo.status}`);
+    
     try {
+      console.log(`📝 Updating status to 'running' for todo: ${todo.id}`);
       this.contextManager.updateTodoStatus(todo.id, 'running');
       this.emitEvent(context.mainTaskId, 'todo_started', { todo });
 
       let result: any;
 
       if (todo.type === 'agent') {
+        console.log(`🤖 Executing agent todo: ${todo.id}`);
         result = await this.executeAgentTodo(todo, context);
       } else if (todo.type === 'tool') {
+        console.log(`🔧 Executing tool todo: ${todo.id} with tool: ${todo.toolName}`);
         result = await this.executeToolTodo(todo, context);
       }
 
+      console.log(`✅ TODO ${todo.id} executed successfully. Result:`, result);
+      console.log(`📝 Updating status to 'completed' for todo: ${todo.id}`);
       this.contextManager.updateTodoStatus(todo.id, 'completed', result);
       this.emitEvent(context.mainTaskId, 'todo_completed', { todo, result });
+      
+      // Verify status was updated
+      const updatedTodo = context.todos.find(t => t.id === todo.id);
+      console.log(`🔍 TODO ${todo.id} status after update: ${updatedTodo?.status}`);
 
     } catch (error: any) {
+      console.log(`❌ TODO ${todo.id} failed with error:`, error.message);
       this.contextManager.updateTodoStatus(todo.id, 'failed', undefined, error.message);
       this.emitEvent(context.mainTaskId, 'todo_failed', { todo, error: error.message });
+      
+      // Verify status was updated
+      const updatedTodo = context.todos.find(t => t.id === todo.id);
+      console.log(`🔍 TODO ${todo.id} status after failure: ${updatedTodo?.status}`);
       
       // Try auto-correction
       const analysis = await this.autoCorrection.analyzeError(error.message, context);
@@ -551,17 +570,26 @@ export class AdvancedOrchestrator {
   }
 
   private async executeToolTodo(todo: TodoItem, context: FluiContext): Promise<any> {
+    console.log(`\n🔧 EXECUTING TOOL TODO: ${todo.id}`);
+    console.log(`Tool Name: ${todo.toolName}`);
+    console.log(`Parameters:`, todo.parameters);
+    
     const tool = this.tools.getAllTools().find(t => t.name === todo.toolName);
     if (!tool) {
+      console.log(`❌ Tool ${todo.toolName} not found. Available tools:`, this.tools.getAllTools().map(t => t.name));
       throw new Error(`Tool ${todo.toolName} not found`);
     }
 
+    console.log(`✅ Tool ${todo.toolName} found. Executing...`);
     const result = await tool.execute(todo.parameters || {});
+    console.log(`🔧 Tool ${todo.toolName} result:`, result);
     
     if (!result.success) {
+      console.log(`❌ Tool ${todo.toolName} execution failed:`, result.error);
       throw new Error(result.error || 'Tool execution failed');
     }
 
+    console.log(`✅ Tool ${todo.toolName} executed successfully`);
     // Update context with tool result
     this.contextManager.updateGlobalContext(`Tool ${tool.name}: ${result.context}`);
     

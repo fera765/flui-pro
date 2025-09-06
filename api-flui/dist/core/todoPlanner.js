@@ -31,7 +31,18 @@ class TodoPlanner {
                         role: 'user',
                         content: `Analise a seguinte tarefa e gere TODOs dinâmicos para executá-la: "${prompt}"
 
-IMPORTANTE: Gere TODOs que criem arquivos físicos específicos. Use ferramentas como file_write para criar arquivos reais como package.json, index.html, App.js, etc.`
+IMPORTANTE: 
+1. Gere TODOs que criem arquivos físicos específicos
+2. Use ferramentas como file_write para criar arquivos reais como package.json, index.html, App.js, etc.
+3. SEMPRE inclua os parâmetros corretos para cada ferramenta:
+   - Para file_write: sempre inclua "filePath" e "content" (para criar arquivos)
+   - Para create_directory: sempre inclua "path" (para criar diretórios)
+   - Para web_search: sempre inclua "query"
+4. Use a ferramenta correta para cada tarefa:
+   - Use create_directory para criar diretórios
+   - Use file_write para criar arquivos
+5. Use IDs únicos para cada TODO (ex: t1, t2, t3, etc.)
+6. Defina dependências corretas entre TODOs`
                     }
                 ],
                 tools: [
@@ -51,8 +62,17 @@ IMPORTANTE: Gere TODOs que criem arquivos físicos específicos. Use ferramentas
                                                 id: { type: 'string', description: 'UUID único para o TODO' },
                                                 description: { type: 'string', description: 'Descrição clara do que fazer' },
                                                 type: { type: 'string', enum: ['tool'], description: 'Tipo do TODO (apenas tool)' },
-                                                toolName: { type: 'string', description: 'Nome da ferramenta (se type=tool)' },
-                                                parameters: { type: 'object', description: 'Parâmetros necessários' },
+                                                toolName: { type: 'string', enum: ['file_write', 'create_directory', 'web_search'], description: 'Nome da ferramenta (file_write, create_directory, web_search)' },
+                                                parameters: {
+                                                    type: 'object',
+                                                    description: 'Parâmetros necessários para a ferramenta',
+                                                    properties: {
+                                                        filePath: { type: 'string', description: 'Caminho do arquivo (para file_write)' },
+                                                        content: { type: 'string', description: 'Conteúdo do arquivo (para file_write)' },
+                                                        path: { type: 'string', description: 'Caminho do diretório (para create_directory)' },
+                                                        query: { type: 'string', description: 'Query de busca (para web_search)' }
+                                                    }
+                                                },
                                                 dependencies: { type: 'array', items: { type: 'string' }, description: 'IDs de TODOs que devem ser completados antes' }
                                             },
                                             required: ['id', 'description', 'type', 'parameters', 'dependencies']

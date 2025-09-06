@@ -1,0 +1,1 @@
+import React from \"https://esm.sh/react@18.2.0\";\nimport ReactDOM from \"https://esm.sh/react-dom@18.2.0\";\n\nconst App = () => {\n  return React.createElement('div', null, 'Hello from App');\n};\n\nReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));\n\nexport default App;

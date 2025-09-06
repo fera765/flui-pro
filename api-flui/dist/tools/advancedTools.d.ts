@@ -10,6 +10,7 @@ export declare class AdvancedTools {
     createFetchTool(): Tool;
     createFileReadTool(): Tool;
     createFileWriteTool(): Tool;
+    createDirectoryTool(): Tool;
     createShellTool(): Tool;
     createTextSplitTool(): Tool;
     createTextSummarizeTool(): Tool;

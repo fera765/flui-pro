@@ -1,0 +1,1 @@
+{\n  \"name\": \"my-react-app\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"start\": \"echo 'Starting dev server...'\",\n    \"build\": \"echo 'Building app...'\",\n    \"test\": \"echo 'Running tests...'\"\n  },\n  \"dependencies\": {\n    \"react\": \"^18.2.0\",\n    \"react-dom\": \"^18.2.0\"\n  }\n}

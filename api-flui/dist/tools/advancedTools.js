@@ -227,6 +227,36 @@ class AdvancedTools {
             }
         };
     }
+    createDirectoryTool() {
+        return {
+            name: 'create_directory',
+            description: 'Create a directory',
+            parameters: {
+                path: {
+                    type: 'string',
+                    description: 'Path to the directory to create (relative to working directory)',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const fullPath = path.join(this.workingDirectory, params.path);
+                    await fs.mkdir(fullPath, { recursive: true });
+                    return {
+                        success: true,
+                        data: { path: params.path },
+                        context: `Created directory ${params.path} successfully`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
     createShellTool() {
         return {
             name: 'shell',
@@ -369,6 +399,7 @@ Summary:`;
             this.createFetchTool(),
             this.createFileReadTool(),
             this.createFileWriteTool(),
+            this.createDirectoryTool(),
             this.createShellTool(),
             this.createTextSplitTool(),
             this.createTextSummarizeTool()

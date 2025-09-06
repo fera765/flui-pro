@@ -72,8 +72,10 @@ class FluiContextManager {
         this.context.todos.push(...todos);
     }
     updateTodoStatus(todoId, status, result, error) {
+        console.log(`📝 Updating todo ${todoId} status from ${this.context.todos.find(t => t.id === todoId)?.status} to ${status}`);
         const todo = this.context.todos.find(t => t.id === todoId);
         if (todo) {
+            const oldStatus = todo.status;
             todo.status = status;
             if (result)
                 todo.result = result;
@@ -82,7 +84,12 @@ class FluiContextManager {
             if (status === 'completed' || status === 'failed') {
                 todo.completedAt = new Date();
                 this.context.completedTasks.push(todo);
+                console.log(`✅ Todo ${todoId} marked as ${status} and added to completedTasks`);
             }
+            console.log(`📝 Todo ${todoId} status updated: ${oldStatus} -> ${status}`);
+        }
+        else {
+            console.log(`❌ Todo ${todoId} not found in context`);
         }
     }
     getNextExecutableTodos() {
@@ -106,7 +113,14 @@ class FluiContextManager {
         return executable;
     }
     isTaskComplete() {
-        return this.context.todos.every(todo => todo.status === 'completed' || todo.status === 'failed');
+        const allComplete = this.context.todos.every(todo => todo.status === 'completed' || todo.status === 'failed');
+        console.log(`🔍 Checking if task is complete:`);
+        console.log(`  Total todos: ${this.context.todos.length}`);
+        this.context.todos.forEach(todo => {
+            console.log(`  - ${todo.id}: ${todo.status}`);
+        });
+        console.log(`  All complete: ${allComplete}`);
+        return allComplete;
     }
     addGeneratedFile(filePath) {
         this.context.generatedFiles.push(filePath);
