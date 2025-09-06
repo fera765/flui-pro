@@ -1,73 +1,79 @@
 import { injectable, inject } from 'inversify';
-import { IAgent, MicroTask, TaskType } from '../types/ITask';
+import { IAgent, AgentType, AgentContext } from '../types/ITask';
+import { Task, ProjectState, MicroTask } from '../types/ITask';
 import { ILlmService } from '../../interfaces/ILlmService';
-import { IEmotionMemory } from '../../memory/interfaces/IEmotionMemory';
-import { IFileSystem } from '../types/ITask';
 
 @injectable()
 export class StyleAgent implements IAgent {
-  public readonly name = 'StyleAgent';
-  private readonly llmService: ILlmService;
-  private readonly emotionMemory: IEmotionMemory;
-  private readonly fileSystem: IFileSystem;
-
+  name: AgentType = 'StyleAgent';
+  
   constructor(
-    @inject('ILlmService') llmService: ILlmService,
-    @inject('IEmotionMemory') emotionMemory: IEmotionMemory,
-    @inject('IFileSystem') fileSystem: IFileSystem
-  ) {
-    this.llmService = llmService;
-    this.emotionMemory = emotionMemory;
-    this.fileSystem = fileSystem;
+    @inject('ILlmService') private llmService: ILlmService
+  ) {}
+
+  canHandle(task: Task, projectState: ProjectState): boolean {
+    // Should create styles if we have React components but no CSS files
+    const hasReactComponents = this.hasReactComponents(projectState.files);
+    const hasStyleFiles = this.hasStyleFiles(projectState.files);
+    const hasPackageJson = !!projectState.files['package.json'];
+    
+    return hasPackageJson && hasReactComponents && !hasStyleFiles;
   }
 
   getPriority(): number {
-    return 4;
+    return 4; // After components are created
   }
 
-  canHandle(task: any, projectState: any): boolean {
-    // Pode lidar se há componentes mas não há estilos definidos
-    const hasComponents = this.hasReactComponents(projectState.files);
-    const hasStyles = this.hasStyleFiles(projectState.files);
+  async execute(context: AgentContext): Promise<MicroTask[]> {
+    const { task, projectState, emotionMemory } = context;
     
-    return hasComponents && !hasStyles;
-  }
-
-  async execute(context: any): Promise<MicroTask[]> {
-    const { task, projectState, emotionMemory, llmService, fileSystem } = context;
+    console.log(`🎯 StyleAgent executando para task ${task.id}`);
     
     try {
-      // Analisar componentes existentes para gerar estilos
+      // Analyze existing components dynamically
       const components = this.extractComponents(projectState.files);
       
       if (components.length === 0) {
+        console.log('❌ No React components found for styling');
         return [];
       }
 
-      // Usar LLM para gerar estilos baseados nos componentes
-      const stylePrompt = this.generateStylePrompt(task.prompt, components, projectState.files);
+      // Generate dynamic style prompt based on actual components
+      const stylePrompt = this.generateDynamicStylePrompt(task.prompt, components, projectState.files);
       
-      if (!(await llmService.isConnected())) {
-        return this.generateFallbackStyles(components);
-      }
+      // Use LLM to generate styles dynamically
+      const styleResponse = await this.llmService.generateResponse(stylePrompt);
+      const styleTasks = this.parseDynamicStyleResponse(styleResponse);
+      
+      // Store memory about style generation
+      await emotionMemory.storeMemory({
+        taskId: task.id,
+        agentName: this.name,
+        action: 'generate_styles',
+        context: `Generated styles for ${components.length} React components`,
+        emotionVector: [0.8, 0.7, 0.9], // confidence, satisfaction, progress
+        timestamp: Date.now(),
+        metadata: {
+          componentsCount: components.length,
+          components: components.map(c => c.name),
+          stylesGenerated: styleTasks.length
+        }
+      });
 
-      const styleResponse = await llmService.generateResponse(stylePrompt);
-      const styleTasks = this.parseStyleResponse(styleResponse, task.projectPath);
-      
-      // Armazenar experiência na memória emocional
-      await this.storeStyleExperience(task, components, styleTasks, emotionMemory);
-      
+      console.log(`✅ StyleAgent criou ${styleTasks.length} micro-tasks para estilos`);
       return styleTasks;
       
     } catch (error) {
-      console.error('Erro no StyleAgent:', error);
-      return [];
+      console.error(`❌ Erro no StyleAgent:`, error);
+      
+      // Generate fallback styles dynamically using LLM
+      return this.generateDynamicFallbackStyles(projectState.files);
     }
   }
 
   private hasReactComponents(files: Record<string, string>): boolean {
     const componentFiles = Object.keys(files).filter(file => 
-      file.endsWith('.tsx') || file.endsWith('.jsx')
+      file.endsWith('.tsx') || file.endsWith('.jsx') || file.endsWith('.ts') || file.endsWith('.js')
     );
     
     return componentFiles.length > 0;
@@ -89,7 +95,7 @@ export class StyleAgent implements IAgent {
     const components: Array<{name: string, content: string, path: string}> = [];
     
     for (const [path, content] of Object.entries(files)) {
-      if (path.endsWith('.tsx') || path.endsWith('.jsx')) {
+      if (path.endsWith('.tsx') || path.endsWith('.jsx') || path.endsWith('.ts') || path.endsWith('.js')) {
         const componentName = this.extractComponentName(content, path);
         if (componentName) {
           components.push({
@@ -105,21 +111,21 @@ export class StyleAgent implements IAgent {
   }
 
   private extractComponentName(content: string, path: string): string | null {
-    // Extrair nome do componente do conteúdo
+    // Extract component name from content dynamically
     const exportMatch = content.match(/export\s+(?:default\s+)?(?:function|const)\s+(\w+)/);
     if (exportMatch) {
       return exportMatch[1];
     }
     
-    // Fallback: usar nome do arquivo
-    const fileName = path.split('/').pop()?.replace(/\.(tsx|jsx)$/, '');
+    // Fallback: use filename
+    const fileName = path.split('/').pop()?.replace(/\.(tsx|jsx|ts|js)$/, '');
     return fileName || null;
   }
 
-  private generateStylePrompt(prompt: string, components: Array<{name: string, content: string, path: string}>, files: Record<string, string>): string {
+  private generateDynamicStylePrompt(prompt: string, components: Array<{name: string, content: string, path: string}>, files: Record<string, string>): string {
     const componentList = components.map(c => `- ${c.name} (${c.path}): ${c.content.substring(0, 200)}...`).join('\n');
     
-    return `Analise os seguintes componentes React e gere estilos CSS modernos e responsivos:
+    return `Você é um especialista em CSS moderno e React. Analise os componentes React existentes e gere estilos CSS dinâmicos e responsivos.
 
 PROMPT ORIGINAL: "${prompt}"
 
@@ -130,33 +136,33 @@ ARQUIVOS DO PROJETO:
 ${Object.keys(files).join(', ')}
 
 Gere estilos que:
-1. Sejam modernos e responsivos
-2. Sigam as melhores práticas de CSS
-3. Sejam compatíveis com os componentes existentes
+1. Sejam completamente dinâmicos baseados nos componentes existentes
+2. Sigam as melhores práticas de CSS moderno
+3. Sejam responsivos e acessíveis
 4. Usem variáveis CSS para consistência
 5. Incluam estados hover, focus, active
-6. Sejam acessíveis
+6. Sejam compatíveis com React
 
-Retorne um JSON com a seguinte estrutura:
+Retorne APENAS um JSON com a seguinte estrutura:
 {
   "styles": [
     {
-      "path": "src/styles/global.css",
-      "content": "conteúdo CSS completo",
+      "path": "src/index.css",
+      "content": "conteúdo CSS global completo",
       "type": "global"
     },
     {
-      "path": "src/components/ComponentName.module.css", 
-      "content": "conteúdo CSS do componente",
+      "path": "src/App.css", 
+      "content": "conteúdo CSS do App component",
       "type": "component"
     }
-  ],
-  "dependencies": ["lista de dependências CSS necessárias"],
-  "instructions": "instruções de implementação"
-}`;
+  ]
+}
+
+NÃO inclua explicações, apenas o JSON.`;
   }
 
-  private parseStyleResponse(response: string, projectPath: string): MicroTask[] {
+  private parseDynamicStyleResponse(response: string): MicroTask[] {
     try {
       const cleaned = this.cleanJsonResponse(response);
       const parsed = JSON.parse(cleaned);
@@ -167,24 +173,11 @@ Retorne um JSON com a seguinte estrutura:
         for (const style of parsed.styles) {
           tasks.push({
             id: `style-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'file_create' as TaskType,
+            type: 'file_create',
             path: style.path,
+            oldSnippet: '',
             newSnippet: style.content,
-            status: 'pending',
-            createdAt: Date.now(),
-            retryCount: 0,
-            maxRetries: 3
-          });
-        }
-      }
-      
-      // Adicionar dependências se necessário
-      if (parsed.dependencies && Array.isArray(parsed.dependencies)) {
-        for (const dep of parsed.dependencies) {
-          tasks.push({
-            id: `style-dep-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'package_install' as TaskType,
-            newSnippet: dep,
+            rollbackHash: this.calculateHash(''),
             status: 'pending',
             createdAt: Date.now(),
             retryCount: 0,
@@ -197,85 +190,39 @@ Retorne um JSON com a seguinte estrutura:
       
     } catch (error) {
       console.error('Erro ao parsear resposta de estilos:', error);
-      return this.generateFallbackStyles([]);
+      return [];
     }
   }
 
-  private generateFallbackStyles(components: Array<{name: string, content: string, path: string}>): MicroTask[] {
-    const tasks: MicroTask[] = [];
-    
-    // Gerar CSS básico para cada componente
-    for (const component of components) {
-      const cssContent = this.generateBasicCSS(component.name);
-      const cssPath = `src/styles/${component.name}.css`;
-      
-      tasks.push({
-        id: `fallback-style-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type: 'file_create' as TaskType,
-        path: cssPath,
-        newSnippet: cssContent,
-        status: 'pending',
-        createdAt: Date.now(),
-        retryCount: 0,
-        maxRetries: 3
-      });
-    }
-    
-    return tasks;
-  }
-
-  private generateBasicCSS(componentName: string): string {
-    return `/* Estilos para ${componentName} */
-.${componentName.toLowerCase()} {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  margin: 0.5rem;
-  border-radius: 8px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.${componentName.toLowerCase()}:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.${componentName.toLowerCase()}:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .${componentName.toLowerCase()} {
-    padding: 0.5rem;
-    margin: 0.25rem;
-  }
-}`;
-  }
-
-  private async storeStyleExperience(
-    task: any, 
-    components: Array<{name: string, content: string, path: string}>, 
-    styleTasks: MicroTask[], 
-    emotionMemory: IEmotionMemory
-  ): Promise<void> {
+  private async generateDynamicFallbackStyles(files: Record<string, string>): Promise<MicroTask[]> {
     try {
-      const context = `StyleAgent executado para task ${task.id}`;
-      const outcome = styleTasks.length > 0;
+      // Use LLM to generate fallback styles dynamically
+      const fallbackPrompt = `Gere estilos CSS básicos e modernos para uma aplicação React. 
       
-      await emotionMemory.storeMemory(
-        await emotionMemory.analyzeEmotionalContext(`Estilos gerados para ${components.length} componentes`),
-        await emotionMemory.createPolicyDelta('style_generation', context),
-        context,
-        outcome
-      );
+      Crie dois arquivos:
+      1. src/index.css - estilos globais
+      2. src/App.css - estilos para o componente App
+      
+      Retorne APENAS JSON:
+      {
+        "styles": [
+          {
+            "path": "src/index.css",
+            "content": "estilos globais completos"
+          },
+          {
+            "path": "src/App.css", 
+            "content": "estilos do App completos"
+          }
+        ]
+      }`;
+
+      const fallbackResponse = await this.llmService.generateResponse(fallbackPrompt);
+      return this.parseDynamicStyleResponse(fallbackResponse);
+      
     } catch (error) {
-      console.warn('Erro ao armazenar experiência do StyleAgent:', error);
+      console.error('Erro ao gerar fallback styles:', error);
+      return [];
     }
   }
 
@@ -290,5 +237,16 @@ Retorne um JSON com a seguinte estrutura:
     }
     
     return cleaned.trim();
+  }
+
+  private calculateHash(content: string): string {
+    // Simple hash calculation for rollback
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString(36);
   }
 }

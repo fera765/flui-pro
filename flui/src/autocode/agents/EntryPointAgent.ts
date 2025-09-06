@@ -1,18 +1,20 @@
-import { injectable } from 'inversify';
-import { IAgent, AgentType, AgentContext } from '../types/IAgent';
+import { injectable, inject } from 'inversify';
+import { IAgent, AgentType, AgentContext } from '../types/ITask';
 import { Task, ProjectState, MicroTask } from '../types/ITask';
-import { ILlmService } from '../../llm/types/ILlmService';
+import { ILlmService } from '../../interfaces/ILlmService';
 
 @injectable()
 export class EntryPointAgent implements IAgent {
-  name: AgentType = 'entry_point';
+  name: AgentType = 'EntryPointAgent';
   
-  constructor(private llmService: ILlmService) {}
+  constructor(
+    @inject('ILlmService') private llmService: ILlmService
+  ) {}
 
   canHandle(task: Task, projectState: ProjectState): boolean {
     // Should create main.tsx if it doesn't exist and we have React components
     const hasPackageJson = !!projectState.files['package.json'];
-    const hasReactDeps = projectState.dependencies['react'] || projectState.dependencies['@types/react'];
+    const hasReactDeps = !!(projectState.dependencies['react'] || projectState.dependencies['@types/react']);
     const hasAppComponent = !!projectState.files['src/App.tsx'] || 
                            !!projectState.files['src/App.ts'] ||
                            !!projectState.files['src/App.jsx'] ||

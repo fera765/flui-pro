@@ -35,6 +35,9 @@ import { TestAgent } from '../autocode/agents/TestAgent';
 import { LogParserAgent } from '../autocode/agents/LogParserAgent';
 import { MergeAgent } from '../autocode/agents/MergeAgent';
 import { FinishAgent } from '../autocode/agents/FinishAgent';
+import { HTMLGeneratorAgent } from '../autocode/agents/HTMLGeneratorAgent';
+import { EntryPointAgent } from '../autocode/agents/EntryPointAgent';
+import { ConfigAgent } from '../autocode/agents/ConfigAgent';
 import { CallbackStreamer } from '../autocode/streaming/CallbackStreamer';
 import { StreamingController } from '../autocode/streaming/StreamingController';
 import { AutoCodeController } from '../autocode/api/AutoCodeController';
@@ -74,27 +77,33 @@ container.bind<CallbackStreamer>('CallbackStreamer').to(CallbackStreamer).inSing
 container.bind<StreamingController>('StreamingController').to(StreamingController).inSingletonScope();
 
 // Register agents
-container.bind<IAgent>('ScaffolderAgent').to(ScaffolderAgent).inSingletonScope();
-container.bind<IAgent>('DepInstallerAgent').to(DepInstallerAgent).inSingletonScope();
-container.bind<IAgent>('ComponentAgent').to(ComponentAgent).inSingletonScope();
-container.bind<IAgent>('StyleAgent').to(StyleAgent).inSingletonScope();
-container.bind<IAgent>('BuildAgent').to(BuildAgent).inSingletonScope();
-container.bind<IAgent>('TestAgent').to(TestAgent).inSingletonScope();
-container.bind<IAgent>('LogParserAgent').to(LogParserAgent).inSingletonScope();
-container.bind<IAgent>('MergeAgent').to(MergeAgent).inSingletonScope();
-container.bind<IAgent>('FinishAgent').to(FinishAgent).inSingletonScope();
+container.bind<ScaffolderAgent>('ScaffolderAgent').to(ScaffolderAgent).inSingletonScope();
+container.bind<DepInstallerAgent>('DepInstallerAgent').to(DepInstallerAgent).inSingletonScope();
+container.bind<ComponentAgent>('ComponentAgent').to(ComponentAgent).inSingletonScope();
+container.bind<StyleAgent>('StyleAgent').to(StyleAgent).inSingletonScope();
+container.bind<BuildAgent>('BuildAgent').to(BuildAgent).inSingletonScope();
+container.bind<TestAgent>('TestAgent').to(TestAgent).inSingletonScope();
+container.bind<LogParserAgent>('LogParserAgent').to(LogParserAgent).inSingletonScope();
+container.bind<MergeAgent>('MergeAgent').to(MergeAgent).inSingletonScope();
+container.bind<FinishAgent>('FinishAgent').to(FinishAgent).inSingletonScope();
+container.bind<HTMLGeneratorAgent>('HTMLGeneratorAgent').to(HTMLGeneratorAgent).inSingletonScope();
+container.bind<EntryPointAgent>('EntryPointAgent').to(EntryPointAgent).inSingletonScope();
+container.bind<ConfigAgent>('ConfigAgent').to(ConfigAgent).inSingletonScope();
 
 // Register agents array
 container.bind<IAgent[]>('IAgent[]').toDynamicValue(() => [
-  container.get<IAgent>('ScaffolderAgent'),
-  container.get<IAgent>('DepInstallerAgent'),
-  container.get<IAgent>('ComponentAgent'),
-  container.get<IAgent>('StyleAgent'),
-  container.get<IAgent>('BuildAgent'),
-  container.get<IAgent>('TestAgent'),
-  container.get<IAgent>('LogParserAgent'),
-  container.get<IAgent>('MergeAgent'),
-  container.get<IAgent>('FinishAgent')
+  container.get<ScaffolderAgent>('ScaffolderAgent'),
+  container.get<DepInstallerAgent>('DepInstallerAgent'),
+  container.get<ComponentAgent>('ComponentAgent'),
+  container.get<HTMLGeneratorAgent>('HTMLGeneratorAgent'),
+  container.get<EntryPointAgent>('EntryPointAgent'),
+  container.get<StyleAgent>('StyleAgent'),
+  container.get<ConfigAgent>('ConfigAgent'),
+  container.get<BuildAgent>('BuildAgent'),
+  container.get<TestAgent>('TestAgent'),
+  container.get<LogParserAgent>('LogParserAgent'),
+  container.get<MergeAgent>('MergeAgent'),
+  container.get<FinishAgent>('FinishAgent')
 ]).inSingletonScope();
 
 // Register controllers with circular dependency support using defer

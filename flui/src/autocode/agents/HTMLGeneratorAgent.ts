@@ -1,20 +1,22 @@
-import { injectable } from 'inversify';
-import { IAgent, AgentType, AgentContext } from '../types/IAgent';
+import { injectable, inject } from 'inversify';
+import { IAgent, AgentType, AgentContext } from '../types/ITask';
 import { Task, ProjectState, MicroTask } from '../types/ITask';
-import { ILlmService } from '../../llm/types/ILlmService';
+import { ILlmService } from '../../interfaces/ILlmService';
 
 @injectable()
 export class HTMLGeneratorAgent implements IAgent {
-  name: AgentType = 'html_generator';
+  name: AgentType = 'HTMLGeneratorAgent';
   
-  constructor(private llmService: ILlmService) {}
+  constructor(
+    @inject('ILlmService') private llmService: ILlmService
+  ) {}
 
   canHandle(task: Task, projectState: ProjectState): boolean {
     // Should create index.html if it doesn't exist and we have a React project
     const hasPackageJson = !!projectState.files['package.json'];
     const hasViteConfig = !!projectState.files['vite.config.ts'] || !!projectState.files['vite.config.js'];
     const hasIndexHtml = !!projectState.files['index.html'];
-    const isReactProject = projectState.dependencies['react'] || projectState.dependencies['@types/react'];
+    const isReactProject = !!(projectState.dependencies['react'] || projectState.dependencies['@types/react']);
     
     return hasPackageJson && hasViteConfig && isReactProject && !hasIndexHtml;
   }

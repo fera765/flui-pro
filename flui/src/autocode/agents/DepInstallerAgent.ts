@@ -1,24 +1,18 @@
 import { injectable, inject } from 'inversify';
-import { IAgent, AgentType, MicroTask, Task, ProjectState, AgentContext } from '../types/ITask';
+import { IAgent, AgentType, AgentContext } from '../types/ITask';
+import { Task, ProjectState, MicroTask } from '../types/ITask';
 import { ILlmService } from '../../interfaces/ILlmService';
-import { IEmotionMemory } from '../../memory/interfaces/IEmotionMemory';
 
 @injectable()
 export class DepInstallerAgent implements IAgent {
   name: AgentType = 'DepInstallerAgent';
-  private readonly llmService: ILlmService;
-  private readonly emotionMemory: IEmotionMemory;
-
+  
   constructor(
-    @inject('ILlmService') llmService: ILlmService,
-    @inject('IEmotionMemory') emotionMemory: IEmotionMemory
-  ) {
-    this.llmService = llmService;
-    this.emotionMemory = emotionMemory;
-  }
+    @inject('ILlmService') private llmService: ILlmService
+  ) {}
 
   canHandle(task: Task, projectState: ProjectState): boolean {
-    // DepInstallerAgent pode lidar quando package.json existe mas dependências não estão instaladas
+    // Should install dependencies if package.json exists but dependencies are not installed
     const hasPackageJson = !!projectState.files['package.json'];
     const hasDependencies = Object.keys(projectState.dependencies).length > 0;
     
@@ -26,55 +20,68 @@ export class DepInstallerAgent implements IAgent {
   }
 
   getPriority(): number {
-    return 2; // Segunda prioridade
+    return 2; // High priority - needed early
   }
 
   async execute(context: AgentContext): Promise<MicroTask[]> {
-    const { task, projectState } = context;
-    const microTasks: MicroTask[] = [];
-
+    const { task, projectState, emotionMemory } = context;
+    
+    console.log(`🎯 DepInstallerAgent executando para task ${task.id}`);
+    
     try {
-      // Analisar package.json para determinar dependências
+      // Analyze package.json dynamically
       const packageJson = JSON.parse(projectState.files['package.json']);
       const dependencies = this.extractDependencies(packageJson);
       
       if (dependencies.length > 0) {
-        // Criar micro-task para instalar dependências
+        // Create micro-task for dependency installation
         const installTask: MicroTask = {
-          id: `install-deps-${Date.now()}`,
+          id: `install-deps-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'package_install',
-          newSnippet: dependencies.join(','),
+          path: '',
+          oldSnippet: '',
+          newSnippet: dependencies.join(' '),
+          rollbackHash: this.calculateHash(''),
           status: 'pending',
           createdAt: Date.now(),
           retryCount: 0,
           maxRetries: 3
         };
         
-        microTasks.push(installTask);
-        
-        // Armazenar memória emocional sobre instalação
-        await this.storeInstallationMemory(dependencies, task.id);
+        // Store memory about dependency installation
+        await emotionMemory.storeMemory({
+          taskId: task.id,
+          agentName: this.name,
+          action: 'install_dependencies',
+          context: `Installing ${dependencies.length} dependencies: ${dependencies.join(', ')}`,
+          emotionVector: [0.9, 0.8, 0.9], // confidence, satisfaction, progress
+          timestamp: Date.now(),
+          metadata: {
+            dependenciesCount: dependencies.length,
+            dependencies: dependencies
+          }
+        });
+
+        console.log(`✅ DepInstallerAgent criou micro-task para instalar ${dependencies.length} dependências`);
+        return [installTask];
       }
       
     } catch (error) {
-      console.error('Erro no DepInstallerAgent:', error);
+      console.error(`❌ Erro no DepInstallerAgent:`, error);
     }
 
-    return microTasks;
+    return [];
   }
 
-  /**
-   * Extrai dependências do package.json
-   */
   private extractDependencies(packageJson: any): string[] {
     const dependencies: string[] = [];
     
-    // Extrair dependências principais
+    // Extract main dependencies
     if (packageJson.dependencies) {
       dependencies.push(...Object.keys(packageJson.dependencies));
     }
     
-    // Extrair dependências de desenvolvimento
+    // Extract dev dependencies
     if (packageJson.devDependencies) {
       dependencies.push(...Object.keys(packageJson.devDependencies));
     }
@@ -82,21 +89,14 @@ export class DepInstallerAgent implements IAgent {
     return dependencies;
   }
 
-  /**
-   * Armazena memória emocional sobre instalação
-   */
-  private async storeInstallationMemory(dependencies: string[], taskId: string): Promise<void> {
-    try {
-      const context = `Instalação de dependências para task ${taskId}`;
-      const outcome = true;
-      
-      await this.emotionMemory.storeMemoryWithLLMAnalysis(
-        `Instalando ${dependencies.length} dependências: ${dependencies.join(', ')}`,
-        context,
-        outcome
-      );
-    } catch (error) {
-      console.warn('Erro ao armazenar memória emocional:', error);
+  private calculateHash(content: string): string {
+    // Simple hash calculation for rollback
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
     }
+    return hash.toString(36);
   }
 }
