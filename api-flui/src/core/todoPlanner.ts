@@ -34,33 +34,28 @@ export class TodoPlanner {
                    role: 'user',
                    content: `Analise a seguinte tarefa e gere TODOs dinâmicos para executá-la: "${prompt}"
 
-IMPORTANTE - FLUXO COMPLETO AUTÔNOMO:
-1. Gere TODOs que criem arquivos físicos específicos
-2. SEMPRE inclua os parâmetros corretos para cada ferramenta:
-   - Para file_write: sempre inclua "filePath" e "content" (para criar arquivos)
-   - Para create_directory: sempre inclua "path" (para criar diretórios)
-   - Para build_project: sempre inclua "command" (ex: "npm run build", "yarn build", "cargo build", "go build")
-   - Para start_project: sempre inclua "command" e "port" (ex: "npm start", "python app.py", "go run main.go")
-   - Para test_endpoint: sempre inclua "url" e "method" (ex: "http://localhost:3000", "GET")
-   - Para web_search: sempre inclua "query"
+REGRAS OBRIGATÓRIAS:
+1. SEMPRE inclua TODOS os parâmetros necessários para cada ferramenta
+2. Para file_write: OBRIGATÓRIO incluir "filePath" e "content"
+3. Para create_directory: OBRIGATÓRIO incluir "path"
+4. Para build_project: OBRIGATÓRIO incluir "command"
+5. Para start_project: OBRIGATÓRIO incluir "command" e "port"
+6. Para test_endpoint: OBRIGATÓRIO incluir "url" e "method"
 
-3. FLUXO AUTÔNOMO OBRIGATÓRIO para projetos executáveis:
-   - Criar estrutura do projeto (diretórios e arquivos)
-   - Fazer build/compilação do projeto (se necessário)
-   - Iniciar o projeto/aplicação
-   - Testar o projeto com curl/HTTP request
-   - Se houver erro, implementar auto-correção
+EXEMPLO CORRETO:
+{
+  "id": "t1",
+  "description": "Create app.py file",
+  "type": "tool",
+  "toolName": "file_write",
+  "parameters": {
+    "filePath": "app.py",
+    "content": "from flask import Flask\\napp = Flask(__name__)\\n@app.route('/')\\ndef hello():\\n    return 'Hello World!'"
+  },
+  "dependencies": []
+}
 
-4. Use a ferramenta correta para cada tarefa:
-   - Use create_directory para criar diretórios
-   - Use file_write para criar arquivos
-   - Use build_project para compilar/buildar
-   - Use start_project para iniciar aplicação
-   - Use test_endpoint para testar funcionamento
-
-5. Use IDs únicos para cada TODO (ex: t1, t2, t3, etc.)
-6. Defina dependências corretas entre TODOs
-7. Para projetos web, sempre teste em localhost com porta específica`
+NUNCA deixe parâmetros vazios ou undefined!`
                  }
         ],
         tools: [
