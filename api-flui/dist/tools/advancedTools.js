@@ -1,0 +1,527 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AdvancedTools = void 0;
+const fs = __importStar(require("fs/promises"));
+const path = __importStar(require("path"));
+const child_process_1 = require("child_process");
+const util_1 = require("util");
+const pluginTools_1 = require("./pluginTools");
+const pluginLoader_1 = require("../core/pluginLoader");
+const execAsync = (0, util_1.promisify)(child_process_1.exec);
+class AdvancedTools {
+    constructor(workingDirectory, pluginLoader) {
+        this.workingDirectory = workingDirectory;
+        this.pluginLoader = pluginLoader || new pluginLoader_1.PluginLoader();
+        this.pluginTools = new pluginTools_1.PluginTools(this.pluginLoader);
+    }
+    createWebSearchTool() {
+        return {
+            name: 'web_search',
+            description: 'Search the web for information using keywords',
+            parameters: {
+                query: {
+                    type: 'string',
+                    description: 'Search query with keywords',
+                    required: true
+                },
+                maxResults: {
+                    type: 'number',
+                    description: 'Maximum number of results to return',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(params.query)}&format=json&no_html=1&skip_disambig=1`;
+                    const response = await fetch(searchUrl);
+                    if (!response.ok) {
+                        throw new Error(`Search API error: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    const results = [];
+                    if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+                        for (const topic of data.RelatedTopics.slice(0, params.maxResults || 5)) {
+                            if (topic.Text && topic.FirstURL) {
+                                results.push({
+                                    title: topic.Text.substring(0, 100) + '...',
+                                    url: topic.FirstURL,
+                                    snippet: topic.Text
+                                });
+                            }
+                        }
+                    }
+                    if (data.Abstract && data.AbstractURL) {
+                        results.unshift({
+                            title: data.Heading || 'Instant Answer',
+                            url: data.AbstractURL,
+                            snippet: data.Abstract
+                        });
+                    }
+                    return {
+                        success: true,
+                        data: results,
+                        context: `Found ${results.length} results for "${params.query}"`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createFetchTool() {
+        return {
+            name: 'fetch',
+            description: 'Fetch content from a URL',
+            parameters: {
+                url: {
+                    type: 'string',
+                    description: 'URL to fetch content from',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const response = await fetch(params.url, {
+                        method: 'GET',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (compatible; FluiBot/1.0)',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.5',
+                            'Accept-Encoding': 'gzip, deflate',
+                            'Connection': 'keep-alive'
+                        },
+                        timeout: 10000
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const contentType = response.headers.get('content-type') || '';
+                    let content;
+                    if (contentType.includes('application/json')) {
+                        const jsonData = await response.json();
+                        content = JSON.stringify(jsonData, null, 2);
+                    }
+                    else if (contentType.includes('text/')) {
+                        content = await response.text();
+                    }
+                    else {
+                        content = `Binary content (${contentType}) - ${response.headers.get('content-length') || 'unknown'} bytes`;
+                    }
+                    return {
+                        success: true,
+                        data: content,
+                        context: `Fetched ${contentType} content from ${params.url} (${content.length} characters)`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createFileReadTool() {
+        return {
+            name: 'file_read',
+            description: 'Read content from a file',
+            parameters: {
+                filePath: {
+                    type: 'string',
+                    description: 'Path to the file to read (relative to working directory)',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const fullPath = path.join(this.workingDirectory, params.filePath);
+                    const content = await fs.readFile(fullPath, 'utf-8');
+                    return {
+                        success: true,
+                        data: content,
+                        context: `Read ${params.filePath} successfully`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createFileWriteTool() {
+        return {
+            name: 'file_write',
+            description: 'Write content to a file',
+            parameters: {
+                filePath: {
+                    type: 'string',
+                    description: 'Path to the file to write (relative to working directory)',
+                    required: true
+                },
+                content: {
+                    type: 'string',
+                    description: 'Content to write to the file',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const fullPath = path.join(this.workingDirectory, params.filePath);
+                    await fs.writeFile(fullPath, params.content, 'utf-8');
+                    return {
+                        success: true,
+                        data: { filePath: params.filePath, size: params.content.length },
+                        context: `Written ${params.filePath} successfully`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createShellTool() {
+        return {
+            name: 'shell',
+            description: 'Execute shell commands safely within the working directory',
+            parameters: {
+                command: {
+                    type: 'string',
+                    description: 'Shell command to execute',
+                    required: true
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const safeCommands = ['ls', 'pwd', 'cat', 'grep', 'find', 'npm', 'pip', 'mkdir', 'touch'];
+                    const commandParts = params.command.split(' ');
+                    const baseCommand = commandParts[0];
+                    if (!baseCommand || !safeCommands.includes(baseCommand)) {
+                        return {
+                            success: false,
+                            error: `Command '${baseCommand}' is not allowed for security reasons`
+                        };
+                    }
+                    const { stdout, stderr } = await execAsync(params.command, {
+                        cwd: this.workingDirectory,
+                        timeout: 30000
+                    });
+                    return {
+                        success: true,
+                        data: { stdout, stderr },
+                        context: `Executed command: ${params.command}`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createTextSplitTool() {
+        return {
+            name: 'text_split',
+            description: 'Split text into smaller chunks while preserving paragraph integrity',
+            parameters: {
+                text: {
+                    type: 'string',
+                    description: 'Text to split',
+                    required: true
+                },
+                chunkSize: {
+                    type: 'number',
+                    description: 'Approximate size of each chunk in characters',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const size = params.chunkSize || 1000;
+                    const paragraphs = params.text.split('\n\n');
+                    const chunks = [];
+                    let currentChunk = '';
+                    for (const paragraph of paragraphs) {
+                        if (currentChunk.length + paragraph.length > size && currentChunk.length > 0) {
+                            chunks.push(currentChunk.trim());
+                            currentChunk = paragraph;
+                        }
+                        else {
+                            currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+                        }
+                    }
+                    if (currentChunk.trim()) {
+                        chunks.push(currentChunk.trim());
+                    }
+                    return {
+                        success: true,
+                        data: chunks,
+                        context: `Split text into ${chunks.length} chunks`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    createTextSummarizeTool() {
+        return {
+            name: 'text_summarize',
+            description: 'Summarize text content concisely using AI',
+            parameters: {
+                text: {
+                    type: 'string',
+                    description: 'Text to summarize',
+                    required: true
+                },
+                maxLength: {
+                    type: 'number',
+                    description: 'Maximum length of summary in characters',
+                    required: false
+                }
+            },
+            execute: async (params) => {
+                try {
+                    const { PollinationsTool } = await Promise.resolve().then(() => __importStar(require('./pollinationsTool')));
+                    const pollinationsTool = new PollinationsTool();
+                    const maxLen = params.maxLength || 500;
+                    const prompt = `Summarize the following text in approximately ${maxLen} characters or less. Focus on the key points and main ideas:
+
+${params.text}
+
+Summary:`;
+                    const summary = await pollinationsTool.generateText(prompt, {
+                        model: 'openai',
+                        temperature: 0.3,
+                        maxTokens: Math.floor(maxLen / 2)
+                    });
+                    return {
+                        success: true,
+                        data: summary.trim(),
+                        context: `AI summarized text from ${params.text.length} to ${summary.length} characters`
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        };
+    }
+    getAllTools() {
+        const baseTools = [
+            this.createWebSearchTool(),
+            this.createFetchTool(),
+            this.createFileReadTool(),
+            this.createFileWriteTool(),
+            this.createShellTool(),
+            this.createTextSplitTool(),
+            this.createTextSummarizeTool()
+        ];
+        const pluginTools = this.pluginTools.getAvailableTools().map(pluginTool => ({
+            name: pluginTool.name,
+            description: pluginTool.description,
+            parameters: pluginTool.parameters,
+            execute: async (params) => {
+                try {
+                    const result = await this.pluginTools.executeTool(pluginTool.name, params);
+                    return {
+                        success: true,
+                        data: result
+                    };
+                }
+                catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        }));
+        return [...baseTools, ...pluginTools];
+    }
+    getAllToolSchemas() {
+        const baseSchemas = [
+            this.getWebSearchSchema(),
+            this.getFetchSchema(),
+            this.getFileReadSchema(),
+            this.getFileWriteSchema(),
+            this.getShellSchema(),
+            this.getTextSplitSchema(),
+            this.getTextSummarizeSchema()
+        ];
+        const pluginSchemas = this.pluginTools.getAllToolSchemas();
+        return [...baseSchemas, ...pluginSchemas];
+    }
+    refreshPluginTools() {
+        this.pluginTools.refreshTools();
+    }
+    getWebSearchSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'web_search',
+                description: 'Search the web for information using keywords',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        query: { type: 'string', description: 'Search query' }
+                    },
+                    required: ['query']
+                }
+            }
+        };
+    }
+    getFetchSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'fetch',
+                description: 'Fetch content from a URL',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        url: { type: 'string', description: 'URL to fetch' }
+                    },
+                    required: ['url']
+                }
+            }
+        };
+    }
+    getFileReadSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'file_read',
+                description: 'Read content from a file',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        path: { type: 'string', description: 'File path to read' }
+                    },
+                    required: ['path']
+                }
+            }
+        };
+    }
+    getFileWriteSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'file_write',
+                description: 'Write content to a file',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        path: { type: 'string', description: 'File path to write' },
+                        content: { type: 'string', description: 'Content to write' }
+                    },
+                    required: ['path', 'content']
+                }
+            }
+        };
+    }
+    getShellSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'shell',
+                description: 'Execute shell command in working directory',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        command: { type: 'string', description: 'Shell command to execute' }
+                    },
+                    required: ['command']
+                }
+            }
+        };
+    }
+    getTextSplitSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'text_split',
+                description: 'Split text into chunks',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        text: { type: 'string', description: 'Text to split' },
+                        chunkSize: { type: 'number', description: 'Size of each chunk' }
+                    },
+                    required: ['text', 'chunkSize']
+                }
+            }
+        };
+    }
+    getTextSummarizeSchema() {
+        return {
+            type: 'function',
+            function: {
+                name: 'text_summarize',
+                description: 'Summarize text content',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        text: { type: 'string', description: 'Text to summarize' }
+                    },
+                    required: ['text']
+                }
+            }
+        };
+    }
+}
+exports.AdvancedTools = AdvancedTools;
+//# sourceMappingURL=advancedTools.js.map

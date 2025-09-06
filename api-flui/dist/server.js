@@ -1,0 +1,197 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
+const morgan_1 = __importDefault(require("morgan"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const tasks_1 = require("./routes/tasks");
+const advancedTasks_1 = require("./routes/advancedTasks");
+const stream_1 = require("./routes/stream");
+const plugins_1 = require("./routes/plugins");
+const knowledge_1 = require("./routes/knowledge");
+const mcp_1 = require("./routes/mcp");
+const emotionMemory_1 = require("./routes/emotionMemory");
+const analytics_1 = require("./routes/analytics");
+const codeForge_1 = require("./routes/codeForge");
+const orchestrator_1 = require("./core/orchestrator");
+const advancedOrchestrator_1 = require("./core/advancedOrchestrator");
+const codeForgeOrchestrator_1 = require("./core/codeForgeOrchestrator");
+const classifier_1 = require("./core/classifier");
+const planner_1 = require("./core/planner");
+const worker_1 = require("./core/worker");
+const supervisor_1 = require("./core/supervisor");
+const pollinationsTool_1 = require("./tools/pollinationsTool");
+const pluginLoader_1 = require("./core/pluginLoader");
+const knowledgeManager_1 = require("./core/knowledgeManager");
+const mcpRegistry_1 = require("./core/mcpRegistry");
+const mcpToolProxy_1 = require("./core/mcpToolProxy");
+dotenv_1.default.config();
+const app = (0, express_1.default)();
+const PORT = process.env['PORT'] || 5000;
+const pollinationsTool = new pollinationsTool_1.PollinationsTool();
+const knowledgeManager = new knowledgeManager_1.KnowledgeManager();
+const mcpRegistry = new mcpRegistry_1.MCPRegistry();
+const mcpToolProxy = new mcpToolProxy_1.MCPToolProxy(mcpRegistry);
+const classifier = new classifier_1.Classifier(knowledgeManager);
+const planner = new planner_1.Planner();
+const worker = new worker_1.Worker(pollinationsTool, knowledgeManager);
+const supervisor = new supervisor_1.Supervisor();
+const orchestratorConfig = {
+    maxDepth: parseInt(process.env['MAX_TASK_DEPTH'] || '5'),
+    maxRetries: parseInt(process.env['MAX_RETRIES'] || '3'),
+    taskTimeoutMs: parseInt(process.env['TASK_TIMEOUT_MS'] || '300000'),
+    enableStreaming: true
+};
+const emotionMemoryConfig = {
+    emotionThreshold: parseFloat(process.env['EMOTION_THRESHOLD'] || '0.7'),
+    maxMemories: parseInt(process.env['MAX_MEMORIES'] || '1000'),
+    memoryDecay: parseFloat(process.env['MEMORY_DECAY'] || '0.95'),
+    contextWindow: parseInt(process.env['CONTEXT_WINDOW'] || '3'),
+    hashLength: parseInt(process.env['HASH_LENGTH'] || '8')
+};
+const orchestrator = new orchestrator_1.Orchestrator(orchestratorConfig, classifier, planner, worker, supervisor, emotionMemoryConfig);
+const advancedOrchestrator = new advancedOrchestrator_1.AdvancedOrchestrator(orchestratorConfig, classifier, planner, worker, supervisor, emotionMemoryConfig);
+const codeForgeOrchestrator = new codeForgeOrchestrator_1.CodeForgeOrchestrator();
+app.use((0, helmet_1.default)());
+app.use((0, cors_1.default)({
+    origin: process.env['NODE_ENV'] === 'production' ? false : true,
+    credentials: true
+}));
+app.use((0, morgan_1.default)('combined'));
+app.use(express_1.default.json({ limit: '50mb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '50mb' }));
+app.use((req, _res, next) => {
+    const requestId = Math.random().toString(36).substring(7);
+    req.requestId = requestId;
+    console.log(JSON.stringify({
+        requestId,
+        method: req.method,
+        path: req.path,
+        timestamp: new Date().toISOString(),
+        userAgent: req.get('User-Agent'),
+        ip: req.ip
+    }));
+    next();
+});
+app.get('/health', (_req, res) => {
+    return res.json({
+        status: 'healthy',
+        service: 'API Flui - Autonomous AI Orchestrator',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env['NODE_ENV'] || 'development',
+        config: {
+            maxDepth: orchestratorConfig.maxDepth,
+            maxRetries: orchestratorConfig.maxRetries,
+            taskTimeoutMs: orchestratorConfig.taskTimeoutMs,
+            enableStreaming: orchestratorConfig.enableStreaming
+        }
+    });
+});
+const pluginLoader = new pluginLoader_1.PluginLoader();
+(async () => {
+    try {
+        console.log('🔌 Initializing plugin system...');
+        await pluginLoader.loadAllPlugins();
+        await pluginLoader.watchForNewPlugins();
+        console.log('✅ Plugin system initialized successfully');
+    }
+    catch (error) {
+        console.error('❌ Failed to initialize plugin system:', error);
+    }
+})();
+app.use('/v1/tasks', (0, tasks_1.taskRoutes)(orchestrator));
+app.use('/v1/advanced-tasks', (0, advancedTasks_1.advancedTaskRoutes)(advancedOrchestrator));
+app.use('/v1/code-forge', (0, codeForge_1.createCodeForgeRoutes)(codeForgeOrchestrator));
+app.use('/v1/stream', (0, stream_1.streamRoutes)(orchestrator));
+app.use('/v1/knowledge', (0, knowledge_1.knowledgeRoutes)(knowledgeManager));
+app.use('/v1/emotion-memory', (0, emotionMemory_1.createEmotionMemoryRoutes)(orchestrator, advancedOrchestrator));
+app.use('/v1/analytics', (0, analytics_1.createAnalyticsRoutes)(orchestrator, advancedOrchestrator));
+app.use('/mcp', (0, mcp_1.mcpRoutes)(mcpRegistry, mcpToolProxy));
+app.use('/v1', (0, plugins_1.createPluginRoutes)(pluginLoader));
+app.get('/', (_req, res) => {
+    return res.json({
+        message: 'API Flui - Autonomous AI Orchestrator',
+        version: '1.0.0',
+        endpoints: {
+            health: '/health',
+            tasks: '/v1/tasks',
+            advancedTasks: '/v1/advanced-tasks',
+            stream: '/v1/stream',
+            knowledge: '/v1/knowledge',
+            mcp: '/mcp',
+            plugins: '/v1/plugins'
+        },
+        documentation: '/docs',
+        status: 'running'
+    });
+});
+app.use('*', (_req, res) => {
+    return res.status(404).json({
+        error: 'Endpoint not found',
+        message: 'The requested endpoint does not exist',
+        availableEndpoints: [
+            'GET /health',
+            'GET /',
+            'POST /v1/tasks',
+            'GET /v1/tasks',
+            'GET /v1/tasks/:id',
+            'POST /v1/tasks/:id/execute',
+            'POST /v1/tasks/:id/delegate',
+            'POST /v1/tasks/:id/retry',
+            'GET /v1/tasks/:id/status',
+            'GET /v1/tasks/:id/events',
+            'GET /v1/stream/:id',
+            'POST /v1/knowledge',
+            'GET /v1/knowledge',
+            'GET /v1/knowledge/active',
+            'GET /v1/knowledge/context',
+            'GET /v1/knowledge/:id',
+            'PUT /v1/knowledge/:id',
+            'DELETE /v1/knowledge/:id',
+            'GET /v1/knowledge/search/:query',
+            'POST /v1/knowledge/contextual',
+            'POST /mcp/add',
+            'GET /mcp/list',
+            'GET /mcp/:name',
+            'DELETE /mcp/remove/:name',
+            'POST /mcp/:name/connect',
+            'POST /mcp/:name/disconnect',
+            'GET /mcp/tools/list',
+            'POST /mcp/tools/call',
+            'GET /mcp/tools/:toolName',
+            'POST /mcp/:name/enable',
+            'POST /mcp/:name/disable'
+        ]
+    });
+});
+app.use((error, _req, res, _next) => {
+    console.error('Global error handler:', error);
+    return res.status(500).json({
+        error: 'Internal server error',
+        message: 'An unexpected error occurred',
+        timestamp: new Date().toISOString(),
+        ...(process.env['NODE_ENV'] === 'development' && { details: error.message })
+    });
+});
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    process.exit(0);
+});
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    process.exit(0);
+});
+app.listen(PORT, () => {
+    console.log(`🚀 API Flui server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔧 Environment: ${process.env['NODE_ENV'] || 'development'}`);
+    console.log(`🎯 OpenAI Base URL: ${process.env['OPENAI_BASE_URL'] || 'http://localhost:4000'}`);
+});
+exports.default = app;
+//# sourceMappingURL=server.js.map

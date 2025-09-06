@@ -997,7 +997,6 @@ export const AuthProvider = ({ children }) => {
       const pollinationsTool = new PollinationsTool();
       
       const authPrompt = `Authenticate user with email: ${email}. This is a mock authentication for development purposes.`;
-      
       const response = await pollinationsTool.generateText(authPrompt, {
         model: 'openai',
         temperature: 0.1,
@@ -1038,7 +1037,7 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};`;
+};`;;
   }
 
   private generateDynamicHTMLContent(intent: Intent): string {
