@@ -12,11 +12,17 @@ export class DepInstallerAgent implements IAgent {
   ) {}
 
   canHandle(task: Task, projectState: ProjectState): boolean {
-    // Should install dependencies if package.json exists but dependencies are not installed
+    // Should install dependencies if package.json exists but node_modules doesn't exist
     const hasPackageJson = !!projectState.files['package.json'];
-    const hasDependencies = Object.keys(projectState.dependencies).length > 0;
+    const hasNodeModules = !!projectState.files['node_modules'];
     
-    return hasPackageJson && !hasDependencies;
+    // Don't handle if we've already tried installing multiple times
+    const installAttempts = task.logs?.filter(log => 
+      log.message.includes('DepInstallerAgent executado') && 
+      log.message.includes('package_install')
+    ).length || 0;
+    
+    return hasPackageJson && !hasNodeModules && installAttempts < 2;
   }
 
   getPriority(): number {

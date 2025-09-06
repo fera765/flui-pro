@@ -135,32 +135,27 @@ Retorne APENAS o conteúdo JSON do tsconfig.node.json, sem explicações.
 
   private async generateDynamicFallbackConfig(): Promise<MicroTask[]> {
     try {
-      // Use LLM to generate fallback config dynamically
-      const fallbackPrompt = `Gere um tsconfig.node.json básico e funcional para um projeto Vite + React + TypeScript.
-
-      Retorne APENAS o JSON:
-      {
-        "compilerOptions": {
-          "composite": true,
-          "skipLibCheck": true,
-          "module": "ESNext",
-          "moduleResolution": "bundler",
-          "allowSyntheticDefaultImports": true,
-          "strict": true,
-          "isolatedModules": true,
-          "types": ["node"]
-        },
-        "include": ["vite.config.ts"]
-      }`;
-
-      const fallbackResponse = await this.llmService.generateResponse(fallbackPrompt);
+      // Generate static fallback config without LLM dependency
+      const fallbackConfig = `{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "isolatedModules": true,
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts"]
+}`;
       
       const fallbackTask: MicroTask = {
         id: `config-fallback-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'file_create',
         path: 'tsconfig.node.json',
         oldSnippet: '',
-        newSnippet: fallbackResponse.trim(),
+        newSnippet: fallbackConfig,
         rollbackHash: this.calculateHash(''),
         status: 'pending',
         createdAt: Date.now(),
@@ -168,6 +163,7 @@ Retorne APENAS o conteúdo JSON do tsconfig.node.json, sem explicações.
         maxRetries: 3
       };
 
+      console.log('✅ Generated static fallback config without LLM dependency');
       return [fallbackTask];
       
     } catch (error) {

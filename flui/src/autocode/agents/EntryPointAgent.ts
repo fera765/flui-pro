@@ -106,7 +106,7 @@ Retorne APENAS o código TypeScript completo, sem explicações adicionais.
     } catch (error) {
       console.error(`❌ Erro no EntryPointAgent:`, error);
       
-      // Fallback main.tsx content
+      // Fallback main.tsx content - static and independent
       const fallbackMain = `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';

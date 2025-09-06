@@ -89,14 +89,15 @@ Retorne APENAS o conteúdo HTML completo, sem explicações adicionais.
     } catch (error) {
       console.error(`❌ Erro no HTMLGeneratorAgent:`, error);
       
-      // Fallback HTML content
+      // Fallback HTML content - static and independent
       const fallbackHtml = `<!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>React App</title>
+    <title>Flui App - Página de Vendas</title>
+    <meta name="description" content="Aplicação web moderna criada pelo FLUI" />
   </head>
   <body>
     <div id="root"></div>

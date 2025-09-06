@@ -17,7 +17,13 @@ export class StyleAgent implements IAgent {
     const hasStyleFiles = this.hasStyleFiles(projectState.files);
     const hasPackageJson = !!projectState.files['package.json'];
     
-    return hasPackageJson && hasReactComponents && !hasStyleFiles;
+    // Only handle if we have components and no styles, and haven't already tried
+    const hasTriedBefore = task.logs?.some(log => 
+      log.message.includes('StyleAgent executado') && 
+      log.message.includes('0 micro-tasks')
+    );
+    
+    return hasPackageJson && hasReactComponents && !hasStyleFiles && !hasTriedBefore;
   }
 
   getPriority(): number {
@@ -196,29 +202,174 @@ NÃO inclua explicações, apenas o JSON.`;
 
   private async generateDynamicFallbackStyles(files: Record<string, string>): Promise<MicroTask[]> {
     try {
-      // Use LLM to generate fallback styles dynamically
-      const fallbackPrompt = `Gere estilos CSS básicos e modernos para uma aplicação React. 
-      
-      Crie dois arquivos:
-      1. src/index.css - estilos globais
-      2. src/App.css - estilos para o componente App
-      
-      Retorne APENAS JSON:
-      {
-        "styles": [
-          {
-            "path": "src/index.css",
-            "content": "estilos globais completos"
-          },
-          {
-            "path": "src/App.css", 
-            "content": "estilos do App completos"
-          }
-        ]
-      }`;
+      // Generate static fallback styles without LLM dependency
+      const indexCss = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-      const fallbackResponse = await this.llmService.generateResponse(fallbackPrompt);
-      return this.parseDynamicStyleResponse(fallbackResponse);
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}`;
+
+      const appCss = `.App {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  color: white;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.App-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+/* Form styles */
+.form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 2rem auto;
+  color: #333;
+}
+
+.form h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-submit {
+  background: #667eea;
+  color: white;
+  width: 100%;
+}
+
+.btn-submit:hover {
+  background: #5a67d8;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .App-header h1 {
+    font-size: 2rem;
+  }
+  
+  .form {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}`;
+
+      const tasks: MicroTask[] = [
+        {
+          id: `fallback-index-css-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: 'file_create',
+          path: 'src/index.css',
+          oldSnippet: '',
+          newSnippet: indexCss,
+          rollbackHash: this.calculateHash(''),
+          status: 'pending',
+          createdAt: Date.now(),
+          retryCount: 0,
+          maxRetries: 3
+        },
+        {
+          id: `fallback-app-css-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: 'file_create',
+          path: 'src/App.css',
+          oldSnippet: '',
+          newSnippet: appCss,
+          rollbackHash: this.calculateHash(''),
+          status: 'pending',
+          createdAt: Date.now(),
+          retryCount: 0,
+          maxRetries: 3
+        }
+      ];
+
+      console.log('✅ Generated static fallback styles without LLM dependency');
+      return tasks;
       
     } catch (error) {
       console.error('Erro ao gerar fallback styles:', error);

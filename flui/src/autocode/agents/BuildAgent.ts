@@ -17,7 +17,13 @@ export class BuildAgent implements IAgent {
     const hasDependencies = Object.keys(projectState.dependencies).length > 0;
     const hasPackageJson = !!projectState.files['package.json'];
     
-    return hasPackageJson && hasEssentialFiles && hasDependencies;
+    // Don't handle if we've already tried building multiple times
+    const buildAttempts = task.logs?.filter(log => 
+      log.message.includes('BuildAgent executado') && 
+      log.message.includes('build_run')
+    ).length || 0;
+    
+    return hasPackageJson && hasEssentialFiles && hasDependencies && buildAttempts < 2;
   }
 
   getPriority(): number {
