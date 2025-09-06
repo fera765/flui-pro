@@ -90,11 +90,15 @@ export class OODALoop {
       let insights: string[] = [];
       let confidence = 0.8;
       
+      let microTasks: MicroTask[] = [];
+      
       if (await this.llmService.isConnected()) {
         const observationPrompt = this.generateObservationPrompt(task, projectState, state);
-        const llmInsights = await this.llmService.generateResponse(observationPrompt);
-        insights = this.parseInsights(llmInsights);
-        confidence = this.calculateConfidence(insights);
+        const llmResponse = await this.llmService.generateResponse(observationPrompt);
+        const parsedResponse = this.parseLLMResponse(llmResponse);
+        insights = parsedResponse.insights || this.parseInsights(llmResponse);
+        confidence = parsedResponse.confidence || this.calculateConfidence(insights);
+        microTasks = parsedResponse.microTasks || [];
       } else {
         insights = this.generateFallbackInsights(projectState);
         confidence = 0.6;
@@ -107,7 +111,7 @@ export class OODALoop {
       return {
         success: true,
         nextPhase: 'orient',
-        microTasks: [],
+        microTasks,
         insights,
         confidence,
         shouldContinue: true
@@ -470,6 +474,47 @@ Retorne análise construtiva e focada.`;
       return lines.map(line => line.replace(/^\d+\.\s*/, '').trim()).filter(line => line.length > 0);
     } catch (error) {
       return [response.substring(0, 200) + '...'];
+    }
+  }
+
+  /**
+   * Parse complete LLM response including micro-tasks
+   */
+  private parseLLMResponse(response: string): { insights: string[]; confidence: number; microTasks: MicroTask[]; nextPhase?: string } {
+    try {
+      const parsed = JSON.parse(response);
+      
+      const result = {
+        insights: parsed.insights || [],
+        confidence: parsed.confidence || 0.5,
+        microTasks: [] as MicroTask[],
+        nextPhase: parsed.phase
+      };
+
+      // Parse micro-tasks if present
+      if (parsed.microTasks && Array.isArray(parsed.microTasks)) {
+        result.microTasks = parsed.microTasks.map((mt: any) => ({
+          id: mt.id || `micro-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: mt.type || 'file_create',
+          path: mt.path,
+          oldSnippet: mt.oldSnippet,
+          newSnippet: mt.newSnippet,
+          rollbackHash: mt.rollbackHash || 'default-hash',
+          status: 'pending' as const,
+          createdAt: Date.now(),
+          retryCount: 0,
+          maxRetries: 3
+        }));
+      }
+
+      return result;
+    } catch {
+      // Se não for JSON válido, retornar estrutura vazia
+      return {
+        insights: this.parseInsights(response),
+        confidence: 0.5,
+        microTasks: []
+      };
     }
   }
 
