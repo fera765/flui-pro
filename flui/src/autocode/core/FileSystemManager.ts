@@ -56,20 +56,36 @@ export class FileSystemManager implements IFileSystem {
 
   async listFiles(directory: string): Promise<string[]> {
     try {
-      const files = await fs.promises.readdir(directory, { withFileTypes: true });
       const result: string[] = [];
-      
-      for (const file of files) {
-        if (file.isDirectory()) {
-          result.push(file.name);
-        } else {
-          result.push(file.name);
-        }
-      }
-      
+      await this.listFilesRecursive(directory, '', result);
       return result;
     } catch (error) {
       throw new Error(`Erro ao listar arquivos de ${directory}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private async listFilesRecursive(directory: string, relativePath: string, result: string[]): Promise<void> {
+    try {
+      const files = await fs.promises.readdir(directory, { withFileTypes: true });
+      
+      for (const file of files) {
+        const fullPath = path.join(directory, file.name);
+        const relativeFilePath = relativePath ? path.join(relativePath, file.name) : file.name;
+        
+        if (file.isDirectory()) {
+          // Ignorar diretórios específicos
+          if (file.name === 'node_modules' || file.name === '.git' || file.name === 'dist') {
+            continue;
+          }
+          // Recursivamente listar arquivos do subdiretório
+          await this.listFilesRecursive(fullPath, relativeFilePath, result);
+        } else {
+          result.push(relativeFilePath);
+        }
+      }
+    } catch (error) {
+      // Ignorar erros de diretórios que não podem ser lidos
+      console.warn(`Erro ao listar arquivos de ${directory}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
