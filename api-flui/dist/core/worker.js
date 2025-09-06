@@ -73,7 +73,14 @@ class Worker {
     }
     async handleTask(task) {
         const metadata = task.metadata;
-        const classification = metadata.classification;
+        const classification = metadata?.classification;
+        if (!classification) {
+            return {
+                success: false,
+                error: 'Task classification not found',
+                metadata: { type: 'task' }
+            };
+        }
         try {
             const availableTools = this.advancedTools.getAllToolSchemas();
             const executionTools = [
@@ -154,10 +161,16 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
         const results = [];
         for (const toolCall of toolCalls) {
             try {
+                if (!toolCall || !toolCall.function) {
+                    console.error('Invalid toolCall:', toolCall);
+                    results.push({ success: false, error: 'Invalid tool call structure' });
+                    continue;
+                }
                 const { name, arguments: args } = toolCall.function;
                 const parsedArgs = JSON.parse(args);
                 switch (name) {
                     case 'execute_task':
+                        console.log('Executing task action with args:', parsedArgs);
                         results.push(await this.executeTaskAction(parsedArgs, task));
                         break;
                     case 'web_search':
@@ -202,6 +215,9 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
         };
     }
     async executeTaskAction(action, task) {
+        if (!action) {
+            throw new Error('Action is undefined');
+        }
         const { action: actionType, parameters, reasoning } = action;
         switch (actionType) {
             case 'generate_text':
@@ -250,7 +266,7 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
     }
     async handleImageGeneration(task) {
         const metadata = task.metadata;
-        const params = metadata.classification.parameters;
+        const params = metadata?.classification?.parameters || {};
         try {
             const imageData = await this.pollinationsTool.generateImage(params.subject || task.prompt, {
                 size: params.size || '1024x1024',
@@ -278,7 +294,7 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
     }
     async handleTextGeneration(task) {
         const metadata = task.metadata;
-        const params = metadata.classification.parameters;
+        const params = metadata?.classification?.parameters || {};
         try {
             const contextualKnowledge = this.knowledgeManager.getContextualKnowledge(task.prompt, 3);
             const enhancedPrompt = contextualKnowledge
@@ -311,7 +327,7 @@ IMPORTANTE: Use the execute_task function to perform the main action, and use ot
     }
     async handleAudioTask(task) {
         const metadata = task.metadata;
-        const params = metadata.classification.parameters;
+        const params = metadata?.classification?.parameters || {};
         try {
             if (params.action === 'text_to_speech') {
                 const audioData = await this.pollinationsTool.generateAudio(task.prompt, {

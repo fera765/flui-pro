@@ -74,21 +74,31 @@ ${contextualKnowledge}
 
 Use este conhecimento para melhorar a classificação e compreensão da tarefa.` : ''}
 
-Classifique esta solicitação em uma das seguintes categorias:
+Classifique esta solicitação usando os seguintes critérios:
 
-1. **conversation**: Perguntas simples, cumprimentos, pedidos de ajuda geral, conversas casuais
-2. **text_generation**: Criação de texto, redação, artigos, resumos, histórias, conteúdo escrito
-3. **image_generation**: Criação de imagens, arte, ilustrações, designs visuais
-4. **audio**: Geração de áudio, conversão de texto para fala, processamento de áudio
-5. **composite**: Tarefas que envolvem múltiplas etapas ou tipos de conteúdo
+**TIPO PRINCIPAL:**
+1. **conversation**: Tarefas SIMPLES que podem ser resolvidas em uma única operação:
+   - Criar um arquivo simples (HTML, texto, script)
+   - Gerar texto curto ou conteúdo direto
+   - Perguntas simples, cumprimentos, ajuda geral
+   - Qualquer solicitação que não requer planejamento complexo
+   
+2. **task**: Tarefas COMPLEXAS que requerem múltiplas etapas ou planejamento:
+   - Criar projetos completos (aplicações, sistemas)
+   - Tarefas que envolvem múltiplos arquivos ou componentes
+   - Processos que requerem análise, pesquisa e implementação
+   - Workflows complexos com dependências
+
+**SUBTIPOS (apenas para type: "task"):**
+- **text_generation**: Criação de texto, artigos, documentos complexos
+- **image_generation**: Criação de imagens, arte, designs visuais
+- **audio**: Geração/processamento de áudio
+- **composite**: Tarefas multi-etapas envolvendo diferentes tipos
 
 IMPORTANTE: 
-- Se for uma conversa simples, use type: "conversation" e subtype: null
-- Se for uma tarefa, use type: "task" e o subtype apropriado
-- Seja preciso na classificação baseado no conteúdo real da solicitação
-- Para tarefas de texto (artigos, resumos, redação), use "text_generation"
-- Para tarefas de imagem (criar, gerar, desenhar imagens), use "image_generation"
-- Use o conhecimento disponível para melhorar a precisão da classificação
+- Para tarefas simples como "criar um arquivo HTML", use type: "conversation"
+- Para projetos complexos como "criar uma aplicação web", use type: "task"
+- A complexidade é o fator decisivo, não o tipo de conteúdo
 `;
             const response = await this.pollinationsTool.generateTextWithTools(classificationPrompt, classificationTools, {
                 temperature: 0.1,

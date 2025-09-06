@@ -38,9 +38,14 @@ class TodoPlanner {
         return complexity;
     }
     createVideoCreationTodos(prompt) {
+        const scriptAnalysisId = (0, uuid_1.v4)();
+        const trendResearchId = (0, uuid_1.v4)();
+        const scriptWriterId = (0, uuid_1.v4)();
+        const visualCreatorId = (0, uuid_1.v4)();
+        const fileCreationId = (0, uuid_1.v4)();
         return [
             {
-                id: (0, uuid_1.v4)(),
+                id: scriptAnalysisId,
                 description: 'Analisando estrutura de roteiro de videos para tiktok',
                 type: 'agent',
                 agentId: 'script_analyst',
@@ -49,7 +54,7 @@ class TodoPlanner {
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: trendResearchId,
                 description: 'Pesquisando tendências atuais do TikTok',
                 type: 'tool',
                 toolName: 'web_search',
@@ -59,39 +64,43 @@ class TodoPlanner {
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: scriptWriterId,
                 description: 'Criando roteiro baseado nas tendências',
                 type: 'agent',
                 agentId: 'script_writer',
                 status: 'pending',
-                dependencies: ['script_analyst', 'trend_research'],
+                dependencies: [scriptAnalysisId, trendResearchId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: visualCreatorId,
                 description: 'Gerando ideias visuais e storyboard',
                 type: 'agent',
                 agentId: 'visual_creator',
                 status: 'pending',
-                dependencies: ['script_writer'],
+                dependencies: [scriptWriterId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: fileCreationId,
                 description: 'Criando arquivos de produção',
                 type: 'tool',
                 toolName: 'file_write',
                 parameters: { filePath: 'script.md', content: 'Generated script content' },
                 status: 'pending',
-                dependencies: ['script_writer'],
+                dependencies: [scriptWriterId],
                 createdAt: new Date()
             }
         ];
     }
     createResearchTodos(prompt) {
+        const researchPlannerId = (0, uuid_1.v4)();
+        const dataCollectionId = (0, uuid_1.v4)();
+        const dataAnalysisId = (0, uuid_1.v4)();
+        const reportWriterId = (0, uuid_1.v4)();
         return [
             {
-                id: (0, uuid_1.v4)(),
+                id: researchPlannerId,
                 description: 'Definindo escopo da pesquisa',
                 type: 'agent',
                 agentId: 'research_planner',
@@ -100,39 +109,44 @@ class TodoPlanner {
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: dataCollectionId,
                 description: 'Coletando informações relevantes',
                 type: 'tool',
                 toolName: 'web_search',
                 parameters: { query: prompt, maxResults: 10 },
                 status: 'pending',
-                dependencies: ['research_planner'],
+                dependencies: [researchPlannerId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: dataAnalysisId,
                 description: 'Analisando e organizando dados',
                 type: 'agent',
                 agentId: 'data_analyst',
                 status: 'pending',
-                dependencies: ['data_collection'],
+                dependencies: [dataCollectionId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: reportWriterId,
                 description: 'Criando relatório final',
                 type: 'agent',
                 agentId: 'report_writer',
                 status: 'pending',
-                dependencies: ['data_analysis'],
+                dependencies: [dataAnalysisId],
                 createdAt: new Date()
             }
         ];
     }
     createContentCreationTodos(prompt) {
+        const contentAnalystId = (0, uuid_1.v4)();
+        const referenceResearchId = (0, uuid_1.v4)();
+        const contentStructureId = (0, uuid_1.v4)();
+        const contentWritingId = (0, uuid_1.v4)();
+        const contentEditingId = (0, uuid_1.v4)();
         return [
             {
-                id: (0, uuid_1.v4)(),
+                id: contentAnalystId,
                 description: 'Analisando requisitos do conteúdo',
                 type: 'agent',
                 agentId: 'content_analyst',
@@ -141,48 +155,51 @@ class TodoPlanner {
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: referenceResearchId,
                 description: 'Pesquisando referências e fontes',
                 type: 'tool',
                 toolName: 'web_search',
                 parameters: { query: prompt, maxResults: 5 },
                 status: 'pending',
-                dependencies: ['content_analyst'],
+                dependencies: [contentAnalystId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: contentStructureId,
                 description: 'Criando estrutura do conteúdo',
                 type: 'agent',
                 agentId: 'content_planner',
                 status: 'pending',
-                dependencies: ['reference_research'],
+                dependencies: [referenceResearchId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: contentWritingId,
                 description: 'Escrevendo o conteúdo',
                 type: 'agent',
                 agentId: 'content_writer',
                 status: 'pending',
-                dependencies: ['content_structure'],
+                dependencies: [contentStructureId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: contentEditingId,
                 description: 'Revisando e editando',
                 type: 'agent',
                 agentId: 'content_editor',
                 status: 'pending',
-                dependencies: ['content_writing'],
+                dependencies: [contentWritingId],
                 createdAt: new Date()
             }
         ];
     }
     createGenericTodos(prompt) {
+        const taskAnalysisId = (0, uuid_1.v4)();
+        const taskExecutionId = (0, uuid_1.v4)();
+        const taskFinalizationId = (0, uuid_1.v4)();
         return [
             {
-                id: (0, uuid_1.v4)(),
+                id: taskAnalysisId,
                 description: 'Analisando a tarefa solicitada',
                 type: 'agent',
                 agentId: 'task_analyst',
@@ -191,21 +208,21 @@ class TodoPlanner {
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: taskExecutionId,
                 description: 'Executando a tarefa principal',
                 type: 'agent',
                 agentId: 'task_executor',
                 status: 'pending',
-                dependencies: ['task_analysis'],
+                dependencies: [taskAnalysisId],
                 createdAt: new Date()
             },
             {
-                id: (0, uuid_1.v4)(),
+                id: taskFinalizationId,
                 description: 'Finalizando e entregando resultado',
                 type: 'agent',
                 agentId: 'task_finalizer',
                 status: 'pending',
-                dependencies: ['task_execution'],
+                dependencies: [taskExecutionId],
                 createdAt: new Date()
             }
         ];
